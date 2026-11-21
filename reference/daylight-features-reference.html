@@ -910,7 +910,7 @@ class Component extends DCLogic {
     if (fx === "smokeOff") this.setState({ smoky: false });
     if (fx === "cook") this.startCook("cook");
     if (fx === "autoWater") { var mw = Object.assign({}, s.moist); mw.bedroom = 46; this.setState({ moist: mw }); this.log("Watered: Bedroom & office", "Spider plant 19% → 46% · seen by the sensor", "Sensor"); }
-    if (fx === "unwater") { var mu = Object.assign({}, s.moist); mu.bedroom = 19; this.setState({ moist: mu }); }
+    if (fx === "unwater") { var mu = Object.assign({}, s.moist); mu.bedroom = 19; var cu = (this.state || {}).cards || s.cards; this.setState({ moist: mu, cards: cu.indexOf("plants") >= 0 ? cu : cu.concat(["plants"]) }); }
     if (fx === "kitchenAuto") this.log("New routine: kitchen lights at 5:30 when someone's home", "Pik suggested it · approved on the kitchen screen", "Kitchen screen");
     if (fx === "awayOn") this.setState({ lights: Object.assign({}, s.lights, { living: false }), setpoint: 64 });
     if (fx === "awayUndo") this.setState({ lights: Object.assign({}, s.lights, { living: true }), setpoint: 70 });

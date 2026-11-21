@@ -162,7 +162,7 @@ Rules:
 - **Missing entity = hidden tile, never an error.** If `air_pm25` is absent, the air text disappears; if `echo` is absent, there's no Now playing pebble.
 - **Thresholds live in Home Assistant** as `input_number` helpers (0–100%), so Tyler can tune a thirsty line without touching the card.
 - **Watering is detected automatically.** When a group's sensor rises by at least its jump size within 30 minutes, the whole group counts as watered: its plant card or route stop clears, and the house history gets "Kitchen group watered" with the before and after readings. Jump sizes live in `input_number.water_jump_<group>` (start at 12 points; 5 for Desert cacti and Tough guys, which get little water). If a combined card covered several groups, only the detected ones clear.
-- A quiet confirmation card follows ("Saw the Bedroom & office group get watered"), with "That wasn't the whole group," which puts the group back on the list until its next jump or a manual tap.
+- A quiet confirmation card follows ("Saw the Bedroom & office group get watered"), with "That wasn't the whole group," which puts the group back on the list until its next jump or a manual tap, and brings the plant card back to the feed if it had cleared.
 - The **Watered** buttons stay as a backup for out-of-order days. Tip for Tyler and Charlie: water each group's sensor plant last.
 - **Units:** °F, kW, %. Show one decimal for kW and whole numbers everywhere else.
 
