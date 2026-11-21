@@ -6,7 +6,7 @@ Nov 21, 2026 · Tyler Langdon · Living version: https://claude.ai/artifact/WBhq
 
 Build one custom Home Assistant dashboard card, the **Pik House Feed**, that runs full-screen on a Chromebook standing in tent mode on the kitchen counter. It shows the locked **Daylight** design: Pik on the left, one item at a time in a speech bubble, status pebbles along the bottom, and detail sheets that slide up. Claude, running inside Home Assistant, is the brain behind Pik's voice and the email-reading cards.
 
-The working prototype is the reference for every visual and interaction decision. It ships as **reference/daylight-reference.html** in this repo and runs in any browser with fake data. Pik's original artwork (five states) is in **reference/pik/**.
+The working prototype is the reference for every visual and interaction decision. It ships as **reference/daylight-reference.html** in this repo and runs in any browser with fake data. Pik's original artwork (five states) is in **reference/pik/**. The Phase 6 screens (cooking mode, house history, freeze smarts) are in **reference/daylight-features-reference.html**, a superset of the main reference.
 
 What Claude Code builds:
 
@@ -39,6 +39,10 @@ These are settled. Claude Code should not revisit them without asking Tyler.
 | Lights | Wemo (local) and Leviton | WeMo; Leviton via Matter or HACS |
 | Bills and deliveries | A Gmail label read over IMAP, sorted by Claude | IMAP + AI Task |
 | Personality | Warm, dry wit. Humor only on low-stakes cards; urgent cards are plain | Prompt + card copy |
+| Household | Tyler (Home Assistant owner, admin) and Charlie (his own Home Assistant login, not an admin) | Home Assistant users |
+| Pik on phones | Tyler and Charlie each text Pik from their own Claude app (a "Pik" project with the Home Assistant connector). Chats stay private to each person; what they share is the house: feed, house history, reminders, recipes | Model Context Protocol Server (core) via Home Assistant Cloud |
+| House history | A shared log of what got done, by whom and when, plus a short list of house facts | Local Calendar + Local To-do |
+| Cooking mode | Recipes sent from either phone open step by step on the kitchen screen, and steps with a time start a timer | Feed item + `input_number.cook_step` |
 
 ## Architecture
 
@@ -59,6 +63,11 @@ These are settled. Claude Code should not revisit them without asking Tyler.
                                         ^
                                         v
                                  Cloud: HA Cloud (speech in/out), Anthropic API (Claude)
+                                        ^
+                                        |  MCP Server, through the HA Cloud URL
+                                 Tyler's Claude app  ·  Charlie's Claude app
+                                 (each a private "Pik" project; both read and
+                                  write the same house)
 ```
 
 The card never talks to a device directly. It reads entities and the feed from Home Assistant, and every button or voice request goes back through Home Assistant as a script, so all the rules live in one place. The Echo Show only takes text commands; it holds no logic.
@@ -185,7 +194,9 @@ Every bubble item is a row in a Home Assistant **Local To-do** list named `House
 | Power's out (urgent) | `grid_status` goes off | Automation |
 | Power's back | `grid_status` goes on after an outage | Automation |
 | Plant groups need water | Any group's moisture below its threshold for 30 min | Automation, one combined card |
-| First freeze tonight | Forecast low ≤ 32°F | Automation, once per evening |
+| Freeze tonight (with cold spots and garden steps) | Forecast low ≤ 32°F; a hard freeze is ≤ 25°F | Automation at 3 PM + AI Task writes it |
+| Recipe sent from a phone | `script.recipe_send` from either Claude app | Script |
+| Something logged from a phone ("Charlie changed the furnace filter") | `script.history_add` from a Claude app, when the item is worth telling the other person | Script |
 | Nobody's home, heat at 70° | Everyone away 30 min and heat ≥ 68° | Automation |
 | Bills, price increases, deliveries | New email under the Gmail label | IMAP + AI Task (Claude) |
 | Trash goes out | Tuesday 8:00 AM | Automation |
@@ -262,6 +273,58 @@ If `kind` isn't `ignore`, it posts a feed card. Bills get a "Remind me the day b
 
 **Cost guardrails.** Local intents first; AI Task only on new labeled email and the weekly report. Expect a few dollars a month, and keep the spending cap as the backstop.
 
+## House history, cooking mode and freeze smarts
+
+These come from Tyler and Charlie's own wish list. They are Phase 6 and must not slow down Phases 0 to 5. The reference for every screen is **reference/daylight-features-reference.html** (tap "Simulate event" for the recipe and furnace-filter cards; the Home sheet has a House history button).
+
+**House history**
+
+- A Local Calendar named `House history`. Each entry is an all-day event: the summary is what happened ("Furnace filter changed"), and the description holds who and the details ("Charlie · 16×25×1").
+- `script.history_add(what, detail)`: adds today's entry. It records who from the calling user (`context.user_id` mapped to Tyler or Charlie); from the kitchen screen it records "Kitchen screen." Exposed to Assist, so Pik on the screen and Pik in both Claude apps can use it.
+- `script.history_lookup(search, days_back)`: returns matching entries, newest first, so Claude can answer "when did we last change the furnace filter?" with a date and a name.
+- Watering logs ("Watered" taps) and finished recipes add entries automatically.
+- **Good to know:** a Local To-do list named `House facts`. Each item's summary is the fact's name ("Furnace filter") and its description is the value ("16×25×1, every 3 months"). Either person adds facts by telling Pik.
+- **The sheet:** opens from the House history button on the Home sheet, and from a "See the history" button on any history card. It shows the 7 newest entries with a colored chip for who did it (Charlie green, Tyler purple, others gray), and the facts list beside them.
+- A logged item becomes a feed card only when it's worth telling the other person (a filter change yes, a watering tap no). Claude decides, and the card says who logged it.
+
+**Cooking mode**
+
+- **Sending a recipe:** in either Claude app, paste a link or a recipe and say "send this to the kitchen." Claude rewrites it into short steps and calls `script.recipe_send(title, steps, from)`. Each step has a short name, the instruction, its ingredients, and an optional timer (label + minutes). The script posts a feed card ("Charlie sent tonight's recipe") whose JSON holds the whole recipe.
+- **The sheet:** steps listed on the left, the current step large on the right with its ingredients, live timers, and Back / Next step. The last step's button is "Finish · log it", which closes the sheet and adds the meal to the house history. The sheet does not drift home after 90 seconds like the others.
+- **Timers start themselves:** reaching a step with a timer calls `script.kitchen_timer` with that step's label and minutes, once per step. These are the same two timers voice uses, so they also show as chips by Pik.
+- **Voice:** "Pik, let's cook Charlie's recipe" opens it. "Next step" and "go back" call `script.cook_step(direction)`, which moves `input_number.cook_step`; taps and voice stay in sync because the card reads that helper.
+
+**Freeze smarts (Reno)**
+
+- At 3 PM, if the forecast low is ≤ 32°F, an automation sends AI Task the low, the hour it hits, whether Rachio and B-Hyve skipped, and the `cold_spots` list from the config package. Claude writes one card in Pik's voice.
+- Starting `cold_spots`: sun room glass (majesty palm, sago palm); the garden beds (cover before dark). At ≤ 25°F, add the outdoor hose bibs on the season's first hard freeze.
+- Buttons: "Done" and "Remind me at 4" (a 60-minute snooze, or until 4 PM). "What's tonight looking like?" answers with the same facts.
+
+## Pik in Tyler's and Charlie's Claude apps
+
+Each of them texts Pik from the Claude app on their phone, the way Tyler texts his Pik in ChatGPT. Both talk to the same house. Neither sees the other's chats.
+
+- **The connection:** turn on Home Assistant's **Model Context Protocol Server** integration. Claude connects from the cloud, so it uses the Home Assistant Cloud remote URL. It sees and controls only what is exposed to Assist (see "Expose only what Pik needs").
+- **Two Home Assistant logins:** Tyler (owner, admin) and Charlie (a regular user, not an admin). Each signs in with their own login when adding the connector, so Home Assistant knows who did what.
+- **In each Claude account:** add the Home Assistant custom connector, then make a project named "Pik" with the instructions below. Charlie can use a free Claude account; free accounts allow one custom connector, which is all he needs.
+- **What's shared:** the feed, house history, house facts, reminders and recipes, because they all live in Home Assistant. **What's private:** each person's chats, and everything else in their Claude account.
+- **Cost:** chats in the Claude apps use each person's Claude plan, not the Anthropic API key.
+
+**Pik's instructions for the Claude app projects (draft)**
+
+```text
+You are Pik, the voice of Tyler and Charlie's house in Reno. You're texting from
+the house, so keep it short and warm, with a dry wit on low-stakes things.
+You can see and run the house through the Home Assistant connector. Use it; never
+guess a sensor value.
+- "We did X" or "log X": script.history_add. "When did we last X": script.history_lookup.
+- A recipe or recipe link to send to the kitchen: rewrite it into short steps with
+  ingredients and timers, then script.recipe_send.
+- Reminders: script.add_reminder. Anything the other person should know: post it
+  to the feed with script.feed_post.
+Never unlock, open, buy or pay for anything. Temperatures in °F.
+```
+
 ## Build phases
 
 Build in this order. Each phase ends with Tyler checking it on the Chromebook, and the next phase starts only after he signs off. Phase 0 needs no hub, so it can start today.
@@ -310,6 +373,14 @@ pik-house/
 - [ ] Email cards from the Gmail label, and the Sunday report.
 - [ ] Done when: a test bill email becomes a card within 2 minutes with the right amount and due date; junk is ignored.
 
+**Phase 6: made for Tyler and Charlie**
+
+- [ ] House history calendar, House facts list, `script.history_add` and `script.history_lookup`, and the history sheet.
+- [ ] Cooking mode: `script.recipe_send`, `script.cook_step`, `input_number.cook_step`, the cooking sheet, timers that start themselves.
+- [ ] Freeze smarts: the 3 PM automation, AI Task card and `cold_spots` list.
+- [ ] Model Context Protocol Server through Home Assistant Cloud; Charlie's login; written setup steps for both Claude apps.
+- [ ] Done when: Charlie logs "changed the furnace filter" from his phone and the card says it was him; Tyler asks his own Pik when it was last changed and gets the date and the name; a recipe link sent from a phone becomes steps on the kitchen screen and its timers start themselves; a test forecast of 24°F produces the freeze card with the sun room plants.
+
 ## Things to verify before relying on them
 
 These came from research, not from testing on Tyler's hardware. Claude Code checks each one against the current docs or a live install, writes the answer into this table, and tells Tyler if a plan has to change.
@@ -325,6 +396,10 @@ These came from research, not from testing on Tyler's hardware. Claude Code chec
 | Does the Ecowitt integration show each WH51 as its own moisture sensor through the GW1200? | Plant groups | Add channels one at a time and label them in Home Assistant |
 | Can Rachio and B-Hyve be paused or put in standby from Home Assistant? | "Pause until March" | Show status only; the button opens the vendor app |
 | Chromebook kiosk: does Chrome full screen + kiosk mode stay awake and keep the mic on all day? | Always-on counter screen | Try the Kiosk Satellite Android app on the Chromebook; set the screen to stay on while charging |
+| Does the claude.ai custom connector sign in to the core MCP Server integration through the Home Assistant Cloud URL? | Pik in both Claude apps | Use the HA-MCP custom component's Home Assistant Cloud webhook URL |
+| When a script runs from the MCP Server, does `context.user_id` show which person called it? | "Charlie changed it" vs "Tyler changed it" | Add a `who` field to `script.history_add` and have each Pik project fill it in |
+| Can a script exposed to Assist return data (a response) that Claude reads? | `script.history_lookup` answers questions | Expose the House history calendar to Assist and let Claude read events directly |
+| Is a long JSON recipe safe in a to-do item's description? | `script.recipe_send` | Store the steps in a separate `Recipe` to-do list, one item per step |
 
 ## What Tyler does
 
@@ -344,6 +419,8 @@ and a short list of anything you couldn't match.
 4. **Open the preview link on the Chromebook** in tent mode, full screen, and tap through everything. Send notes back to Claude Code until it feels right.
 5. ~~Send Claude your plant list~~ Done: 83 plants in 7 groups, in the Pik House Plants sheet. When the sensors arrive, put each one in its group's indicator plant and note its channel in the sheet's Groups tab.
 
+6. **Charlie makes a Claude account** (free is fine). Nothing else for him until the hub is set up.
+
 **When the Green arrives** (Claude walks through each step in chat)
 
 1. Plug in the Green, create the owner account, and start the Home Assistant Cloud trial.
@@ -351,3 +428,6 @@ and a short list of anything you couldn't match.
 3. Add the device integrations: Ecowitt, Ecobee, Powerwall, Ring, Rachio, B-Hyve, WeMo, Leviton, Alexa Devices.
 4. Install HACS, then Voice Satellite, and set up the Chromebook as a satellite.
 5. Back to Claude Code: "Build Phase 1." Then Phases 2 through 5, one at a time, checking each on the Chromebook.
+6. Make Charlie's Home Assistant login (not an admin) and turn on the Model Context Protocol Server integration.
+7. Each of you adds the Home Assistant connector in your own Claude app and makes a "Pik" project with the instructions above. Claude gives you both the exact steps.
+8. Back to Claude Code: "Build Phase 6."
