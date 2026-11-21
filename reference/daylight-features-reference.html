@@ -511,7 +511,7 @@ body{margin:0}
 <div class="lead">{{routeHead}}</div>
 <sc-for list="{{routeStops}}" as="r" hint-placeholder-count="2"><div class="rstop"><span class="stopn">{{r.n}}</span>{{r.room}}<span class="rp">{{r.plants}} plants</span></div></sc-for>
 <sc-if value="{{hasRoute}}" hint-placeholder-val="{{ true }}"><button type="button" class="bigbtn ink" onclick="{{logRoute}}">{{routeBtn}}</button></sc-if>
-<p class="note">One sensor sits in each group's thirstiest plant. When it dips below its line (the tick on the bar), the whole group gets water.</p>
+<p class="note">One sensor sits in each group's thirstiest plant. Below its line (the tick), the group needs water. When it jumps back up, I log the group as watered, so water that plant last.</p>
 </div>
 </div>
 </div>
@@ -635,6 +635,7 @@ var ALL = {
   plantdoc: { cat: "plant", label: "Plant doctor · photo from Tyler", title: "The bath fiddle leaf is probably too wet", detail: "Brown patches spreading from the edges of the low leaves usually mean soggy roots. Let it dry two extra days and move it off the cold floor by the window. I'll ask for a new photo Friday.", primary: "Got it", secondary: "See the history", secPage: "history", arrive: "docLog", toast: "Noted. Photo check on Friday." },
   fixit: { cat: "fix", label: "Fix-it · photo from Charlie", title: "That bathroom faucet drip is a cartridge swap", detail: "It's a single-handle faucet, so the cartridge inside is the usual culprit. 7 steps, about 30 minutes, and one part from the hardware store.", primary: "Start the fix", secondary: "Later", fx: "fixit", toast: "Let's fix it." },
   sticker: { cat: "history", label: "Good to know · photo from Tyler", title: "Saved the furnace's model sticker", detail: "Model, serial and install date are in the house facts. Its warranty runs through 2031. Next time, just ask me.", primary: "Nice", secondary: "See the history", secPage: "history", arrive: "stickerLog", toast: "Filed under Good to know." },
+  autowater: { cat: "plant", label: "Plants · logged by the sensor", title: "Saw the Bedroom & office group get watered", detail: "The spider plant jumped from 19% to 46% a minute ago, so I logged the group and took it off the route. Trees & palms still needs a drink.", primary: "Nice", secondary: "That wasn't the whole group", secMsg: "Okay. Bedroom & office stays on the list until its next watering.", secFx: "unwater", arrive: "autoWater", toast: "Logged without lifting a finger." },
   suggest: { cat: "light", label: "Pik noticed · a suggestion", title: "Want the kitchen lights on at 5:30?", detail: "You've turned them on between 5:15 and 5:45 on 9 of the last 14 evenings. I can do it for you, only when someone's home.", primary: "Yes, do that", secondary: "No thanks", secMsg: "Got it. I won't suggest that one again.", fx: "kitchenAuto", toast: "Done. Kitchen lights at 5:30 when someone's home." },
   sunshine: { cat: "energy", label: "Energy · free power", title: "Free power for the next 3 hours", detail: "The Powerwall's full and the panels are sending 3.2 kW back to the grid. Good time to run the laundry or the dishwasher.", primary: "Got it", secondary: "Not today", secMsg: "Okay. No more sunshine tips today.", toast: "Enjoy the free laundry." },
   leaving: { cat: "home", label: "Coming & going · Charlie left last", title: "Nobody's home, so I tidied up", detail: "The living room lamps were on, so I turned them off and dropped the heat to 64°. I'll warm it back up when one of you heads home.", primary: "Thanks", secondary: "Undo", secMsg: "Put back: lamps on, heat at 70°.", secFx: "awayUndo", arrive: "awayOn", toast: "You're welcome. The house is resting." },
@@ -657,7 +658,7 @@ var ALL = {
   report: { cat: "home", label: "Weekly report", title: "Your Sunday house report is ready", detail: "2 bills due, 1 price change, nothing broken. Solar covered 71% of the house this week.", primary: "Open report", toast: "Opening this week's report." }
 };
 var INITIAL = ["freeze", "plants", "internet"];
-var QUEUE = ["recipe", "calendar", "plantdoc", "suggest", "leaving", "arriving", "filter", "doorbell", "sunshine", "health", "netdown", "netup", "fixit", "remind", "sticker", "trash", "ferns", "outage", "restore", "garden", "smoke", "soil", "report"];
+var QUEUE = ["recipe", "autowater", "calendar", "plantdoc", "suggest", "leaving", "arriving", "filter", "doorbell", "sunshine", "health", "netdown", "netup", "fixit", "remind", "sticker", "trash", "ferns", "outage", "restore", "garden", "smoke", "soil", "report"];
 var QUESTIONS = ["Hands-free for 30 minutes.", "What's coming up this week?", "When did we last change the furnace filter?", "Let's cook Charlie's recipe.", "Set a pasta timer for one minute.", "Play some Robyn.", "What's tonight looking like?", "Put Judy Justice back on.", "How's the Powerwall doing?", "Which plants need water?", "Turn off the porch light."];
 var PLAY = "M8 5v14l11-7z";
 var PAUSE = "M7 5h4v14H7zM13 5h4v14h-4z";
@@ -908,6 +909,8 @@ class Component extends DCLogic {
     if (fx === "smokeOn") this.setState({ smoky: true });
     if (fx === "smokeOff") this.setState({ smoky: false });
     if (fx === "cook") this.startCook("cook");
+    if (fx === "autoWater") { var mw = Object.assign({}, s.moist); mw.bedroom = 46; this.setState({ moist: mw }); this.log("Watered: Bedroom & office", "Spider plant 19% → 46% · seen by the sensor", "Sensor"); }
+    if (fx === "unwater") { var mu = Object.assign({}, s.moist); mu.bedroom = 19; this.setState({ moist: mu }); }
     if (fx === "kitchenAuto") this.log("New routine: kitchen lights at 5:30 when someone's home", "Pik suggested it · approved on the kitchen screen", "Kitchen screen");
     if (fx === "awayOn") this.setState({ lights: Object.assign({}, s.lights, { living: false }), setpoint: 64 });
     if (fx === "awayUndo") this.setState({ lights: Object.assign({}, s.lights, { living: true }), setpoint: 70 });
