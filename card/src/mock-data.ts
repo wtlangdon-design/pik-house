@@ -35,16 +35,23 @@ export const ICON: Record<string, string> = {
   water: "M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z",
 };
 
-// Sample groups in walking order. Swap in Tyler's real rooms and indicator plants later.
+// Tyler's real watering groups (Nov 21), in route order. Moisture values are sample data.
+// Starting thresholds (%) come from SPEC.md; in live mode they come from input_number helpers.
 export const GROUPS: Group[] = [
-  { id: "kitchen", room: "Kitchen", ind: "basil", plants: 3, thr: 25, m: 15 },
-  { id: "dining", room: "Dining room", ind: "pothos", plants: 6, thr: 24, m: 43 },
-  { id: "living", room: "Living room", ind: "Boston fern", plants: 8, thr: 30, m: 38 },
-  { id: "office", room: "Office", ind: "fiddle leaf fig", plants: 6, thr: 25, m: 18 },
-  { id: "bedroom", room: "Bedroom", ind: "snake plant", plants: 7, thr: 15, m: 41 },
-  { id: "guest", room: "Guest room", ind: "monstera", plants: 4, thr: 28, m: 34 },
-  { id: "sunroom", room: "Sunroom", ind: "calathea", plants: 6, thr: 35, m: 61 },
+  { id: "kitchen", room: "Kitchen", ind: "nerve plant", plants: 14, thr: 30, m: 36 },
+  { id: "aroids", room: "Big aroids", ind: "monstera by the shoe rack", plants: 11, thr: 28, m: 41 },
+  { id: "bedroom", room: "Bedroom & office", ind: "spider plant", plants: 8, thr: 28, m: 19 },
+  { id: "trees", room: "Trees & palms", ind: "bedroom fiddle leaf fig", plants: 12, thr: 25, m: 21 },
+  { id: "tough", room: "Tough guys", ind: "big ZZ in the yellow pot", plants: 9, thr: 12, m: 30 },
+  { id: "jungle", room: "Jungle cacti", ind: "blooming Christmas cactus", plants: 10, thr: 20, m: 33 },
+  { id: "desert", room: "Desert cacti", ind: "middle succulent trough", plants: 18, thr: 8, m: 14 },
 ];
+
+// Plants outside the groups, with no sensor: the pitcher plant (weekly reminder card instead).
+export const UNGROUPED_PLANTS = 1;
+
+/** All of Tyler's plants: 82 in the seven groups plus the pitcher plant = 83, as in SPEC.md. */
+export const PLANT_TOTAL = GROUPS.reduce((a, g) => a + g.plants, 0) + UNGROUPED_PLANTS;
 
 export const ALL: Record<string, FeedCard> = {
   freeze: { cat: "weather", label: "Weather · Rachio", title: "First freeze tonight. Low of 28°", detail: "Rachio already skipped tomorrow's yard watering. Bring the 3 patio pots in before dark.", primary: "Done", toast: "Nice. The patio pots are safe." },

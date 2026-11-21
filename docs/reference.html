@@ -423,7 +423,7 @@ body{margin:0}
 <sc-if value="{{onPlants}}" hint-placeholder-val="{{ false }}">
 <div class="sheet">
 <div class="handle"></div>
-<div class="shead"><span class="eb">Plants · 40 in 7 groups</span><h2 class="stitle">{{plHead}}</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
+<div class="shead"><span class="eb">Plants · 83 in 7 groups</span><h2 class="stitle">{{plHead}}</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
 <div class="sbody psb">
 <div class="plist">
 <sc-for list="{{groups}}" as="g" hint-placeholder-count="7">
@@ -483,13 +483,14 @@ var ICON = {
 };
 // Sample groups in walking order. Swap in Tyler's real rooms and indicator plants later.
 var GROUPS = [
-  { id: "kitchen", room: "Kitchen", ind: "basil", plants: 3, thr: 25, m: 15 },
-  { id: "dining", room: "Dining room", ind: "pothos", plants: 6, thr: 24, m: 43 },
-  { id: "living", room: "Living room", ind: "Boston fern", plants: 8, thr: 30, m: 38 },
-  { id: "office", room: "Office", ind: "fiddle leaf fig", plants: 6, thr: 25, m: 18 },
-  { id: "bedroom", room: "Bedroom", ind: "snake plant", plants: 7, thr: 15, m: 41 },
-  { id: "guest", room: "Guest room", ind: "monstera", plants: 4, thr: 28, m: 34 },
-  { id: "sunroom", room: "Sunroom", ind: "calathea", plants: 6, thr: 35, m: 61 }
+  // Tyler's real watering groups (Nov 21). Moisture values are sample data.
+  { id: "kitchen", room: "Kitchen", ind: "nerve plant", plants: 14, thr: 30, m: 36 },
+  { id: "aroids", room: "Big aroids", ind: "monstera by the shoe rack", plants: 11, thr: 28, m: 41 },
+  { id: "bedroom", room: "Bedroom & office", ind: "spider plant", plants: 8, thr: 28, m: 19 },
+  { id: "trees", room: "Trees & palms", ind: "bedroom fiddle leaf fig", plants: 12, thr: 25, m: 21 },
+  { id: "tough", room: "Tough guys", ind: "big ZZ in the yellow pot", plants: 9, thr: 12, m: 30 },
+  { id: "jungle", room: "Jungle cacti", ind: "blooming Christmas cactus", plants: 10, thr: 20, m: 33 },
+  { id: "desert", room: "Desert cacti", ind: "middle succulent trough", plants: 18, thr: 8, m: 14 }
 ];
 var ALL = {
   freeze: { cat: "weather", label: "Weather · Rachio", title: "First freeze tonight. Low of 28°", detail: "Rachio already skipped tomorrow's yard watering. Bring the 3 patio pots in before dark.", primary: "Done", toast: "Nice. The patio pots are safe." },
@@ -672,8 +673,8 @@ class Component extends DCLogic {
     var id = s.queue[0];
     var rest = s.queue.slice(1);
     if (id === "ferns") {
-      var g = GROUPS.find((x) => x.id === "living");
-      var mm = Object.assign({}, s.moist); mm.living = g.thr - 8;
+      var g = GROUPS.find((x) => x.id === "kitchen");
+      var mm = Object.assign({}, s.moist); mm.kitchen = g.thr - 12;
       this.setState({ moist: mm, cards: ["plants"].concat(s.cards.filter((x) => x !== "plants")), queue: rest, newest: "plants", focus: "plants" });
       return;
     }
@@ -774,8 +775,8 @@ class Component extends DCLogic {
         c = {
           cat: "plant",
           label: "Plants · indicator sensors",
-          title: one ? (thirsty[0].id === "living" ? "The ferns are being dramatic" : "The " + thirsty[0].room.toLowerCase() + " group is thirsty") : thirsty.length + " plant groups need water",
-          detail: one ? "The " + thirsty[0].ind + " is at " + s.moist[thirsty[0].id] + "%. Water all " + thirsty[0].plants + " plants in the " + thirsty[0].room.toLowerCase() + "." : thirsty.map((g) => g.room).join(" → ") + ". " + plantsNeeded + " plants, about " + plantsNeeded + " minutes. Tap Plants for the route.",
+          title: one ? (thirsty[0].id === "kitchen" ? "The nerve plant has fainted again" : "The " + thirsty[0].room.toLowerCase() + " group is thirsty") : thirsty.length + " plant groups need water",
+          detail: one ? "The " + thirsty[0].ind + " is at " + s.moist[thirsty[0].id] + "%. Water all " + thirsty[0].plants + " plants in the " + thirsty[0].room.toLowerCase() + " group" + (thirsty[0].id === "kitchen" ? ". It perks up within the hour." : ".") : thirsty.map((g) => g.room).join(" → ") + ". " + plantsNeeded + " plants, about " + plantsNeeded + " minutes. Tap Plants for the route.",
           primary: one ? "Watered" : "Watered them all",
           secondary: "Snooze 1 day",
           toast: one ? "Logged: " + thirsty[0].room.toLowerCase() + " group watered." : "Logged: " + thirsty.length + " groups watered."
@@ -877,7 +878,7 @@ class Component extends DCLogic {
       waiting: waiting,
       isEmpty: count === 0,
       emptyT: quiet ? "Nothing urgent" : "All caught up",
-      emptyS: quiet ? (waiting > 0 ? waiting + (waiting === 1 ? " thing is" : " things are") + " waiting for 7 AM. Sleep well." : "Nothing is waiting. Sleep well.") : "Even the ferns have nothing to say.",
+      emptyS: quiet ? (waiting > 0 ? waiting + (waiting === 1 ? " thing is" : " things are") + " waiting for 7 AM. Sleep well." : "Nothing is waiting. Sleep well.") : "Even the nerve plant has nothing to say.",
       cards: cards,
       demoLabel: s.queue.length ? "Simulate event" : "Restart demo",
       next: () => this.next(),
@@ -914,7 +915,7 @@ class Component extends DCLogic {
       pcountCls: thirsty.length ? "" : "ok",
       routeCls: thirsty.length ? "route" : "route clear",
       routeLbl: thirsty.length ? "Watering route" : "All caught up",
-      routeTxt: thirsty.length ? thirsty.map((g) => g.room).join(" → ") : "The ferns can wait.",
+      routeTxt: thirsty.length ? thirsty.map((g) => g.room).join(" → ") : "The nerve plant can wait.",
       hasRoute: thirsty.length > 0,
       routeBtn: routeOn ? "Log the whole route" : "Log it",
       logRoute: () => {

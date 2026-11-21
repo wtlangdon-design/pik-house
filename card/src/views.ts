@@ -72,7 +72,7 @@ ${v.showEssentials ? html`<button type="button" class="bigbtn" @click=${v.essent
 export function plantsSheet(v: Vals) {
   return html`<div class="sheet">
 <div class="handle"></div>
-<div class="shead"><span class="eb">Plants · 40 in 7 groups</span><h2 class="stitle">${v.plHead}</h2><button type="button" class="done" @click=${v.goHome}>Done</button></div>
+<div class="shead"><span class="eb">${v.plantsEb}</span><h2 class="stitle">${v.plHead}</h2><button type="button" class="done" @click=${v.goHome}>Done</button></div>
 <div class="sbody psb">
 <div class="plist">
 ${repeat(v.groups, (g) => g.id, (g) => html`<div class=${g.cls}>

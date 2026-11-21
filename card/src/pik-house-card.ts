@@ -9,7 +9,7 @@ import { keyed } from "lit/directives/keyed.js";
 import { adjustStyles, daylightStyles, hostStyles } from "./styles";
 import { pikArt } from "./pik-art";
 import { energySheet, plantsSheet, homeSheet } from "./views";
-import { ALL, CAP, GROUPS, INITIAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type PikState } from "./mock-data";
+import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type PikState } from "./mock-data";
 
 const FONTS = "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap";
 
@@ -305,8 +305,8 @@ export class PikHouseCard extends LitElement {
     const id = s.queue[0];
     const rest = s.queue.slice(1);
     if (id === "ferns") {
-      const g = GROUPS.find((x) => x.id === "living")!;
-      const mm = Object.assign({}, s.moist); mm.living = g.thr - 8;
+      const g = GROUPS.find((x) => x.id === "kitchen")!;
+      const mm = Object.assign({}, s.moist); mm.kitchen = g.thr - 12;
       this.setState({ moist: mm, cards: ["plants"].concat(s.cards.filter((x) => x !== "plants")), queue: rest, newest: "plants", focus: "plants" });
       return;
     }
@@ -413,8 +413,8 @@ export class PikHouseCard extends LitElement {
         c = {
           cat: "plant",
           label: "Plants · indicator sensors",
-          title: one ? (thirsty[0].id === "living" ? "The ferns are being dramatic" : "The " + thirsty[0].room.toLowerCase() + " group is thirsty") : thirsty.length + " plant groups need water",
-          detail: one ? "The " + thirsty[0].ind + " is at " + s.moist[thirsty[0].id] + "%. Water all " + thirsty[0].plants + " plants in the " + thirsty[0].room.toLowerCase() + "." : thirsty.map((g) => g.room).join(" → ") + ". " + plantsNeeded + " plants, about " + plantsNeeded + " minutes. Tap Plants for the route.",
+          title: one ? (thirsty[0].id === "kitchen" ? "The nerve plant has fainted again" : "The " + thirsty[0].room.toLowerCase() + " group is thirsty") : thirsty.length + " plant groups need water",
+          detail: one ? "The " + thirsty[0].ind + " is at " + s.moist[thirsty[0].id] + "%. Water all " + thirsty[0].plants + " plants in the " + thirsty[0].room.toLowerCase() + " group" + (thirsty[0].id === "kitchen" ? ". It perks up within the hour." : ".") : thirsty.map((g) => g.room).join(" → ") + ". " + plantsNeeded + " plants, about " + plantsNeeded + " minutes. Tap Plants for the route.",
           primary: one ? "Watered" : "Watered them all",
           secondary: "Snooze 1 day",
           toast: one ? "Logged: " + thirsty[0].room.toLowerCase() + " group watered." : "Logged: " + thirsty.length + " groups watered.",
@@ -512,7 +512,7 @@ export class PikHouseCard extends LitElement {
       peekTitle: count > 1 ? cards[(curIdx + 1) % count].title : "",
       emptyEb: quiet ? "Quiet hours" : "Pik's list",
       emptyT: quiet ? "Nothing urgent" : "All caught up",
-      emptyS: quiet ? (waiting > 0 ? waiting + (waiting === 1 ? " thing is" : " things are") + " waiting for 7 AM. Sleep well." : "Nothing is waiting. Sleep well.") : "Even the ferns have nothing to say.",
+      emptyS: quiet ? (waiting > 0 ? waiting + (waiting === 1 ? " thing is" : " things are") + " waiting for 7 AM. Sleep well." : "Nothing is waiting. Sleep well.") : "Even the nerve plant has nothing to say.",
 
       // timers
       tmodeCls: tlist.length ? "tmode" : "",
@@ -550,7 +550,7 @@ export class PikHouseCard extends LitElement {
       bfillStyle: "width:" + e.pct + "%",
       pebEnLine: s.outage ? "Grid's down · tap for details" : dark ? "The battery is running the house" : "Charging from the sun",
       pebPlCls: "pv" + (thirsty.length ? " dry" : ""),
-      plBig: thirsty.length ? String(thirsty.length) : "40",
+      plBig: thirsty.length ? String(thirsty.length) : String(PLANT_TOTAL),
       plBigSub: thirsty.length ? (thirsty.length === 1 ? "group thirsty" : "groups thirsty") : "plants happy",
       gdots: GROUPS.map((g) => { const m = s.moist[g.id]; return m < g.thr ? "dry" : m >= 55 ? "wet" : ""; }),
       plShort: thirsty.length ? thirsty.map((g) => g.room).join(" → ") : "Everyone's had a drink",
@@ -587,6 +587,7 @@ export class PikHouseCard extends LitElement {
 
       // plants sheet
       groups,
+      plantsEb: "Plants · " + PLANT_TOTAL + " in " + GROUPS.length + " groups",
       plHead: thirsty.length ? thirsty.length + " thirsty" : "All happy",
       routeLbl: thirsty.length ? "Watering route" : "All caught up",
       routeHead: thirsty.length > 1 ? thirsty.length + " stops, about " + plantsNeeded + " minutes" : thirsty.length ? "One stop, about " + plantsNeeded + " minutes" : "Nothing to water today",
@@ -681,7 +682,7 @@ ${v.np ? html`<div class="peb np">
 <span class="ps">${v.pebEnLine}</span>
 </button>
 <button type="button" class="peb" @click=${v.openPlants}>
-<span class="eb">Plants · 7 groups</span>
+<span class="eb">Plants · ${GROUPS.length} groups</span>
 <span class=${v.pebPlCls}>${v.plBig}<small>${v.plBigSub}</small></span>
 <span class="gd">${v.gdots.map((c) => html`<i class=${c}></i>`)}</span>
 <span class="ps">${v.plShort}</span>
