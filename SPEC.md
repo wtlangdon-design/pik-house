@@ -230,7 +230,9 @@ Tapping Pik starts a conversation on that satellite, the same as the wake word. 
 **Timers.** "Set a pasta timer for 10 minutes" goes through Voice Satellite, which supports voice timers. The card draws its own chips (countdown, ring, Stop), so it needs each timer's name and end time.
 
 - **Plan A:** read them from Voice Satellite if it exposes active timers to the frontend.
-- **Plan B:** two `timer` helpers plus two `input_text` labels, with a `script.kitchen_timer` exposed to Assist. Claude calls the script, and the card reads the helpers.
+- **Plan B:** a pool of `timer` helpers (start with 8) plus a matching `input_text` label for each, with a `script.kitchen_timer` exposed to Assist that takes the first free one. Claude calls the script, and the card reads the helpers. Adding more helpers raises the ceiling, so there is no practical limit.
+- **No silent replacing.** A new timer never cancels a running one. If every helper is busy (Plan B only), Pik says so and asks which one to replace.
+- **How they show:** up to three chips next to Pik, soonest first. With more than three, two chips show plus a "+N more timers" pill that opens a Kitchen timers sheet listing all of them. The cooking sheet always lists every running timer.
 - Pick after the check in "Things to verify."
 
 **Music and Judy Justice go to the Echo Show.** Two scripts are exposed to Assist with clear descriptions so Claude knows when to use them:
@@ -300,7 +302,8 @@ House history, cooking and fix-it modes, calendars, reminders, plant doctor, mod
 
 - **Sending a recipe:** in either Claude app, paste a link or a recipe and say "send this to the kitchen." Claude rewrites it into short steps and calls `script.recipe_send(title, steps, from)`. Each step has a short name, the instruction, its ingredients, and an optional timer (label + minutes). The script posts a feed card ("Charlie sent tonight's recipe") whose JSON holds the whole recipe.
 - **The sheet:** steps listed on the left, the current step large on the right with its ingredients, live timers, and Back / Next step. The last step's button is "Finish · log it", which closes the sheet and adds the meal to the house history. The sheet does not drift home after 90 seconds like the others.
-- **Timers start themselves:** reaching a step with a timer calls `script.kitchen_timer` with that step's label and minutes, once per step. These are the same two timers voice uses, so they also show as chips by Pik.
+- **Timers start themselves:** reaching a step with a timer calls `script.kitchen_timer` with that step's label and minutes, once per step. They share the pool with voice timers, so they also show as chips by Pik, and they never replace a running timer.
+- **Leaving and coming back:** closing the sheet (Done) or getting pulled away by an urgent card never resets the recipe. While a recipe or fix-it guide is in progress, the feed keeps a "Back to the soup? You're on step 4 of 8" card at the front of the non-urgent cards, with "Back to it" and "I'm done." Saying "Pik, let's cook Charlie's recipe" again also resumes at the same step. The step and which steps already started their timers live in Home Assistant (`input_number.cook_step` plus a `cook_started` attribute), so a page reload doesn't lose them either. "I'm done" ends the recipe and leaves running timers alone.
 - **Voice:** "Pik, let's cook Charlie's recipe" opens it. "Next step" and "go back" call `script.cook_step(direction)`, which moves `input_number.cook_step`; taps and voice stay in sync because the card reads that helper.
 
 **Fix-it mode**
@@ -446,7 +449,7 @@ These came from research, not from testing on Tyler's hardware. Claude Code chec
 
 | Question | Why it matters | If the answer is no |
 | --- | --- | --- |
-| Does Voice Satellite expose active timers (name, end time) to the frontend or as entities? | The card draws its own timer chips | Plan B: timer helpers + `script.kitchen_timer` |
+| Does Voice Satellite expose active timers (name, end time) to the frontend or as entities, with no cap on how many? | The card draws its own timer chips | Plan B: a pool of timer helpers + `script.kitchen_timer` |
 | Can the card start a conversation on the satellite and mute it? | Tap-to-talk and the mic button | Keep Voice Satellite's own overlay for tap-to-talk; hide the card's mic button |
 | Does the core Alexa Devices integration give the Echo Show a `media_player` with title and play/pause? | The Now playing pebble | Use the Alexa Media Player custom integration (HACS) for the media player only |
 | Does `alexa_devices.send_text_command` start Prime Video shows on an Echo Show ("play Judy Justice on Prime Video")? | The Judy Justice request | Send "open Prime Video" plus the show name, or fall back to an Alexa routine triggered by the text command |
