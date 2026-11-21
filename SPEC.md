@@ -204,7 +204,12 @@ Every bubble item is a row in a Home Assistant **Local To-do** list named `House
 | Plant doctor result | A plant photo sent from a Claude app | `script.feed_post` from the Claude app |
 | Fix-it guide ready | A repair photo sent from a Claude app | `script.guide_send` |
 | Model sticker saved | A sticker photo sent from a Claude app | `script.feed_post` + House facts |
-| Nobody's home, heat at 70° | Everyone away 30 min and heat ≥ 68° | Automation |
+| Nobody's home, so I tidied up (with Undo) | Both phones away 10 min | Automation (replaces heat-away and lamps cards) |
+| Porch light's on for you | A phone heading home, after sunset | Automation |
+| Pik noticed: a suggestion | Sunday logbook review finds a repeat | AI Task, at most 2 a week |
+| Free power for the next 3 hours | Powerwall > 95%, exporting > 2 kW for 15 min | Automation, once a day |
+| House health | Monday 9 AM if anything needs a hand; urgent items right away | Automation |
+| The internet's down / back | `binary_sensor.internet` off for 2 min / back on | Automation, card side |
 | Bills, price increases, deliveries | New email under the Gmail label | IMAP + AI Task (Claude) |
 | Trash goes out | Tuesday 8:00 AM | Automation |
 | Top up the pitcher plant's tray (distilled water) | Weekly, Sunday 10:00 AM | Automation |
@@ -349,6 +354,45 @@ House history, cooking and fix-it modes, calendars, reminders, plant doctor, mod
 - Starting `cold_spots`: sun room glass (majesty palm, sago palm); the garden beds (cover before dark). At ≤ 25°F, add the outdoor hose bibs on the season's first hard freeze.
 - Buttons: "Done" and "Remind me at 4" (a 60-minute snooze, or until 4 PM). "What's tonight looking like?" answers with the same facts.
 
+## Keeping it running
+
+**Backups (set up on day one).** Turn on Home Assistant Cloud's automatic backups during setup: a nightly encrypted copy stored off the Green, keeping the last several. Also keep one local copy on the Green. Restoring onto a new Green brings back every device, automation, helper, the house history and Pik's settings. The backup encryption key gets saved in Tyler's password manager the same day, because a backup can't be restored without it. Test once: restore the latest backup onto a fresh install (or a spare) and confirm it comes back.
+
+**Internet outages.** The Powerwall covers power outages; internet outages need their own behavior.
+
+- What keeps working with no internet: the card and its buttons, Wemo lights, the Ecowitt plant and air sensors, the Powerwall readings, timers and local automations.
+- What stops until it's back: Pik's voice and Claude, Ecobee control, the Echo Show, Ring, calendars, email cards and both Claude apps.
+- The card watches an internet check (`binary_sensor.internet`, a ping to two public hosts). When it goes off for 2 minutes, Pik's label reads **Offline**, its line says what still works, and an "The internet's down" card lists both halves above. Tapping Pik shows "I can't hear you while the internet's down. The buttons still work." instead of starting a conversation.
+- When it's back, an "The internet's back" card says how long it was out, the down card clears itself, and anything that queued up while offline posts normally.
+
+**House health check.** Pik keeps an eye on its own parts.
+
+- Watched: every soil and air sensor's battery and last-seen time; integrations that need a fresh sign-in (Alexa Devices, Ring, Google, Microsoft 365 are the usual ones); the Ecowitt gateway, the Chromebook satellite, and the backup's last success.
+- Monday 9 AM, if anything needs a hand, one "House health" card lists it in plain words with "Show me how" (sends steps to Tyler's phone) and "Tomorrow" (a snooze). Nothing wrong means no card.
+- Right away, not weekly: a backup that failed twice in a row, the Chromebook satellite offline for 30 minutes, or a plant group's sensor silent for 24 hours (its group's thirst alerts would stop).
+
+## Pik notices
+
+These make Pik propose things instead of waiting to be asked. Every suggestion needs a yes; nothing changes the house on a guess.
+
+**Pik suggests automations.**
+
+- Sunday night, an AI Task reads the past 14 days of the logbook for things done by hand (lights, heat, Echo, watering logs) and looks for repeats: same thing, similar time, most days.
+- At most two suggestions a week, each as a card: what it noticed, with numbers ("on 9 of the last 14 evenings"), and what it would do ("only when someone's home"). Buttons: **Yes, do that** and **No thanks**.
+- Yes: the automation is created and labeled "Suggested by Pik," and it's logged to the house history. No: remembered in a `Pik suggestions` list and never offered again.
+- Never suggested: anything with locks, doors, cameras, money, or turning heat off while someone's home.
+
+**Coming and going.** Uses the Home Assistant app's home/away location on both phones; each of you turns it on in your own app.
+
+- **Last one out** (both phones away for 10 minutes): Pik turns off lights left on, sets the heat to 64°, and posts "Nobody's home, so I tidied up" with what it did and **Undo**. A push goes to the person who left last. This replaces the separate "heat-away" and "lamps on" cards.
+- **First one home** (a phone heading home and within about 10 minutes): heat goes back to the normal setpoint. After sunset, the porch light turns on. A quiet card says who's almost home.
+- Not included: garage, doors and locks (out of scope for v1).
+
+**Run on sunshine.**
+
+- When the Powerwall is above 95% and solar is sending more than 2 kW to the grid for 15 minutes, and the forecast says it'll last at least 2 more hours: a "Free power for the next 3 hours" card suggests the laundry or dishwasher. At most once a day, never in quiet hours; "Not today" silences it until tomorrow.
+- Storm days: if the forecast has a winter storm or high wind warning, Pik checks that the Powerwall's Storm Watch is on (or the reserve is high) and says so in a card.
+
 ## Pik in Tyler's and Charlie's Claude apps
 
 Each of them texts Pik from the Claude app on their phone, the way Tyler texts his Pik in ChatGPT. Both talk to the same house. Neither sees the other's chats.
@@ -428,7 +472,8 @@ pik-house/
 **Phase 5: Claude extras**
 
 - [ ] Email cards from the Gmail label, and the Sunday report.
-- [ ] Done when: a test bill email becomes a card within 2 minutes with the right amount and due date; junk is ignored.
+- [ ] House health check (weekly card plus the right-away items) and the internet outage behavior (Offline label, down/back cards).
+- [ ] Done when: a test bill email becomes a card within 2 minutes with the right amount and due date; junk is ignored; unplugging the router shows Offline within 2 minutes while the lights still respond, and plugging it back in clears it; a sensor with its battery pulled shows up in the health card.
 
 **Phase 6: made for Tyler and Charlie**
 
@@ -442,6 +487,14 @@ pik-house/
 - [ ] Meal plan (last): `Dinners` calendar, `script.meal_plan_set`, the 4 PM dinner card and the thaw reminder.
 - [ ] Model Context Protocol Server through Home Assistant Cloud; Charlie's login; written setup steps for both Claude apps.
 - [ ] Done when: Charlie logs "changed the furnace filter" from his phone and the card says it was him; Tyler asks his own Pik when it was last changed and gets the date and the name; a recipe link sent from a phone becomes steps on the kitchen screen and its timers start themselves; a test forecast of 24°F produces the freeze card with the sun room plants; a screenshot of an event sent from Charlie's phone lands on both calendars and Undo removes both; "remind us both at 6" buzzes both phones and posts the card; a fix-it photo becomes steps on the screen.
+
+**Phase 7: Pik notices**
+
+- [ ] Automation suggestions: the Sunday logbook review, the suggestion card, creating approved automations, the `Pik suggestions` list of declined ones.
+- [ ] Coming and going: phone home/away zones, last-one-out with Undo, first-one-home heat and porch light.
+- [ ] Run on sunshine: the surplus card and the storm check.
+- [ ] Done when: after two weeks of real use, Pik makes at least one sensible suggestion and a yes creates a working automation; both phones leaving turns off a lamp and Undo puts it back; a sunny afternoon with a full Powerwall posts the free-power card once.
+
 
 ## Things to verify before relying on them
 
@@ -465,6 +518,9 @@ These came from research, not from testing on Tyler's hardware. Claude Code chec
 | Does Microsoft 365 Calendar (HACS) sign in to Charlie's Outlook account and create and delete events? | Events on Charlie's calendar | Invite Charlie's Outlook address as a guest on the Google event instead (needs the Google Calendar API directly) |
 | Can Home Assistant delete a Google Calendar event it created? | Undo | Undo removes the Outlook copy and posts a card asking Tyler to delete the Google one |
 | Do Companion app pushes arrive as time-sensitive on Charlie's iPhone? | House reminders get through Focus modes | Use a critical alert for reminders marked urgent only |
+| Can an approved suggestion create an automation from inside Home Assistant (the automation config API, called by a script)? | "Yes, do that" on a Pik suggestion | Save it as a disabled draft and post steps for Tyler to turn it on in Settings |
+| Is the Ecobee integration cloud-only, and does Leviton (Matter) keep working offline? | What the Offline card promises | Adjust the offline card's lists to match what actually works |
+| Does the Powerwall integration expose Storm Watch or the backup reserve? | The storm-day check | Card just reminds Tyler to check Storm Watch in the Tesla app |
 
 ## What Tyler does
 
@@ -488,13 +544,13 @@ and a short list of anything you couldn't match.
 
 **When the Green arrives** (Claude walks through each step in chat)
 
-1. Plug in the Green, create the owner account, and start the Home Assistant Cloud trial.
+1. Plug in the Green, create the owner account, and start the Home Assistant Cloud trial. Turn on Home Assistant Cloud's automatic backups right away, and save the backup encryption key in your password manager.
 2. Create an Anthropic API key with a monthly spending cap, and add the Anthropic integration.
 3. Add the device integrations: Ecowitt, Ecobee, Powerwall, Ring, Rachio, B-Hyve, WeMo, Leviton, Alexa Devices.
 4. Install HACS, then Voice Satellite, and set up the Chromebook as a satellite.
 5. Back to Claude Code: "Build Phase 1." Then Phases 2 through 5, one at a time, checking each on the Chromebook.
 6. Make Charlie's Home Assistant login (not an admin) and turn on the Model Context Protocol Server integration.
-7. Install the Home Assistant app on both phones and sign in, each with your own login.
+7. Install the Home Assistant app on both phones and sign in, each with your own login. Allow location so the house knows home/away (for coming and going).
 8. Connect the calendars: Tyler signs in to Google Calendar, and Charlie signs in to Microsoft 365 Calendar (installed through HACS).
 9. Each of you adds the Home Assistant connector in your own Claude app and makes a "Pik" project with the instructions above. Claude gives you both the exact steps. In the Claude app's settings, Charlie allows Reminders and Calendar, and Tyler allows Calendar.
-10. Back to Claude Code: "Build Phase 6."
+10. Back to Claude Code: "Build Phase 6." After two weeks of normal use: "Build Phase 7."
