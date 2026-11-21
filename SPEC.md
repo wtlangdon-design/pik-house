@@ -29,7 +29,7 @@ These are settled. Claude Code should not revisit them without asking Tyler.
 | Face | Pik "Porch Light" artwork (5 states from Tyler) plus a 6th **Heads up** state | In the card |
 | Design | Daylight, locked. Light theme by day, dark after sunset, quiet hours 11 PM to 7 AM | In the card |
 | Music and Judy Justice | Played on the existing Echo Show from Amazon Music and Prime Video. Pik relays requests | Alexa Devices (core) |
-| Plants | 40 plants in 7 watering groups, one Ecowitt WH51 soil sensor per group | Ecowitt (GW1200 gateway) |
+| Plants | 83 plants in 7 watering groups, one Ecowitt WH51 soil sensor per group in its indicator plant (full list: Pik House Plants sheet). The pitcher plant has no sensor: a weekly reminder card instead | Ecowitt (GW1200 gateway) |
 | Air | Ecowitt WH41 PM2.5, outdoors under cover | Ecowitt |
 | Thermostat | Ecobee | Ecobee |
 | Energy | Tesla Powerwall 2 + solar | Tesla Powerwall (local) |
@@ -114,10 +114,23 @@ energy:
   battery_level: sensor.powerwall_charge
   grid_status: binary_sensor.grid_status
   essentials_script: script.essentials_only
-plant_groups:            # walking order = route order
-  - { name: Kitchen, indicator: basil, plants: 3,
+plant_groups:            # route order. Tyler's real groups; sensor entity IDs come from the Ecowitt setup
+  - { name: Kitchen, indicator: nerve plant, plants: 14,
       moisture: sensor.soil_moisture_1, threshold: input_number.thirst_kitchen }
-  # ...one entry per group, 7 total (Tyler's real list replaces these)
+  - { name: Big aroids, indicator: monstera by the shoe rack, plants: 11,
+      moisture: sensor.soil_moisture_2, threshold: input_number.thirst_aroids }
+  - { name: Bedroom & office, indicator: spider plant, plants: 8,
+      moisture: sensor.soil_moisture_3, threshold: input_number.thirst_bedroom }
+  - { name: Trees & palms, indicator: bedroom fiddle leaf fig, plants: 12,
+      moisture: sensor.soil_moisture_4, threshold: input_number.thirst_trees }
+  - { name: Tough guys, indicator: big ZZ in the yellow pot, plants: 9,
+      moisture: sensor.soil_moisture_5, threshold: input_number.thirst_tough }
+  - { name: Jungle cacti, indicator: blooming Christmas cactus, plants: 10,
+      moisture: sensor.soil_moisture_6, threshold: input_number.thirst_jungle }
+  - { name: Desert cacti, indicator: middle succulent trough, plants: 18,
+      moisture: sensor.soil_moisture_7, threshold: input_number.thirst_desert }
+  # Starting thresholds (%): kitchen 30, aroids 28, bedroom 28, trees 25, jungle 20, tough 12, desert 8.
+  # Up to 16 groups: the GW1200 takes 16 sensors, and adding a group is config only.
 lights:
   - { name: Living room, entity: switch.wemo_living_room }
   - { name: Porch, entity: light.leviton_porch }
@@ -176,6 +189,7 @@ Every bubble item is a row in a Home Assistant **Local To-do** list named `House
 | Nobody's home, heat at 70° | Everyone away 30 min and heat ≥ 68° | Automation |
 | Bills, price increases, deliveries | New email under the Gmail label | IMAP + AI Task (Claude) |
 | Trash goes out | Tuesday 8:00 AM | Automation |
+| Top up the pitcher plant's tray (distilled water) | Weekly, Sunday 10:00 AM | Automation |
 | Voice reminders | "Remind me..." | `script.add_reminder`, then automation |
 | Sunday house report | Sunday 9:00 AM | AI Task writes it |
 | Smoky air outside | PM2.5 above 35 for 20 min | Automation |
@@ -328,7 +342,7 @@ and a short list of anything you couldn't match.
 ```
 
 4. **Open the preview link on the Chromebook** in tent mode, full screen, and tap through everything. Send notes back to Claude Code until it feels right.
-5. **Send Claude your plant list** (names, rooms, rough pot sizes) so the 7 groups and their indicator plants are real before Phase 3.
+5. ~~Send Claude your plant list~~ Done: 83 plants in 7 groups, in the Pik House Plants sheet. When the sensors arrive, put each one in its group's indicator plant and note its channel in the sheet's Groups tab.
 
 **When the Green arrives** (Claude walks through each step in chat)
 
