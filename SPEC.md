@@ -161,6 +161,9 @@ Rules:
 
 - **Missing entity = hidden tile, never an error.** If `air_pm25` is absent, the air text disappears; if `echo` is absent, there's no Now playing pebble.
 - **Thresholds live in Home Assistant** as `input_number` helpers (0–100%), so Tyler can tune a thirsty line without touching the card.
+- **Watering is detected automatically.** When a group's sensor rises by at least its jump size within 30 minutes, the whole group counts as watered: its plant card or route stop clears, and the house history gets "Kitchen group watered" with the before and after readings. Jump sizes live in `input_number.water_jump_<group>` (start at 12 points; 5 for Desert cacti and Tough guys, which get little water). If a combined card covered several groups, only the detected ones clear.
+- A quiet confirmation card follows ("Saw the Bedroom & office group get watered"), with "That wasn't the whole group," which puts the group back on the list until its next jump or a manual tap.
+- The **Watered** buttons stay as a backup for out-of-order days. Tip for Tyler and Charlie: water each group's sensor plant last.
 - **Units:** °F, kW, %. Show one decimal for kW and whole numbers everywhere else.
 
 ## The "Needs you" feed
@@ -196,6 +199,7 @@ Every bubble item is a row in a Home Assistant **Local To-do** list named `House
 | Power's out (urgent) | `grid_status` goes off | Automation |
 | Power's back | `grid_status` goes on after an outage | Automation |
 | Plant groups need water | Any group's moisture below its threshold for 30 min | Automation, one combined card |
+| Saw a group get watered | A sensor jumps by its group's jump size within 30 min | Automation; clears that group from the plant card |
 | Freeze tonight (with cold spots and garden steps) | Forecast low ≤ 32°F; a hard freeze is ≤ 25°F | Automation at 3 PM + AI Task writes it |
 | Recipe sent from a phone | `script.recipe_send` from either Claude app | Script |
 | Something logged from a phone ("Charlie changed the furnace filter") | `script.history_add` from a Claude app, when the item is worth telling the other person | Script |
@@ -298,7 +302,7 @@ House history, cooking and fix-it modes, calendars, reminders, plant doctor, mod
 - A Local Calendar named `House history`. Each entry is an all-day event: the summary is what happened ("Furnace filter changed"), and the description holds who and the details ("Charlie · 16×25×1").
 - `script.history_add(what, detail)`: adds today's entry. It records who from the calling user (`context.user_id` mapped to Tyler or Charlie); from the kitchen screen it records "Kitchen screen." Exposed to Assist, so Pik on the screen and Pik in both Claude apps can use it.
 - `script.history_lookup(search, days_back)`: returns matching entries, newest first, so Claude can answer "when did we last change the furnace filter?" with a date and a name.
-- Watering logs ("Watered" taps) and finished recipes add entries automatically.
+- Watering logs (detected by the sensors, or "Watered" taps) and finished recipes add entries automatically.
 - **Good to know:** a Local To-do list named `House facts`. Each item's summary is the fact's name ("Furnace filter") and its description is the value ("16×25×1, every 3 months"). Either person adds facts by telling Pik.
 - **The sheet:** opens from the House history button on the Home sheet, and from a "See the history" button on any history card. It shows the 7 newest entries with a colored chip for who did it (Charlie green, Tyler purple, others gray), and the facts list beside them.
 - A logged item becomes a feed card only when it's worth telling the other person (a filter change yes, a watering tap no). Claude decides, and the card says who logged it.
@@ -464,7 +468,7 @@ pik-house/
 **Phase 3: pebbles and sheets on live data**
 
 - [ ] Energy flow with correct directions, the plant circuit with threshold helpers, home controls.
-- [ ] Done when: the arrows match the Tesla app for a day and a night; a light responds within 1 second; "Watered" clears a group and its card.
+- [ ] Done when: the arrows match the Tesla app for a day and a night; a light responds within 1 second; "Watered" clears a group and its card; pouring water on a sensor plant clears its group within 5 minutes and logs it.
 
 **Phase 4: voice extras**
 
