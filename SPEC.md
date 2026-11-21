@@ -399,6 +399,17 @@ These make Pik propose things instead of waiting to be asked. Every suggestion n
 - When the Powerwall is above 95% and solar is sending more than 2 kW to the grid for 15 minutes, and the forecast says it'll last at least 2 more hours: a "Free power for the next 3 hours" card suggests the laundry or dishwasher. At most once a day, never in quiet hours; "Not today" silences it until tomorrow.
 - Storm days: if the forecast has a winter storm or high wind warning, Pik checks that the Powerwall's Storm Watch is on (or the reserve is high) and says so in a card.
 
+## Second screen: the Echo Show 15
+
+Saying **"Alexa, open Pik"** brings the dashboard up on the wall-mounted Echo Show 15. Alexa's own home screen stays the default; Amazon closes the browser after a while and goes back to it, which suits a shared screen. Reference: **reference/echo-show-15-reference.html**.
+
+- **How it opens:** a private Alexa skill that Claude Code builds (Alexa-hosted, so no AWS account; it lives in Tyler's free Amazon developer account and is never published). Its only job is to open the dashboard URL in the Echo's Silk browser. An Alexa routine maps the exact phrase "open Pik" to the skill, since skill names usually need two words ("Pik House").
+- **Layout:** the same card with an `echo` layout for 1280×720 CSS px (16:9, landscape): a smaller Pik, shorter stage and pebbles, sheets 560 px tall and scrollable. The card picks it from a `?screen=echo` URL parameter, never by guessing.
+- **Touch only:** the Echo's microphone belongs to Alexa, so there's no mic button. Tapping Pik says "On this screen, tap away. To talk to me, use the kitchen screen or your Claude app." A small line under Pik reads "“Alexa, go home” to leave."
+- **Its own login:** a Home Assistant user named "Echo" (not an admin) signs in once in Silk, so the Echo's taps are logged as "Echo screen."
+- **Now playing:** while the dashboard is open on the Echo, it can't also show video; the pebble still controls music.
+- Optional later: open it automatically when someone walks up (the Echo Show 15's own presence detection, through an Alexa routine).
+
 ## Pik in Tyler's and Charlie's Claude apps
 
 Each of them texts Pik from the Claude app on their phone, the way Tyler texts his Pik in ChatGPT. Both talk to the same house. Neither sees the other's chats.
@@ -510,6 +521,9 @@ These came from research, not from testing on Tyler's hardware. Claude Code chec
 | --- | --- | --- |
 | Can the wake-word engine run extra phrase models ("next step," "go back," "repeat that") alongside the wake word, switched on and off by a helper? | Hands-free cooking without sending audio out | Keep the wake word, and add "Hey Pik" continued conversation: after each cooking reply, listen 8 seconds for a follow-up |
 | Can a custom "Hey Pik" wake word be trained and run reliably on the Chromebook satellite? | The wake word | Use a built-in wake word ("Okay Nabu" or "Hey Jarvis") |
+| What is the Echo Show 15's CSS viewport in Silk (expected 1280×720)? | The echo layout | Adjust the echo layout's sizes to match |
+| Does Silk on the Echo Show 15 keep the Home Assistant login and run the card smoothly? | Opening fast, no lag | Use a lighter echo layout (no animations), or open a simpler dashboard there |
+| Can a one-word "Alexa, open Pik" routine launch the private skill? | The phrase Tyler wants | "Alexa, open Pik House" |
 | Does the Voice Satellite expose active timers (name, end time) to the frontend or as entities, with no cap on how many? | The card draws its own timer chips | Plan B: a pool of timer helpers + `script.kitchen_timer` |
 | Can the card start a conversation on the satellite and mute it? | Tap-to-talk and the mic button | Keep Voice Satellite's own overlay for tap-to-talk; hide the card's mic button |
 | Does the core Alexa Devices integration give the Echo Show a `media_player` with title and play/pause? | The Now playing pebble | Use the Alexa Media Player custom integration (HACS) for the media player only |
@@ -562,3 +576,4 @@ and a short list of anything you couldn't match.
 8. Connect the calendars: Tyler signs in to Google Calendar, and Charlie signs in to Microsoft 365 Calendar (installed through HACS).
 9. Each of you adds the Home Assistant connector in your own Claude app and makes a "Pik" project with the instructions above. Claude gives you both the exact steps. In the Claude app's settings, Charlie allows Reminders and Calendar, and Tyler allows Calendar.
 10. Back to Claude Code: "Build Phase 6." After two weeks of normal use: "Build Phase 7."
+11. Echo Show 15 (any time after Phase 3): make a free Amazon developer account with your Amazon login, then ask Claude Code to build the "Pik House" skill. In the Alexa app, add a routine: when you say "open Pik," open Pik House. On the Echo, sign in once as the "Echo" Home Assistant user.
