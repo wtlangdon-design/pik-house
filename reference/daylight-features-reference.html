@@ -153,6 +153,14 @@ body{margin:0}
 .ctime.tdone{border-color:var(--urg);color:var(--urg)}
 .ctime button{height:40px;padding:0 16px;border-radius:20px;border:none;background:var(--btn);color:var(--btnInk);font:700 13px 'DM Sans',system-ui,sans-serif;cursor:pointer}
 .cnav{display:flex;gap:12px;margin-top:auto}
+.copts{display:flex;gap:10px;flex-wrap:wrap}
+.copt{height:40px;padding:0 16px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);font:600 14px 'DM Sans',system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px}
+.copt i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.copt.on{color:var(--ink);border-color:var(--ink)}
+.copt.on i{background:#6E9A68}
+.hfree{display:flex;align-items:center;gap:8px;margin-top:10px;height:36px;padding:0 6px 0 14px;border-radius:18px;background:var(--card);border:1px solid #6E9A68;font:600 13px 'DM Sans',system-ui,sans-serif;color:var(--ink)}
+.hfree i{width:8px;height:8px;border-radius:50%;background:#6E9A68;animation:tpulse 1.6s ease-in-out infinite}
+.hfree button{height:26px;padding:0 10px;border-radius:13px;border:none;background:var(--soft);color:var(--ink);font:700 12px 'DM Sans',system-ui,sans-serif;cursor:pointer}
 .cnav .bigbtn{flex:1;margin:0}
 .cback{height:56px;padding:0 26px;border-radius:28px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:700 16px 'DM Sans',system-ui,sans-serif;cursor:pointer}
 /* house history sheet */
@@ -354,7 +362,7 @@ body{margin:0}
 </svg>
 </button>
 <div class="pikname"><b>Pik</b><span class="{{pillCls}}">{{pikLabel}}</span><button type="button" class="{{micCls}}" aria-pressed="{{micPressed}}" aria-label="{{micLabel}}" onclick="{{toggleMic}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"></path><path d="{{micSlash}}"></path></svg></button></div>
-<sc-if value="{{hasTimers}}" hint-placeholder-val="{{ false }}"><div class="{{timersCls}}"><sc-for list="{{timersShown}}" as="tm" hint-placeholder-count="1"><div class="{{tm.cls}}"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle class="tr-bg" cx="32" cy="32" r="26"></circle><circle class="tr-fg" cx="32" cy="32" r="26" style="{{tm.dash}}"></circle></svg><div class="tt"><b>{{tm.left}}</b><span>{{tm.label}}</span></div><button type="button" class="tx" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.btn}}</button></div></sc-for><sc-if value="{{hasMoreTimers}}" hint-placeholder-val="{{ false }}"><button type="button" class="tmore" onclick="{{openTimers}}">{{moreTimersTxt}}</button></sc-if></div></sc-if>
+<sc-if value="{{hfOn}}" hint-placeholder-val="{{ false }}"><div class="hfree"><i></i>{{hfPill}}<button type="button" onclick="{{stopHf}}">Stop</button></div></sc-if><sc-if value="{{hasTimers}}" hint-placeholder-val="{{ false }}"><div class="{{timersCls}}"><sc-for list="{{timersShown}}" as="tm" hint-placeholder-count="1"><div class="{{tm.cls}}"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle class="tr-bg" cx="32" cy="32" r="26"></circle><circle class="tr-fg" cx="32" cy="32" r="26" style="{{tm.dash}}"></circle></svg><div class="tt"><b>{{tm.left}}</b><span>{{tm.label}}</span></div><button type="button" class="tx" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.btn}}</button></div></sc-for><sc-if value="{{hasMoreTimers}}" hint-placeholder-val="{{ false }}"><button type="button" class="tmore" onclick="{{openTimers}}">{{moreTimersTxt}}</button></sc-if></div></sc-if>
 </div>
 <div class="{{bubbleCls}}" aria-live="polite">
 <sc-if value="{{showTalk}}" hint-placeholder-val="{{ false }}">
@@ -536,6 +544,7 @@ body{margin:0}
 <p class="cbig">{{stepText}}</p>
 <sc-if value="{{hasIng}}" hint-placeholder-val="{{ true }}"><p class="cing">{{stepIng}}</p></sc-if>
 <sc-if value="{{hasCookTimers}}" hint-placeholder-val="{{ true }}"><div class="ctimers"><sc-for list="{{timers}}" as="tm" hint-placeholder-count="1"><div class="{{tm.ccls}}"><b>{{tm.left}}</b>{{tm.label}}<button type="button" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.cbtn}}</button></div></sc-for></div></sc-if>
+<div class="copts"><button type="button" class="{{hfCls}}" aria-pressed="{{hfPressed}}" onclick="{{toggleHf}}"><i></i>{{hfBtn}}</button><button type="button" class="{{raCls}}" aria-pressed="{{raPressed}}" onclick="{{toggleRa}}"><i></i>{{raBtn}}</button></div>
 <div class="cnav"><button type="button" class="cback" onclick="{{stepBack}}">Back</button><button type="button" class="bigbtn ink" onclick="{{stepNext}}">{{nextLbl}}</button></div>
 </div>
 </div>
@@ -649,7 +658,7 @@ var ALL = {
 };
 var INITIAL = ["freeze", "plants", "internet"];
 var QUEUE = ["recipe", "calendar", "plantdoc", "suggest", "leaving", "arriving", "filter", "doorbell", "sunshine", "health", "netdown", "netup", "fixit", "remind", "sticker", "trash", "ferns", "outage", "restore", "garden", "smoke", "soil", "report"];
-var QUESTIONS = ["What's coming up this week?", "When did we last change the furnace filter?", "Let's cook Charlie's recipe.", "Set a pasta timer for one minute.", "Play some Robyn.", "What's tonight looking like?", "Put Judy Justice back on.", "How's the Powerwall doing?", "Which plants need water?", "Turn off the porch light."];
+var QUESTIONS = ["Hands-free for 30 minutes.", "What's coming up this week?", "When did we last change the furnace filter?", "Let's cook Charlie's recipe.", "Set a pasta timer for one minute.", "Play some Robyn.", "What's tonight looking like?", "Put Judy Justice back on.", "How's the Powerwall doing?", "Which plants need water?", "Turn off the porch light."];
 var PLAY = "M8 5v14l11-7z";
 var PAUSE = "M7 5h4v14H7zM13 5h4v14h-4z";
 var LABELS = { rest: "Resting", listen: "Listening", think: "Thinking", speak: "Speaking", muted: "Mic off", alert: "Heads up" };
@@ -859,11 +868,11 @@ class Component extends DCLogic {
     var g = kind === "fix" ? "fix" : "cook";
     // Already in progress: pick up where you left off instead of starting over.
     if (st.cookActive && st.guide === g) { this.go("cook"); return; }
-    this.setState({ guide: g, cookStep: 0, cookStarted: {}, cookActive: true });
+    this.setState({ guide: g, cookStep: 0, cookStarted: {}, cookActive: true, hfEnd: Math.max((st.hfEnd || 0), Date.now() + 30 * 60000) });
     this.go("cook");
   }
   endCook() {
-    this.setState({ cookActive: false, cookStep: 0, cookStarted: {} });
+    this.setState({ cookActive: false, cookStep: 0, cookStarted: {}, hfEnd: 0 });
   }
   cookTo(i) {
     var st = this.state || {};
@@ -885,6 +894,7 @@ class Component extends DCLogic {
     }
     clearTimeout(this._idle);
     this.setState({ cookStep: i, cookStarted: started });
+    if (st.readAloud) this.flash("Pik reads aloud: step " + (i + 1) + ". " + step.t);
   }
   applyFx(fx) {
     var s = this.cur();
@@ -946,6 +956,7 @@ class Component extends DCLogic {
       var fl = ((this.state || {}).log || []).some((x) => x.what === "Furnace filter changed");
       return fl ? "Charlie changed it today. Before that, August 21. Next one's due around February 21." : "Charlie changed it August 21. That's three months, so it's due now. It takes a 16×25×1.";
     }
+    if (q.indexOf("Hands-free") >= 0) { this.setState({ hfEnd: Date.now() + 30 * 60000 }); return "Hands-free for 30 minutes. Just say next step, go back, repeat that, or a timer. Anything else, say Hey Pik."; }
     if (q.indexOf("coming up") >= 0) {
       this._t4 = setTimeout(() => this.go("calendar"), 2600);
       return "Tonight's the holiday party next door at 7:30. Charlie's at the dentist Monday at 2, and trash is Tuesday." + ((this.state || {}).concert ? " The concert's on December 5." : "");
@@ -1120,6 +1131,8 @@ class Component extends DCLogic {
     this._last = { count: count, curIdx: curIdx, urgent: visibleIds.some((x) => ALL[x] && ALL[x].urgent) };
     var curCard = cards[curIdx] || { cat: "", label: "", title: "", detail: "", primary: "", hasSecondary: false, urgent: false };
     var L = s.lights;
+    var tCap = st.hfEnd && st.hfEnd > Date.now() ? 2 : 3; // the hands-free pill takes one chip's room
+    var hfLeft = st.hfEnd ? Math.max(0, Math.ceil((st.hfEnd - Date.now()) / 60000)) : 0;
     var G = this.guide();
     var cookI = Math.min(st.cookStep || 0, G.steps.length - 1);
     var cookStep = G.steps[cookI];
@@ -1295,9 +1308,9 @@ class Component extends DCLogic {
       tmodeCls: tlist.length ? "tmode" : "",
       hasTimers: tlist.length > 0,
       timersCls: "timers" + (tlist.length > 2 ? " many" : ""),
-      timersShown: timerVals.slice(0, tlist.length > 3 ? 2 : 3),
-      hasMoreTimers: tlist.length > 3,
-      moreTimersTxt: "+" + (tlist.length - 2) + " more timers",
+      timersShown: timerVals.slice(0, tlist.length > tCap ? tCap - 1 : tCap),
+      hasMoreTimers: tlist.length > tCap,
+      moreTimersTxt: "+" + (tlist.length - tCap + 1) + " more timers",
       openTimers: () => this.go("timers"),
       onTimers: page === "timers",
       timersHead: tlist.length === 1 ? "1 timer" : tlist.length + " timers",
@@ -1332,6 +1345,17 @@ class Component extends DCLogic {
       stepBack: () => this.cookTo(cookI - 1),
       stepNext: () => this.cookTo(cookI + 1),
       nextLbl: cookI === G.steps.length - 1 ? "Finish · log it" : "Next step",
+      hfOn: hfLeft > 0,
+      hfPill: "Hands-free · " + hfLeft + " min left",
+      stopHf: () => { this.setState({ hfEnd: 0 }); this.flash("Hands-free off. Say Hey Pik when you need me."); },
+      hfCls: "copt" + (hfLeft > 0 ? " on" : ""),
+      hfPressed: hfLeft > 0 ? "true" : "false",
+      hfBtn: hfLeft > 0 ? "Hands-free on · " + hfLeft + " min" : "Hands-free off",
+      toggleHf: () => { if (hfLeft > 0) { this.setState({ hfEnd: 0 }); this.flash("Hands-free off."); } else { this.setState({ hfEnd: Date.now() + 30 * 60000 }); this.flash("Hands-free for 30 minutes. Say next step, go back or repeat that."); } },
+      raCls: "copt" + (st.readAloud ? " on" : ""),
+      raPressed: st.readAloud ? "true" : "false",
+      raBtn: st.readAloud ? "Reading steps aloud" : "Read steps aloud: off",
+      toggleRa: () => { this.setState({ readAloud: !st.readAloud }); this.flash(st.readAloud ? "Okay, I'll stay quiet." : "I'll read each step out loud as you get to it."); },
       onCal: page === "calendar",
       openCal: () => this.go("calendar"),
       cuTime: nextEv.time.replace(/ [AP]M$/, ""),
