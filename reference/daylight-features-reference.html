@@ -641,7 +641,7 @@ var ALL = {
   arriving: { cat: "light", label: "Coming & going · Tyler's almost home", title: "Porch light's on for you", detail: "Tyler's phone is about 5 minutes out and it's dark, so the porch light is on and the heat is heading back to 70°.", primary: "Nice", arrive: "homeOn", toast: "Welcome home." },
   health: { cat: "home", label: "House health · weekly check", title: "Two things need a hand", detail: "The Desert cacti soil sensor's battery is low (one AA). And the Alexa connection wants you to sign in again, or music on the Echo stops working.", primary: "Show me how", secondary: "Tomorrow", secMsg: "Okay. I'll ask again tomorrow.", secSnooze: true, toast: "The steps are on your phone." },
   netdown: { cat: "home", label: "Internet · router", title: "The internet's down", detail: "The lights, plant sensors and Powerwall still work from here. Talking to me, the heat, the Echo, the doorbell camera and the Claude apps come back when the internet does.", primary: "Got it", arrive: "netOff", toast: "I'll tell you when it's back." },
-  netup: { cat: "home", label: "Internet · router", title: "The internet's back", detail: "It was out for 14 minutes. Nothing was missed: two cards that came in while it was down are below.", primary: "Nice", arrive: "netOn", toast: "Back to normal." },
+  netup: { cat: "home", label: "Internet · router", title: "The internet's back", detail: "It was out for 14 minutes. Nothing was missed: two cards that came in while it was down are below.", primary: "Nice", arrive: "netOn", clears: "netdown", toast: "Back to normal." },
   recipe: { cat: "cook", label: "Cooking · from Charlie's phone", title: "Charlie sent tonight's recipe", detail: "Chicken and white bean soup. 8 steps, about 50 minutes. I'll walk you through it and start the timers myself.", primary: "Start cooking", secondary: "Later", fx: "cook", toast: "Let's cook." },
   filter: { cat: "history", label: "House history · from Charlie's phone", title: "Charlie changed the furnace filter", detail: "Logged with today's date. The last one was August 21. The next is due around February 21, and I'll remind you both.", primary: "Nice", secondary: "See the history", secPage: "history", arrive: "filterLog", toast: "Logged. Thanks, Charlie." },
   internet: { cat: "bill", label: "Bills · from email", title: "Your internet bill went up $12", detail: "The promo rate ended. Want a short script for the call to get it back?", primary: "Write the script", secondary: "Ignore", toast: "Script's ready in this week's report." },
@@ -913,7 +913,7 @@ class Component extends DCLogic {
     if (fx === "awayUndo") this.setState({ lights: Object.assign({}, s.lights, { living: true }), setpoint: 70 });
     if (fx === "homeOn") this.setState({ lights: Object.assign({}, s.lights, { porch: true }), setpoint: 70 });
     if (fx === "netOff") this.setState({ offline: true });
-    if (fx === "netOn") this.setState({ offline: false, cards: (this.state.cards || []).filter((x) => x !== "netdown") });
+    if (fx === "netOn") this.setState({ offline: false });
     if (fx === "fixit") this.startCook("fix");
     if (fx === "calAdd") this.setState({ concert: true });
     if (fx === "docLog") this.log("Plant doctor: bath fiddle leaf too wet", "Photo · dry two extra days, off the cold floor", "Tyler");
@@ -945,7 +945,8 @@ class Component extends DCLogic {
     }
     if (ALL[id] && ALL[id].arrive) this.applyFx(ALL[id].arrive);
     if (ALL[id] && ALL[id].urgent) { clearTimeout(this._idle); this.setState({ page: "home" }); }
-    this.setState({ cards: [id].concat(s.cards.filter((x) => x !== id)), queue: rest, newest: id, focus: id });
+    var clears = ALL[id] && ALL[id].clears;
+    this.setState({ cards: [id].concat(s.cards.filter((x) => x !== id && x !== clears)), queue: rest, newest: id, focus: id });
   }
   answer(i) {
     var s = this.cur();
