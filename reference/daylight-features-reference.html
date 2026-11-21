@@ -626,6 +626,13 @@ var ALL = {
   plantdoc: { cat: "plant", label: "Plant doctor · photo from Tyler", title: "The bath fiddle leaf is probably too wet", detail: "Brown patches spreading from the edges of the low leaves usually mean soggy roots. Let it dry two extra days and move it off the cold floor by the window. I'll ask for a new photo Friday.", primary: "Got it", secondary: "See the history", secPage: "history", arrive: "docLog", toast: "Noted. Photo check on Friday." },
   fixit: { cat: "fix", label: "Fix-it · photo from Charlie", title: "That bathroom faucet drip is a cartridge swap", detail: "It's a single-handle faucet, so the cartridge inside is the usual culprit. 7 steps, about 30 minutes, and one part from the hardware store.", primary: "Start the fix", secondary: "Later", fx: "fixit", toast: "Let's fix it." },
   sticker: { cat: "history", label: "Good to know · photo from Tyler", title: "Saved the furnace's model sticker", detail: "Model, serial and install date are in the house facts. Its warranty runs through 2031. Next time, just ask me.", primary: "Nice", secondary: "See the history", secPage: "history", arrive: "stickerLog", toast: "Filed under Good to know." },
+  suggest: { cat: "light", label: "Pik noticed · a suggestion", title: "Want the kitchen lights on at 5:30?", detail: "You've turned them on between 5:15 and 5:45 on 9 of the last 14 evenings. I can do it for you, only when someone's home.", primary: "Yes, do that", secondary: "No thanks", secMsg: "Got it. I won't suggest that one again.", fx: "kitchenAuto", toast: "Done. Kitchen lights at 5:30 when someone's home." },
+  sunshine: { cat: "energy", label: "Energy · free power", title: "Free power for the next 3 hours", detail: "The Powerwall's full and the panels are sending 3.2 kW back to the grid. Good time to run the laundry or the dishwasher.", primary: "Got it", secondary: "Not today", secMsg: "Okay. No more sunshine tips today.", toast: "Enjoy the free laundry." },
+  leaving: { cat: "home", label: "Coming & going · Charlie left last", title: "Nobody's home, so I tidied up", detail: "The living room lamps were on, so I turned them off and dropped the heat to 64°. I'll warm it back up when one of you heads home.", primary: "Thanks", secondary: "Undo", secMsg: "Put back: lamps on, heat at 70°.", secFx: "awayUndo", arrive: "awayOn", toast: "You're welcome. The house is resting." },
+  arriving: { cat: "light", label: "Coming & going · Tyler's almost home", title: "Porch light's on for you", detail: "Tyler's phone is about 5 minutes out and it's dark, so the porch light is on and the heat is heading back to 70°.", primary: "Nice", arrive: "homeOn", toast: "Welcome home." },
+  health: { cat: "home", label: "House health · weekly check", title: "Two things need a hand", detail: "The Desert cacti soil sensor's battery is low (one AA). And the Alexa connection wants you to sign in again, or music on the Echo stops working.", primary: "Show me how", secondary: "Tomorrow", secMsg: "Okay. I'll ask again tomorrow.", secSnooze: true, toast: "The steps are on your phone." },
+  netdown: { cat: "home", label: "Internet · router", title: "The internet's down", detail: "The lights, plant sensors and Powerwall still work from here. Talking to me, the heat, the Echo, the doorbell camera and the Claude apps come back when the internet does.", primary: "Got it", arrive: "netOff", toast: "I'll tell you when it's back." },
+  netup: { cat: "home", label: "Internet · router", title: "The internet's back", detail: "It was out for 14 minutes. Nothing was missed: two cards that came in while it was down are below.", primary: "Nice", arrive: "netOn", toast: "Back to normal." },
   recipe: { cat: "cook", label: "Cooking · from Charlie's phone", title: "Charlie sent tonight's recipe", detail: "Chicken and white bean soup. 8 steps, about 50 minutes. I'll walk you through it and start the timers myself.", primary: "Start cooking", secondary: "Later", fx: "cook", toast: "Let's cook." },
   filter: { cat: "history", label: "House history · from Charlie's phone", title: "Charlie changed the furnace filter", detail: "Logged with today's date. The last one was August 21. The next is due around February 21, and I'll remind you both.", primary: "Nice", secondary: "See the history", secPage: "history", arrive: "filterLog", toast: "Logged. Thanks, Charlie." },
   internet: { cat: "bill", label: "Bills · from email", title: "Your internet bill went up $12", detail: "The promo rate ended. Want a short script for the call to get it back?", primary: "Write the script", secondary: "Ignore", toast: "Script's ready in this week's report." },
@@ -641,7 +648,7 @@ var ALL = {
   report: { cat: "home", label: "Weekly report", title: "Your Sunday house report is ready", detail: "2 bills due, 1 price change, nothing broken. Solar covered 71% of the house this week.", primary: "Open report", toast: "Opening this week's report." }
 };
 var INITIAL = ["freeze", "plants", "internet"];
-var QUEUE = ["recipe", "calendar", "plantdoc", "filter", "doorbell", "fixit", "remind", "sticker", "trash", "ferns", "outage", "heat", "restore", "garden", "smoke", "soil", "lamps", "report"];
+var QUEUE = ["recipe", "calendar", "plantdoc", "suggest", "leaving", "arriving", "filter", "doorbell", "sunshine", "health", "netdown", "netup", "fixit", "remind", "sticker", "trash", "ferns", "outage", "restore", "garden", "smoke", "soil", "report"];
 var QUESTIONS = ["What's coming up this week?", "When did we last change the furnace filter?", "Let's cook Charlie's recipe.", "Set a pasta timer for one minute.", "Play some Robyn.", "What's tonight looking like?", "Put Judy Justice back on.", "How's the Powerwall doing?", "Which plants need water?", "Turn off the porch light."];
 var PLAY = "M8 5v14l11-7z";
 var PAUSE = "M7 5h4v14H7zM13 5h4v14h-4z";
@@ -891,6 +898,12 @@ class Component extends DCLogic {
     if (fx === "smokeOn") this.setState({ smoky: true });
     if (fx === "smokeOff") this.setState({ smoky: false });
     if (fx === "cook") this.startCook("cook");
+    if (fx === "kitchenAuto") this.log("New routine: kitchen lights at 5:30 when someone's home", "Pik suggested it · approved on the kitchen screen", "Kitchen screen");
+    if (fx === "awayOn") this.setState({ lights: Object.assign({}, s.lights, { living: false }), setpoint: 64 });
+    if (fx === "awayUndo") this.setState({ lights: Object.assign({}, s.lights, { living: true }), setpoint: 70 });
+    if (fx === "homeOn") this.setState({ lights: Object.assign({}, s.lights, { porch: true }), setpoint: 70 });
+    if (fx === "netOff") this.setState({ offline: true });
+    if (fx === "netOn") this.setState({ offline: false, cards: (this.state.cards || []).filter((x) => x !== "netdown") });
     if (fx === "fixit") this.startCook("fix");
     if (fx === "calAdd") this.setState({ concert: true });
     if (fx === "docLog") this.log("Plant doctor: bath fiddle leaf too wet", "Photo · dry two extra days, off the cold floor", "Tyler");
@@ -908,7 +921,7 @@ class Component extends DCLogic {
     var s = this.cur();
     if (!s.queue.length) {
       var m = {}; GROUPS.forEach((g) => { m[g.id] = g.m; });
-      this.setState({ cards: INITIAL.slice(), queue: QUEUE.slice(), newest: null, moist: m, setpoint: 70, garden: true, outage: false, essentials: false, smoky: false, lights: { living: true, porch: true, kitchen: false }, timers: [], np: undefined, log: [], cookStep: 0, cookStarted: {}, cookActive: false, concert: false, sticker: false, guide: "cook" });
+      this.setState({ cards: INITIAL.slice(), queue: QUEUE.slice(), newest: null, moist: m, setpoint: 70, garden: true, outage: false, essentials: false, smoky: false, lights: { living: true, porch: true, kitchen: false }, timers: [], np: undefined, log: [], cookStep: 0, cookStarted: {}, cookActive: false, concert: false, sticker: false, guide: "cook", offline: false });
       this.flash("Demo restarted.");
       return;
     }
@@ -958,6 +971,7 @@ class Component extends DCLogic {
   }
   talk() {
     var st = this.state || {};
+    if (st.offline) { this.flash("I can't hear you while the internet's down. The buttons still work."); return; }
     if (st.muted) { this.flash("My mic is off. Tap “Mic off” to turn it back on."); return; }
     if (st.talk) return;
     var i = (st.qi || 0) % QUESTIONS.length;
@@ -1064,7 +1078,7 @@ class Component extends DCLogic {
           if (id === "plants") this.water(thirstyIds);
           this.resolve(id, c.toast, false, c.fx);
         },
-        onSecondary: () => c.resume ? (this.endCook(), this.flash("Okay. I closed it out. Your timers keep running.")) : c.secUndo ? (this.resolve(id, "Undone. It's off both calendars.", false, null), this.setState({ concert: false })) : c.secPage ? (this.resolve(id, "Opening the house history.", false, null), this.go(c.secPage)) : c.secondary === "Remind me at 4" ? this.resolve(id, "Okay. I'll bring it back at 4.", true, null) : this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null)
+        onSecondary: () => c.secMsg ? (this.resolve(id, c.secMsg, !!c.secSnooze, c.secFx || null)) : c.resume ? (this.endCook(), this.flash("Okay. I closed it out. Your timers keep running.")) : c.secUndo ? (this.resolve(id, "Undone. It's off both calendars.", false, null), this.setState({ concert: false })) : c.secPage ? (this.resolve(id, "Opening the house history.", false, null), this.go(c.secPage)) : c.secondary === "Remind me at 4" ? this.resolve(id, "Okay. I'll bring it back at 4.", true, null) : this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null)
       };
     });
     var count = visibleIds.length;
@@ -1086,6 +1100,7 @@ class Component extends DCLogic {
     else if (st.talk === "speak") line = "Here's what I found.";
     else if (timerDone) line = "Your " + doneT[0].label.toLowerCase() + " timer is done.";
     else if (urgent) line = "Heads up. This one's worth a look.";
+    else if (st.offline) line = "The internet's down. The lights and sensors still work.";
     else if (st.muted) line = "My mic is off. Tap below to turn it back on.";
     else if (quiet) line = "Quiet hours. I'll only wake you for the important stuff.";
     else if (count === 0) line = "Nothing needs you. Go sit down.";
@@ -1132,7 +1147,7 @@ class Component extends DCLogic {
       appCls: (quiet ? "night " : "") + (dark ? "dark" : ""),
       pik: pik,
       pikAria: "Pik: " + LABELS[pik],
-      pikLabel: LABELS[pik],
+      pikLabel: st.offline && !st.talk ? "Offline" : LABELS[pik],
       pillCls: pik === "alert" ? "pill alert" : "pill",
       pikLine: line,
       talk: () => this.talk(),
