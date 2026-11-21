@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pik House Feed preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+  /* The card is laid out at 1280×800, the Chromebook's full-screen size at 1.5× scale.
+     On any other window size it is scaled to fit, so the whole card is always visible. */
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+  body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  #frame { position: absolute; left: 50%; top: 50%; width: 1280px; height: 800px; transform-origin: 50% 50%; transform: translate(-50%, -50%) scale(var(--s, 1)); }
+</style>
+</head>
+<body>
+<div id="frame"><pik-house-card></pik-house-card></div>
+<script type="module">
+  import "./pik-house-card.js";
+  const card = document.querySelector("pik-house-card");
+  card.setConfig({ type: "custom:pik-house-card", mock: true });
+  const frame = document.getElementById("frame");
+  function fit() {
+    frame.style.setProperty("--s", Math.min(innerWidth / 1280, innerHeight / 800));
+  }
+  addEventListener("resize", fit);
+  fit();
+</script>
+</body>
+</html>
