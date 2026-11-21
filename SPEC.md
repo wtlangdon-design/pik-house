@@ -6,7 +6,7 @@ Nov 21, 2026 · Tyler Langdon · Living version: https://claude.ai/artifact/WBhq
 
 Build one custom Home Assistant dashboard card, the **Pik House Feed**, that runs full-screen on a Chromebook standing in tent mode on the kitchen counter. It shows the locked **Daylight** design: Pik on the left, one item at a time in a speech bubble, status pebbles along the bottom, and detail sheets that slide up. Claude, running inside Home Assistant, is the brain behind Pik's voice and the email-reading cards.
 
-The working prototype is the reference for every visual and interaction decision. It ships as **reference/daylight-reference.html** in this repo and runs in any browser with fake data. Pik's original artwork (five states) is in **reference/pik/**. The Phase 6 screens (cooking mode, house history, freeze smarts) are in **reference/daylight-features-reference.html**, a superset of the main reference.
+The working prototype is the reference for every visual and interaction decision. It ships as **reference/daylight-reference.html** in this repo and runs in any browser with fake data. Pik's original artwork (five states) is in **reference/pik/**. The Phase 6 screens (calendars, cooking and fix-it modes, plant doctor, house history, freeze smarts) are in **reference/daylight-features-reference.html**, a superset of the main reference.
 
 What Claude Code builds:
 
@@ -42,7 +42,9 @@ These are settled. Claude Code should not revisit them without asking Tyler.
 | Household | Tyler (Home Assistant owner, admin) and Charlie (his own Home Assistant login, not an admin) | Home Assistant users |
 | Pik on phones | Tyler and Charlie each text Pik from their own Claude app (a "Pik" project with the Home Assistant connector). Chats stay private to each person; what they share is the house: feed, house history, reminders, recipes | Model Context Protocol Server (core) via Home Assistant Cloud |
 | House history | A shared log of what got done, by whom and when, plus a short list of house facts | Local Calendar + Local To-do |
-| Cooking mode | Recipes sent from either phone open step by step on the kitchen screen, and steps with a time start a timer | Feed item + `input_number.cook_step` |
+| Cooking and fix-it modes | Recipes and repair guides sent from either phone open step by step on the kitchen screen, and steps with a time start a timer | Feed item + `input_number.cook_step` |
+| Calendars | Tyler: Google Calendar. Charlie: Outlook. Pik adds shared events to both | Google Calendar (core) + Microsoft 365 Calendar (HACS) |
+| Phones | Charlie: iPhone. Tyler: Android. Personal reminders and alarms go through each person's Claude app straight to their phone; house reminders go through Pik and buzz both phones | Home Assistant Companion app on both phones |
 
 ## Architecture
 
@@ -197,6 +199,11 @@ Every bubble item is a row in a Home Assistant **Local To-do** list named `House
 | Freeze tonight (with cold spots and garden steps) | Forecast low ≤ 32°F; a hard freeze is ≤ 25°F | Automation at 3 PM + AI Task writes it |
 | Recipe sent from a phone | `script.recipe_send` from either Claude app | Script |
 | Something logged from a phone ("Charlie changed the furnace filter") | `script.history_add` from a Claude app, when the item is worth telling the other person | Script |
+| Added to both calendars (with Undo) | `script.calendar_add_both` | Script |
+| House reminder for both ("put the chicken out to thaw") | `script.add_reminder` with `who: both`; also pushes to both phones | Script, then automation |
+| Plant doctor result | A plant photo sent from a Claude app | `script.feed_post` from the Claude app |
+| Fix-it guide ready | A repair photo sent from a Claude app | `script.guide_send` |
+| Model sticker saved | A sticker photo sent from a Claude app | `script.feed_post` + House facts |
 | Nobody's home, heat at 70° | Everyone away 30 min and heat ≥ 68° | Automation |
 | Bills, price increases, deliveries | New email under the Gmail label | IMAP + AI Task (Claude) |
 | Trash goes out | Tuesday 8:00 AM | Automation |
@@ -273,9 +280,11 @@ If `kind` isn't `ignore`, it posts a feed card. Bills get a "Remind me the day b
 
 **Cost guardrails.** Local intents first; AI Task only on new labeled email and the weekly report. Expect a few dollars a month, and keep the spending cap as the backstop.
 
-## House history, cooking mode and freeze smarts
+## Made for Tyler and Charlie
 
-These come from Tyler and Charlie's own wish list. They are Phase 6 and must not slow down Phases 0 to 5. The reference for every screen is **reference/daylight-features-reference.html** (tap "Simulate event" for the recipe and furnace-filter cards; the Home sheet has a House history button).
+House history, cooking and fix-it modes, calendars, reminders, plant doctor, model stickers, the meal plan and freeze smarts. These come from Tyler and Charlie's own wish list. They are Phase 6 and must not slow down Phases 0 to 5. The reference for every screen is **reference/daylight-features-reference.html** (tap "Simulate event" to step through the recipe, calendar, plant doctor, furnace filter, fix-it, reminder and sticker cards; the Coming up pebble opens the calendar sheet, and the Home sheet has a House history button).
+
+**Pebble change in Phase 6:** Heat and Lights merge into one **Home** pebble (setpoint, lights on, inside temperature), and a new **Coming up** pebble shows the next event from either calendar.
 
 **House history**
 
@@ -293,6 +302,43 @@ These come from Tyler and Charlie's own wish list. They are Phase 6 and must not
 - **The sheet:** steps listed on the left, the current step large on the right with its ingredients, live timers, and Back / Next step. The last step's button is "Finish · log it", which closes the sheet and adds the meal to the house history. The sheet does not drift home after 90 seconds like the others.
 - **Timers start themselves:** reaching a step with a timer calls `script.kitchen_timer` with that step's label and minutes, once per step. These are the same two timers voice uses, so they also show as chips by Pik.
 - **Voice:** "Pik, let's cook Charlie's recipe" opens it. "Next step" and "go back" call `script.cook_step(direction)`, which moves `input_number.cook_step`; taps and voice stay in sync because the card reads that helper.
+
+**Fix-it mode**
+
+- Same sheet as cooking mode, with its own label ("Fix-it · from Charlie's photo"). Charlie or Tyler sends a photo of the problem (a dripping faucet, a loose hinge) to Pik in the Claude app. Claude works out the likely fix, writes short steps with the tools and parts for each, and calls `script.guide_send(kind: fix, title, steps, from)`.
+- The card says what's probably wrong, how long it takes and what to buy. "Start the fix" opens the steps. Finishing logs it to the house history ("Fixed the bathroom faucet drip").
+- If a job looks unsafe for a DIY fix (gas, the main electrical panel, anything structural), Pik says to call a pro instead of writing steps.
+
+**Calendars and Coming up**
+
+- **Adding to both calendars:** either of you sends Pik a screenshot or a forwarded invite in the Claude app and says "put it on our calendars." Claude reads the title, date, time and place, checks them with you in one line, then calls `script.calendar_add_both(title, start, end, location, notes, from)`. That creates the event on Tyler's Google Calendar (`google.create_event`) and on Charlie's Outlook calendar (Microsoft 365 Calendar's create-event action). It posts an "Added to both your calendars" card with **Undo**, which removes both copies.
+- **One person's calendar:** "put it on Charlie's calendar" adds to his only.
+- **Coming up pebble:** the next event from either calendar or the house Reminders calendar. Time big, title below.
+- **Coming up sheet:** this week, grouped by day. Each row shows the time, title, where it came from, and a chip: Tyler (purple), Charlie (green), Both (gold), House (gray, for house reminders). Events Pik added say so. The right column is **Dinners this week** from the meal plan.
+- Pik answers "what's coming up this week?" from the same data.
+
+**Reminders and alarms**
+
+- **Personal ones** ("remind me to call the dentist at 3," "wake me at 6"): handled by each person's Claude app on their own phone. On Charlie's iPhone, the Claude app adds them to Apple Reminders. On Tyler's Android, it can set alarms in the Clock app. The house isn't involved.
+- **House ones** ("remind us both Thursday at 6 to put the chicken out"): `script.add_reminder(text, when, who)` with `who: both | tyler | charlie`. At that time, the card posts on the kitchen screen, and a push notification goes to the right phones through the Home Assistant Companion app (time-sensitive on Charlie's iPhone, so it shows through Focus modes).
+- Recurring house reminders ("every Sunday, the pitcher plant tray") move from v2 into Phase 6: `script.add_reminder` takes an optional repeat rule and writes a recurring event to the `Reminders` Local Calendar.
+
+**Meal plan (optional; build last)**
+
+- Send Pik a few recipes ("plan dinners this week: these three, and Friday we're out"). Claude calls `script.meal_plan_set(day, title, recipe)` for each day. The plan lives in a Local Calendar named `Dinners`, one all-day event per day; the recipe JSON goes in the description.
+- The night before a dinner that needs thawing or soaking, a house reminder posts at 6 PM. At 4 PM on the day, that night's recipe card posts with "Start cooking."
+- "Plan the week" on the Coming up sheet just explains how to send recipes.
+
+**Plant doctor**
+
+- Send Pik a photo of a sad plant in the Claude app. Claude names the plant if it can, gives the likely cause in plain words and what to do, and says how sure it is. It posts a plant card ("The bath fiddle leaf is probably too wet") and logs it to the house history.
+- It sets a follow-up: a few days later, a push to the sender says "Send me a new photo of the fiddle leaf," and Pik compares the two.
+- If the plant is one of the 83 on the Pik House Plants sheet, Claude uses its group's soil reading in the diagnosis.
+
+**Model stickers and manuals**
+
+- Send Pik a photo of a model sticker (furnace, fridge, water heater, washer). Claude reads the brand, model, serial and date, looks up the filter size or part numbers and the warranty length if it can, and adds them to `House facts`. A short card confirms what it saved.
+- Later, "what filter does the fridge take?" is answered from `House facts`.
 
 **Freeze smarts (Reno)**
 
@@ -320,8 +366,16 @@ guess a sensor value.
 - "We did X" or "log X": script.history_add. "When did we last X": script.history_lookup.
 - A recipe or recipe link to send to the kitchen: rewrite it into short steps with
   ingredients and timers, then script.recipe_send.
-- Reminders: script.add_reminder. Anything the other person should know: post it
-  to the feed with script.feed_post.
+- Reminders for the house or both of us: script.add_reminder (who: both, tyler or
+  charlie). A reminder or alarm just for the person you're talking to: set it on
+  their phone with the phone's own reminders or alarms, not the house.
+- A screenshot or invite to "put on our calendars": read it, confirm the details in
+  one line, then script.calendar_add_both.
+- A photo of a sad plant: diagnose it, say how sure you are, post a plant card,
+  and log it. A photo of a repair: write a fix-it guide with script.guide_send, or
+  say to call a pro if it's gas, the main panel or structural. A model sticker:
+  save it to House facts.
+- Anything the other person should know: post it to the feed with script.feed_post.
 Never unlock, open, buy or pay for anything. Temperatures in °F.
 ```
 
@@ -378,8 +432,13 @@ pik-house/
 - [ ] House history calendar, House facts list, `script.history_add` and `script.history_lookup`, and the history sheet.
 - [ ] Cooking mode: `script.recipe_send`, `script.cook_step`, `input_number.cook_step`, the cooking sheet, timers that start themselves.
 - [ ] Freeze smarts: the 3 PM automation, AI Task card and `cold_spots` list.
+- [ ] Fix-it mode: `script.guide_send`, sharing the cooking sheet.
+- [ ] Calendars: Google Calendar and Microsoft 365 Calendar, `script.calendar_add_both` with Undo, the Coming up pebble and sheet; Heat and Lights merge into the Home pebble.
+- [ ] Reminders: `who` on `script.add_reminder`, Companion app pushes to both phones, recurring reminders.
+- [ ] Plant doctor and model stickers: card formats, house history entries, House facts, the follow-up photo push.
+- [ ] Meal plan (last): `Dinners` calendar, `script.meal_plan_set`, the 4 PM dinner card and the thaw reminder.
 - [ ] Model Context Protocol Server through Home Assistant Cloud; Charlie's login; written setup steps for both Claude apps.
-- [ ] Done when: Charlie logs "changed the furnace filter" from his phone and the card says it was him; Tyler asks his own Pik when it was last changed and gets the date and the name; a recipe link sent from a phone becomes steps on the kitchen screen and its timers start themselves; a test forecast of 24°F produces the freeze card with the sun room plants.
+- [ ] Done when: Charlie logs "changed the furnace filter" from his phone and the card says it was him; Tyler asks his own Pik when it was last changed and gets the date and the name; a recipe link sent from a phone becomes steps on the kitchen screen and its timers start themselves; a test forecast of 24°F produces the freeze card with the sun room plants; a screenshot of an event sent from Charlie's phone lands on both calendars and Undo removes both; "remind us both at 6" buzzes both phones and posts the card; a fix-it photo becomes steps on the screen.
 
 ## Things to verify before relying on them
 
@@ -400,6 +459,9 @@ These came from research, not from testing on Tyler's hardware. Claude Code chec
 | When a script runs from the MCP Server, does `context.user_id` show which person called it? | "Charlie changed it" vs "Tyler changed it" | Add a `who` field to `script.history_add` and have each Pik project fill it in |
 | Can a script exposed to Assist return data (a response) that Claude reads? | `script.history_lookup` answers questions | Expose the House history calendar to Assist and let Claude read events directly |
 | Is a long JSON recipe safe in a to-do item's description? | `script.recipe_send` | Store the steps in a separate `Recipe` to-do list, one item per step |
+| Does Microsoft 365 Calendar (HACS) sign in to Charlie's Outlook account and create and delete events? | Events on Charlie's calendar | Invite Charlie's Outlook address as a guest on the Google event instead (needs the Google Calendar API directly) |
+| Can Home Assistant delete a Google Calendar event it created? | Undo | Undo removes the Outlook copy and posts a card asking Tyler to delete the Google one |
+| Do Companion app pushes arrive as time-sensitive on Charlie's iPhone? | House reminders get through Focus modes | Use a critical alert for reminders marked urgent only |
 
 ## What Tyler does
 
@@ -429,5 +491,7 @@ and a short list of anything you couldn't match.
 4. Install HACS, then Voice Satellite, and set up the Chromebook as a satellite.
 5. Back to Claude Code: "Build Phase 1." Then Phases 2 through 5, one at a time, checking each on the Chromebook.
 6. Make Charlie's Home Assistant login (not an admin) and turn on the Model Context Protocol Server integration.
-7. Each of you adds the Home Assistant connector in your own Claude app and makes a "Pik" project with the instructions above. Claude gives you both the exact steps.
-8. Back to Claude Code: "Build Phase 6."
+7. Install the Home Assistant app on both phones and sign in, each with your own login.
+8. Connect the calendars: Tyler signs in to Google Calendar, and Charlie signs in to Microsoft 365 Calendar (installed through HACS).
+9. Each of you adds the Home Assistant connector in your own Claude app and makes a "Pik" project with the instructions above. Claude gives you both the exact steps. In the Claude app's settings, Charlie allows Reminders and Calendar, and Tyler allows Calendar.
+10. Back to Claude Code: "Build Phase 6."

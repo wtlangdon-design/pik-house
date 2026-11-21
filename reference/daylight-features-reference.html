@@ -109,7 +109,23 @@ body{margin:0}
 .npc{display:flex;gap:6px;margin-top:auto}
 .nc{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 18px/1 'DM Sans',system-ui,sans-serif;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
 .nc.main{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
-.cd.reminder{background:#C98A3A}.cd.cook{background:#B5683C}.cd.history{background:#7C8C6A}
+.cd.reminder{background:#C98A3A}.cd.cook{background:#B5683C}.cd.history{background:#7C8C6A}.cd.calendar{background:#4E8FB0}.cd.fix{background:#8C6E55}
+/* coming up sheet */
+.cusb{grid-template-columns:1fr 340px}
+.culist{display:flex;flex-direction:column;overflow:hidden}
+.cuday{margin:6px 0 0}
+.cuday:first-child{margin-top:0}
+.cuev{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.cuev .ct{font:700 15px 'DM Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.cuev .cw{font:600 17px/1.25 'DM Sans',system-ui,sans-serif}
+.cuev .cw small{display:block;font:500 13px 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-top:3px}
+.cuev.rem .cw{font-weight:500}
+.who.b{background:#F3E6CF;color:#8A6427}.app.dark .who.b{background:#3A3020;color:#EBCF9F}
+.dinner{display:grid;grid-template-columns:52px 1fr;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font:500 15px/1.3 'DM Sans',system-ui,sans-serif}
+.dinner b{font:700 13px 'DM Sans',system-ui,sans-serif;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding-top:2px}
+.dinner.none span{color:var(--muted)}
+.dinner.today span{font-weight:700}
+.cuplan{height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:700 14px 'DM Sans',system-ui,sans-serif;cursor:pointer;margin-top:auto}
 /* cooking sheet */
 .csb{grid-template-columns:340px 1fr}
 .clist{display:flex;flex-direction:column;gap:4px;overflow:hidden}
@@ -378,15 +394,15 @@ body{margin:0}
 <span class="gd"><sc-for list="{{gdots}}" as="g" hint-placeholder-count="7"><i class="{{g.cls}}"></i></sc-for></span>
 <span class="ps">{{plShort}}</span>
 </button>
-<button type="button" class="peb" onclick="{{openControls}}">
-<span class="eb">Heat · Ecobee</span>
-<span class="pv">{{setpoint}}°<small>{{heatWord}}</small></span>
-<span class="ps">It's 68° inside</span>
+<button type="button" class="peb" onclick="{{openCal}}">
+<span class="eb">Coming up</span>
+<span class="pv">{{cuTime}}<small>{{cuWhen}}</small></span>
+<span class="ps">{{cuNext}}</span>
 </button>
 <button type="button" class="peb" onclick="{{openControls}}">
-<span class="eb">Lights &amp; watering</span>
-<span class="pv">{{nOn}}<small>of 3 lights on</small></span>
-<span class="ps">{{waterWord}}</span>
+<span class="eb">Home · heat &amp; lights</span>
+<span class="pv">{{setpoint}}°<small>{{heatWord}}</small></span>
+<span class="ps">{{nOn}} of 3 lights on · 68° inside</span>
 </button>
 </section>
 <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{ false }}">
@@ -501,7 +517,7 @@ body{margin:0}
 <sc-if value="{{onCook}}" hint-placeholder-val="{{ false }}">
 <div class="sheet">
 <div class="handle"></div>
-<div class="shead"><span class="eb">Cooking · {{recipeFrom}}</span><h2 class="stitle">{{recipeTitle}}</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
+<div class="shead"><span class="eb">{{guideEb}}</span><h2 class="stitle">{{recipeTitle}}</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
 <div class="sbody csb">
 <div class="clist">
 <sc-for list="{{csteps}}" as="c" hint-placeholder-count="8"><button type="button" class="{{c.cls}}" onclick="{{c.pick}}"><span class="cn">{{c.n}}</span>{{c.short}}</button></sc-for>
@@ -512,6 +528,25 @@ body{margin:0}
 <sc-if value="{{hasIng}}" hint-placeholder-val="{{ true }}"><p class="cing">{{stepIng}}</p></sc-if>
 <sc-if value="{{hasCookTimers}}" hint-placeholder-val="{{ true }}"><div class="ctimers"><sc-for list="{{timers}}" as="tm" hint-placeholder-count="1"><div class="{{tm.ccls}}"><b>{{tm.left}}</b>{{tm.label}}<button type="button" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.cbtn}}</button></div></sc-for></div></sc-if>
 <div class="cnav"><button type="button" class="cback" onclick="{{stepBack}}">Back</button><button type="button" class="bigbtn ink" onclick="{{stepNext}}">{{nextLbl}}</button></div>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{onCal}}" hint-placeholder-val="{{ false }}">
+<div class="sheet">
+<div class="handle"></div>
+<div class="shead"><span class="eb">Coming up · Tyler's Google + Charlie's Outlook</span><h2 class="stitle">This week</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
+<div class="sbody cusb">
+<div class="culist">
+<sc-for list="{{cuDays}}" as="day" hint-placeholder-count="3">
+<span class="eb cuday">{{day.label}}</span>
+<sc-for list="{{day.evs}}" as="ev" hint-placeholder-count="2"><div class="{{ev.cls}}"><span class="ct">{{ev.time}}</span><span class="cw">{{ev.title}}<small>{{ev.sub}}</small></span><span class="{{ev.whoCls}}">{{ev.who}}</span></div></sc-for>
+</sc-for>
+</div>
+<div class="rcol">
+<span class="eb">Dinners this week</span>
+<sc-for list="{{dinners}}" as="dn" hint-placeholder-count="7"><div class="{{dn.cls}}"><b>{{dn.day}}</b><span>{{dn.what}}</span></div></sc-for>
+<button type="button" class="cuplan" onclick="{{planWeek}}">Plan the week</button>
 </div>
 </div>
 </div>
@@ -551,6 +586,8 @@ var ICON = {
   light: "M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z",
   water: "M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z",
   cook: "M4 10h16v4a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6zM2 10h20M9 4v3M12 3v4M15 4v3",
+  calendar: "M4 6h16v14H4zM4 10h16M9 3v4M15 3v4",
+  fix: "M14 6a4 4 0 0 0 5 5l-9 9-3-3 9-9a4 4 0 0 1-2-2z",
   history: "M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z"
 };
 var GROUPS = [
@@ -565,6 +602,11 @@ var GROUPS = [
 ];
 var ALL = {
   freeze: { cat: "weather", label: "Weather · Reno forecast", title: "Hard freeze tonight. 19° by 5 AM", detail: "Rachio and B-Hyve both skipped tomorrow. The sun room glass gets coldest: pull the majesty palm and the sago a foot off the window. Cover the garden beds before dark.", primary: "Done", secondary: "Remind me at 4", toast: "Nice. The sun room crew is safe." },
+  calendar: { cat: "calendar", label: "Calendars · screenshot from Charlie", title: "Added to both your calendars", detail: "Concert at the Pioneer Center, Saturday, December 5 at 7 PM. It's on Tyler's Google Calendar and Charlie's Outlook.", primary: "Looks right", secondary: "Undo", secUndo: true, arrive: "calAdd", toast: "Great. See you there." },
+  remind: { cat: "reminder", label: "Reminder · from Charlie · both phones", title: "Put the chicken out to thaw", detail: "For tomorrow's soup. This one also buzzed both your phones.", primary: "Done", secondary: "In an hour", toast: "Chicken's out. Tomorrow's soup thanks you." },
+  plantdoc: { cat: "plant", label: "Plant doctor · photo from Tyler", title: "The bath fiddle leaf is probably too wet", detail: "Brown patches spreading from the edges of the low leaves usually mean soggy roots. Let it dry two extra days and move it off the cold floor by the window. I'll ask for a new photo Friday.", primary: "Got it", secondary: "See the history", secPage: "history", arrive: "docLog", toast: "Noted. Photo check on Friday." },
+  fixit: { cat: "fix", label: "Fix-it · photo from Charlie", title: "That bathroom faucet drip is a cartridge swap", detail: "It's a single-handle faucet, so the cartridge inside is the usual culprit. 7 steps, about 30 minutes, and one part from the hardware store.", primary: "Start the fix", secondary: "Later", fx: "fixit", toast: "Let's fix it." },
+  sticker: { cat: "history", label: "Good to know · photo from Tyler", title: "Saved the furnace's model sticker", detail: "Model, serial and install date are in the house facts. Its warranty runs through 2031. Next time, just ask me.", primary: "Nice", secondary: "See the history", secPage: "history", arrive: "stickerLog", toast: "Filed under Good to know." },
   recipe: { cat: "cook", label: "Cooking · from Charlie's phone", title: "Charlie sent tonight's recipe", detail: "Chicken and white bean soup. 8 steps, about 50 minutes. I'll walk you through it and start the timers myself.", primary: "Start cooking", secondary: "Later", fx: "cook", toast: "Let's cook." },
   filter: { cat: "history", label: "House history · from Charlie's phone", title: "Charlie changed the furnace filter", detail: "Logged with today's date. The last one was August 21. The next is due around February 21, and I'll remind you both.", primary: "Nice", secondary: "See the history", secPage: "history", arrive: "filterLog", toast: "Logged. Thanks, Charlie." },
   internet: { cat: "bill", label: "Bills · from email", title: "Your internet bill went up $12", detail: "The promo rate ended. Want a short script for the call to get it back?", primary: "Write the script", secondary: "Ignore", toast: "Script's ready in this week's report." },
@@ -580,8 +622,8 @@ var ALL = {
   report: { cat: "home", label: "Weekly report", title: "Your Sunday house report is ready", detail: "2 bills due, 1 price change, nothing broken. Solar covered 71% of the house this week.", primary: "Open report", toast: "Opening this week's report." }
 };
 var INITIAL = ["freeze", "plants", "internet"];
-var QUEUE = ["recipe", "filter", "doorbell", "trash", "ferns", "outage", "heat", "restore", "garden", "smoke", "soil", "lamps", "report"];
-var QUESTIONS = ["When did we last change the furnace filter?", "Let's cook Charlie's recipe.", "Set a pasta timer for one minute.", "Play some Robyn.", "What's tonight looking like?", "Put Judy Justice back on.", "How's the Powerwall doing?", "Which plants need water?", "Turn off the porch light."];
+var QUEUE = ["recipe", "calendar", "plantdoc", "filter", "doorbell", "fixit", "remind", "sticker", "trash", "ferns", "outage", "heat", "restore", "garden", "smoke", "soil", "lamps", "report"];
+var QUESTIONS = ["What's coming up this week?", "When did we last change the furnace filter?", "Let's cook Charlie's recipe.", "Set a pasta timer for one minute.", "Play some Robyn.", "What's tonight looking like?", "Put Judy Justice back on.", "How's the Powerwall doing?", "Which plants need water?", "Turn off the porch light."];
 var PLAY = "M8 5v14l11-7z";
 var PAUSE = "M7 5h4v14H7zM13 5h4v14h-4z";
 var LABELS = { rest: "Resting", listen: "Listening", think: "Thinking", speak: "Speaking", muted: "Mic off", alert: "Heads up" };
@@ -590,6 +632,9 @@ var CAP = 13.5; // Powerwall 2 usable kWh
 var RECIPE = {
   title: "Chicken & white bean soup",
   from: "from Charlie",
+  eb: "Cooking · from Charlie",
+  done: "Made chicken & white bean soup",
+  how: "Charlie's recipe · cooking mode",
   steps: [
     { s: "Chop the vegetables", t: "Chop the onion, carrots and celery.", ing: "1 onion · 2 carrots · 2 celery stalks" },
     { s: "Brown the chicken", t: "Brown the chicken thighs in the big pot, 4 minutes a side.", ing: "1½ lb chicken thighs · 1 tbsp olive oil", timer: { label: "Flip the chicken", min: 4 } },
@@ -601,6 +646,32 @@ var RECIPE = {
     { s: "Finish", t: "Squeeze in half a lemon, taste for salt, and serve.", ing: "½ lemon · salt" }
   ]
 };
+// Sample fix-it guide, as if Pik made it from Charlie's photo of the faucet.
+var FIX = {
+  title: "Bathroom faucet drip",
+  eb: "Fix-it · from Charlie's photo",
+  done: "Fixed the bathroom faucet drip",
+  how: "New cartridge · fix-it mode",
+  steps: [
+    { s: "Water off", t: "Turn off both valves under the sink, then open the faucet to drain it.", ing: "" },
+    { s: "Plug the drain", t: "Close the drain and lay a towel in the sink so small parts can't escape.", ing: "A towel" },
+    { s: "Handle off", t: "Pop off the little cap, take out the handle screw, and lift the handle off.", ing: "Phillips screwdriver · small flathead · a hex key if there's no screw" },
+    { s: "Pull the clip", t: "Pull the metal retaining clip straight up.", ing: "Needle-nose pliers" },
+    { s: "Swap the cartridge", t: "Pull the old cartridge out, note which way it faced, and push the new one in the same way.", ing: "New cartridge: take the old one to the store to match it" },
+    { s: "Put it back", t: "Clip, handle, screw, cap. Then pull the towel out of the sink.", ing: "" },
+    { s: "Test it", t: "Turn the valves back on slowly and watch for drips for a few minutes.", ing: "", timer: { label: "Drip check", min: 5 } }
+  ]
+};
+// Sample calendar: both people's calendars plus house reminders. "pik" marks events Pik added.
+var CAL = [
+  { day: "Today", time: "7:30 PM", title: "Neighborhood holiday party", sub: "Next door · added by Pik from Charlie's screenshot", who: "Both" },
+  { day: "Tomorrow", time: "6:00 PM", title: "Put the chicken out to thaw", sub: "Reminder from Charlie · both phones", who: "House", rem: true },
+  { day: "Monday", time: "2:00 PM", title: "Dentist", sub: "Charlie's Outlook", who: "Charlie" },
+  { day: "Tuesday", time: "8:00 AM", title: "Trash goes out", sub: "Every Tuesday", who: "House", rem: true },
+  { day: "Wednesday", time: "12:00 PM", title: "Lunch with a client", sub: "Tyler's Google Calendar", who: "Tyler" }
+];
+var CONCERT = { day: "Sat, Dec 5", time: "7:00 PM", title: "Concert at the Pioneer Center", sub: "Added by Pik from Charlie's screenshot", who: "Both" };
+var DINNERS = [["Sat", "Chicken & white bean soup"], ["Sun", ""], ["Mon", "Sheet-pan gnocchi"], ["Tue", ""], ["Wed", "Tacos"], ["Thu", ""], ["Fri", "Out"]];
 // Sample house history. In the real build this lives in Home Assistant and both Claude apps can add to it.
 var HISTORY = [
   { d: "Nov 18", what: "The Christmas cactus started blooming", how: "Sun room · told Pik", who: "Tyler" },
@@ -754,22 +825,26 @@ class Component extends DCLogic {
     var st = this.state || {};
     this.setState({ log: [{ d: "Today", what: what, how: how, who: who }].concat(st.log || []) });
   }
-  startCook() {
-    this.setState({ cookStep: 0, cookStarted: {} });
+  guide() {
+    return (this.state || {}).guide === "fix" ? FIX : RECIPE;
+  }
+  startCook(kind) {
+    this.setState({ guide: kind === "fix" ? "fix" : "cook", cookStep: 0, cookStarted: {} });
     this.go("cook");
   }
   cookTo(i) {
     var st = this.state || {};
-    var n = RECIPE.steps.length;
+    var G = this.guide();
+    var n = G.steps.length;
     if (i >= n) {
-      this.log("Made " + RECIPE.title.toLowerCase(), "Charlie's recipe · cooking mode", "Kitchen screen");
+      this.log(G.done, G.how, "Kitchen screen");
       this.go("home");
-      this.flash("Dinner's on. I added it to the house history.");
+      this.flash(G === FIX ? "Drip fixed. I added it to the house history." : "Dinner's on. I added it to the house history.");
       return;
     }
     i = Math.max(0, i);
     var started = Object.assign({}, st.cookStarted || {});
-    var step = RECIPE.steps[i];
+    var step = G.steps[i];
     if (step.timer && !started[i]) {
       started[i] = true;
       this.addTimer(step.timer.label, step.timer.min * 60000);
@@ -788,7 +863,11 @@ class Component extends DCLogic {
     if (fx === "outageOff") this.setState({ outage: false, essentials: false });
     if (fx === "smokeOn") this.setState({ smoky: true });
     if (fx === "smokeOff") this.setState({ smoky: false });
-    if (fx === "cook") this.startCook();
+    if (fx === "cook") this.startCook("cook");
+    if (fx === "fixit") this.startCook("fix");
+    if (fx === "calAdd") this.setState({ concert: true });
+    if (fx === "docLog") this.log("Plant doctor: bath fiddle leaf too wet", "Photo · dry two extra days, off the cold floor", "Tyler");
+    if (fx === "stickerLog") { this.log("Saved the furnace's model sticker", "Photo · warranty through 2031", "Tyler"); this.setState({ sticker: true }); }
     if (fx === "filterLog") this.log("Furnace filter changed", "16×25×1 · Claude app", "Charlie");
   }
   resolve(id, msg, snooze, fx) {
@@ -802,7 +881,7 @@ class Component extends DCLogic {
     var s = this.cur();
     if (!s.queue.length) {
       var m = {}; GROUPS.forEach((g) => { m[g.id] = g.m; });
-      this.setState({ cards: INITIAL.slice(), queue: QUEUE.slice(), newest: null, moist: m, setpoint: 70, garden: true, outage: false, essentials: false, smoky: false, lights: { living: true, porch: true, kitchen: false }, timers: [], np: undefined, log: [], cookStep: 0, cookStarted: {} });
+      this.setState({ cards: INITIAL.slice(), queue: QUEUE.slice(), newest: null, moist: m, setpoint: 70, garden: true, outage: false, essentials: false, smoky: false, lights: { living: true, porch: true, kitchen: false }, timers: [], np: undefined, log: [], cookStep: 0, cookStarted: {}, concert: false, sticker: false, guide: "cook" });
       this.flash("Demo restarted.");
       return;
     }
@@ -827,7 +906,11 @@ class Component extends DCLogic {
       var fl = ((this.state || {}).log || []).some((x) => x.what === "Furnace filter changed");
       return fl ? "Charlie changed it today. Before that, August 21. Next one's due around February 21." : "Charlie changed it August 21. That's three months, so it's due now. It takes a 16×25×1.";
     }
-    if (q.indexOf("recipe") >= 0) { this._t4 = setTimeout(() => this.startCook(), 2400); return "Chicken and white bean soup. Opening step one now. I'll run the timers."; }
+    if (q.indexOf("coming up") >= 0) {
+      this._t4 = setTimeout(() => this.go("calendar"), 2600);
+      return "Tonight's the holiday party next door at 7:30. Charlie's at the dentist Monday at 2, and trash is Tuesday." + ((this.state || {}).concert ? " The concert's on December 5." : "");
+    }
+    if (q.indexOf("recipe") >= 0) { this._t4 = setTimeout(() => this.startCook("cook"), 2400); return "Chicken and white bean soup. Opening step one now. I'll run the timers."; }
     if (q.indexOf("pasta timer") >= 0) { this.addTimer("Pasta", 60000); return "Pasta timer, one minute. Starting now."; }
     if (q.indexOf("Robyn") >= 0) { this.setState({ np: { kind: "music", title: "Robyn", sub: "Amazon Music", playing: true } }); return "Playing Robyn on the Echo Show."; }
     if (q.indexOf("Judy") >= 0) { this.setState({ np: { kind: "video", title: "Judy Justice", sub: "Prime Video", playing: true } }); return "Judy Justice is back on the Echo Show. Court is in session."; }
@@ -938,7 +1021,7 @@ class Component extends DCLogic {
           if (id === "plants") this.water(thirstyIds);
           this.resolve(id, c.toast, false, c.fx);
         },
-        onSecondary: () => c.secPage ? (this.resolve(id, "Opening the house history.", false, null), this.go(c.secPage)) : c.secondary === "Remind me at 4" ? this.resolve(id, "Okay. I'll bring it back at 4.", true, null) : this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null)
+        onSecondary: () => c.secUndo ? (this.resolve(id, "Undone. It's off both calendars.", false, null), this.setState({ concert: false })) : c.secPage ? (this.resolve(id, "Opening the house history.", false, null), this.go(c.secPage)) : c.secondary === "Remind me at 4" ? this.resolve(id, "Okay. I'll bring it back at 4.", true, null) : this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null)
       };
     });
     var count = visibleIds.length;
@@ -979,8 +1062,13 @@ class Component extends DCLogic {
     this._last = { count: count, curIdx: curIdx, urgent: visibleIds.some((x) => ALL[x] && ALL[x].urgent) };
     var curCard = cards[curIdx] || { cat: "", label: "", title: "", detail: "", primary: "", hasSecondary: false, urgent: false };
     var L = s.lights;
-    var cookI = Math.min(st.cookStep || 0, RECIPE.steps.length - 1);
-    var cookStep = RECIPE.steps[cookI];
+    var G = this.guide();
+    var cookI = Math.min(st.cookStep || 0, G.steps.length - 1);
+    var cookStep = G.steps[cookI];
+    var cal = CAL.concat(st.concert ? [CONCERT] : []);
+    var dayOrder = [];
+    cal.forEach((x) => { if (dayOrder.indexOf(x.day) < 0) dayOrder.push(x.day); });
+    var nextEv = cal.filter((x) => !x.rem)[0];
     return {
       appCls: (quiet ? "night " : "") + (dark ? "dark" : ""),
       pik: pik,
@@ -1162,22 +1250,40 @@ class Component extends DCLogic {
       onCook: page === "cook",
       onHistory: page === "history",
       openHistory: () => this.go("history"),
-      recipeTitle: RECIPE.title,
-      recipeFrom: RECIPE.from,
-      csteps: RECIPE.steps.map((x, i) => ({
+      recipeTitle: G.title,
+      guideEb: G.eb,
+      csteps: G.steps.map((x, i) => ({
         n: i + 1,
         short: x.s,
         cls: "cstep" + (i === cookI ? " now" : i < cookI ? " cdone" : ""),
         pick: () => this.cookTo(i)
       })),
-      stepEb: "Step " + (cookI + 1) + " of " + RECIPE.steps.length + (cookStep.timer ? " · timer: " + cookStep.timer.min + (cookStep.timer.min === 1 ? " minute" : " minutes") : ""),
+      stepEb: "Step " + (cookI + 1) + " of " + G.steps.length + (cookStep.timer ? " · timer: " + cookStep.timer.min + (cookStep.timer.min === 1 ? " minute" : " minutes") : ""),
       stepText: cookStep.t,
       stepIng: cookStep.ing,
       hasIng: !!cookStep.ing,
       hasCookTimers: tlist.length > 0,
       stepBack: () => this.cookTo(cookI - 1),
       stepNext: () => this.cookTo(cookI + 1),
-      nextLbl: cookI === RECIPE.steps.length - 1 ? "Finish · log it" : "Next step",
+      nextLbl: cookI === G.steps.length - 1 ? "Finish · log it" : "Next step",
+      onCal: page === "calendar",
+      openCal: () => this.go("calendar"),
+      cuTime: nextEv.time.replace(/ [AP]M$/, ""),
+      cuWhen: nextEv.time.slice(-2) + " " + nextEv.day.toLowerCase(),
+      cuNext: nextEv.title + (nextEv.who === "Both" ? " · both of you" : ""),
+      cuDays: dayOrder.map((dname) => ({
+        label: dname,
+        evs: cal.filter((x) => x.day === dname).map((x) => ({
+          cls: "cuev" + (x.rem ? " rem" : ""),
+          time: x.time,
+          title: x.title,
+          sub: x.sub,
+          who: x.who,
+          whoCls: "who" + (x.who === "Charlie" ? " c" : x.who === "Tyler" ? " t" : x.who === "Both" ? " b" : "")
+        }))
+      })),
+      dinners: DINNERS.map((x, i) => ({ day: x[0], what: x[1] || "Nothing planned", cls: "dinner" + (x[1] ? "" : " none") + (i === 0 ? " today" : "") })),
+      planWeek: () => this.flash("Send Pik a few recipes and it'll fill in the week."),
       hist: (st.log || []).map((x) => Object.assign({ fresh: true }, x)).concat(HISTORY).slice(0, 7).map((x) => ({
         cls: "hrow" + (x.fresh ? " new" : ""),
         d: x.d,
@@ -1186,7 +1292,7 @@ class Component extends DCLogic {
         who: x.who,
         whoCls: "who" + (x.who === "Charlie" ? " c" : x.who === "Tyler" ? " t" : "")
       })),
-      facts: FACTS.map((f) => ({ k: f[0], v: f[1] })),
+      facts: (st.sticker ? [["Furnace warranty", "Through 2031"]] : []).concat(FACTS).slice(0, 6).map((f) => ({ k: f[0], v: f[1] })),
       hasToast: !!st.toast,
       toast: st.toast || ""
     };
