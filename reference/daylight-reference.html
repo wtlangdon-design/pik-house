@@ -1,0 +1,1050 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.app{--bg:#F3ECE0;--glow:#FCF7EE;--ink:#2A2019;--muted:#7A6B5A;--card:#FFFBF4;--line:#E2D5C1;--soft:#EDE3D3;--btn:#2A2019;--btnInk:#FBF6EE;--urg:#C2452F;--urgBg:#FFF0EA;
+  position:relative;width:1280px;height:800px;overflow:hidden;font-family:'DM Sans',system-ui,sans-serif;color:var(--ink);background:radial-gradient(ellipse at 22% 38%,var(--glow) 0%,var(--bg) 58%);transition:background .6s,color .6s}
+.app.dark{--bg:#12181C;--glow:#232C2C;--ink:#F1E8DA;--muted:#A3988A;--card:#1D2529;--line:#2F3A3F;--soft:#243035;--btn:#F1E8DA;--btnInk:#1A1F22;--urg:#FF8F6B;--urgBg:#2C1F1C}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-weight:400}
+.eb{font:700 11px 'DM Sans',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+/* top strip */
+.top{position:absolute;left:44px;right:44px;top:26px;height:64px;display:flex;align-items:center;gap:28px}
+.clock{font:400 58px/1 'Instrument Serif',Georgia,serif;letter-spacing:-.01em}
+.clock span{font:600 18px 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-left:6px}
+.date{font:500 16px 'DM Sans',system-ui,sans-serif;color:var(--muted);line-height:1.3}
+.sep{width:1px;height:40px;background:var(--line)}
+.wx{display:flex;align-items:baseline;gap:8px;font:500 16px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
+.wx b{font:400 34px 'Instrument Serif',Georgia,serif;color:var(--ink)}
+.airok{color:#5E8A5A}.dark .airok{color:#ADDFB9}
+.demo{margin-left:auto;display:flex;gap:8px}
+.dbtn{height:44px;padding:0 14px;border-radius:22px;border:1px dashed var(--line);background:transparent;color:var(--muted);font:600 13px 'DM Sans',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.dbtn.on{border-style:solid;border-color:var(--ink);color:var(--ink)}
+.ghost{height:44px;padding:0 14px;border-radius:22px;border:1px dashed var(--line);background:transparent;color:var(--muted);font:600 13px 'DM Sans',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.ghost.on{border-style:solid;border-color:var(--ink);color:var(--ink)}
+/* stage */
+.stage{position:absolute;left:44px;right:44px;top:118px;height:452px;display:flex;align-items:center;gap:34px}
+.pikcol{width:300px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+.pikbtn{width:280px;height:280px;transition:width .4s,height .4s;padding:0;border:none;background:transparent;cursor:pointer;border-radius:50%}
+.pikbtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pikname{display:flex;align-items:center;gap:10px;margin-top:4px}
+.pikname b{font:400 34px 'Instrument Serif',Georgia,serif}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:100px;padding:5px 11px;font:700 10px 'DM Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:var(--card)}
+.pill.alert{color:var(--urg);border-color:var(--urg)}
+.mic{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.mic.off{border-color:var(--urg);color:var(--urg)}
+.bubble{position:relative;flex:1;min-width:0;height:420px;box-sizing:border-box;padding:30px 36px 28px;border-radius:34px;background:var(--card);border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(80,55,30,.35);display:flex;flex-direction:column;transition:background .4s,border-color .4s}
+.dark .bubble{box-shadow:0 30px 60px -30px rgba(0,0,0,.7)}
+.bubble::before{content:"";position:absolute;left:-13px;top:150px;width:24px;height:24px;background:var(--card);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg);transition:background .4s,border-color .4s}
+.bubble.urgent{background:var(--urgBg);border-color:var(--urg)}
+.bubble.urgent::before{background:var(--urgBg);border-color:var(--urg)}
+.btop{display:flex;align-items:center;gap:12px}
+.pdots{display:flex;gap:6px;margin-left:4px}
+.pdots i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block}
+.pdots i.on{background:var(--ink)}
+.nav{margin-left:auto;display:flex;gap:8px}
+.nbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.nbtn.dim{opacity:.3;cursor:default}
+.cat{display:flex;align-items:center;gap:8px;margin-top:26px}
+.cd{width:10px;height:10px;border-radius:50%;display:block;background:#B7A58C}
+.cd.plant{background:#6E9A68}.cd.weather{background:#5F94C4}.cd.bill{background:#D8953F}.cd.home{background:#8B76C9}.cd.package{background:#D07B5E}.cd.energy{background:#E0A93E}.cd.door{background:var(--urg)}.cd.air{background:#8D9C96}.cd.light{background:#E0A93E}.cd.water{background:#4F9BC4}
+.utag{color:var(--urg)}
+.btitle{font:400 46px/1.05 'Instrument Serif',Georgia,serif;letter-spacing:-.01em;margin:12px 0 0}
+.bdetail{font:400 19px/1.5 'DM Sans',system-ui,sans-serif;color:var(--muted);margin:14px 0 0;max-width:640px}
+.acts{display:flex;gap:12px;margin-top:auto}
+.pbtn{height:56px;padding:0 26px;border-radius:28px;border:none;background:var(--btn);color:var(--btnInk);font:700 16px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.urgent .pbtn{background:var(--urg);color:#fff}
+.sbtn{height:56px;padding:0 24px;border-radius:28px;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 16px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.peek{margin-left:auto;max-width:340px;min-width:0;display:flex;align-items:center;gap:10px;height:56px;padding:0 20px;border-radius:28px;border:1px solid var(--line);background:transparent;color:var(--muted);font:500 15px 'DM Sans',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.peek .pt{overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.peek:hover{border-color:var(--muted)}
+.urgent .peek{display:none}
+.q{font:italic 400 30px/1.2 'Instrument Serif',Georgia,serif;color:var(--muted);margin:26px 0 0}
+.ans{font:400 40px/1.15 'Instrument Serif',Georgia,serif;margin:18px 0 0}
+.wait{font:600 13px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
+/* pebbles */
+.pebs{position:absolute;left:44px;right:44px;top:598px;height:166px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:14px}
+.pebs.five .pv{font-size:44px}
+.peb{box-sizing:border-box;padding:18px 20px;border-radius:28px;border:1px solid var(--line);background:var(--soft);color:var(--ink);text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;transition:background .4s,border-color .4s}
+.peb:hover{border-color:var(--muted)}
+.peb.out{border-color:var(--urg);background:var(--urgBg)}
+.pv{font:400 50px/1 'Instrument Serif',Georgia,serif;margin-top:10px}
+.pv small{font:500 15px 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-left:6px}
+.pv.dry{color:var(--urg)}
+.ps{font:500 14px/1.35 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-top:auto}
+.mini{display:flex;align-items:center;gap:6px;margin-top:10px}
+.mini b{width:8px;height:8px;border-radius:50%;display:block}
+.dots{flex:1;display:flex;justify-content:space-between;padding:0 3px}
+.dots i{width:4px;height:4px;border-radius:50%;background:var(--line);display:block}
+.dots.on i{background:var(--w);animation:dot 1.2s ease-in-out infinite}
+.dots.on i:nth-child(2){animation-delay:.2s}.dots.on i:nth-child(3){animation-delay:.4s}
+.dots.on.rev i:nth-child(1){animation-delay:.4s}.dots.on.rev i:nth-child(3){animation-delay:0s}
+@keyframes dot{0%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1.4)}}
+
+.pikbtn svg{transition:width .4s,height .4s}
+.tmode .pikbtn{width:214px;height:214px}
+.tmode .pikbtn svg{width:214px;height:214px}
+.timers{display:flex;flex-direction:column;gap:10px;margin-top:12px;width:100%}
+.tchip{display:flex;align-items:center;gap:12px;padding:8px 10px 8px 8px;border-radius:40px;background:var(--card);border:1px solid var(--line)}
+.tchip svg{flex-shrink:0;transform:rotate(-90deg)}
+.tr-bg{fill:none;stroke:var(--soft);stroke-width:6}
+.tr-fg{fill:none;stroke:#E0A93E;stroke-width:6;stroke-linecap:round;stroke-dasharray:163.4;transition:stroke-dashoffset 1s linear}
+.tt{flex:1;min-width:0;line-height:1}
+.tt b{display:block;font:400 34px 'Instrument Serif',Georgia,serif;font-variant-numeric:tabular-nums}
+.tt span{display:block;font:600 12px 'DM Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.tx{height:44px;min-width:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.tchip.tdone{border-color:var(--urg);background:var(--urgBg);animation:tpulse 1s ease-in-out infinite}
+.tchip.tdone .tr-fg{stroke:var(--urg)}
+.tchip.tdone .tt b{color:var(--urg)}
+.tchip.tdone .tx{background:var(--urg);border-color:var(--urg);color:#fff}
+@keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(194,69,47,.0)}50%{box-shadow:0 0 0 8px rgba(194,69,47,.18)}}
+.np{cursor:default;background:var(--card)}
+.nphead{display:flex;align-items:center;gap:8px}
+.eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px}
+.eq i{width:3px;height:4px;border-radius:1px;background:#E0A93E;display:block}
+.eq.on i{animation:eq .9s ease-in-out infinite}
+.eq.on i:nth-child(2){animation-delay:.2s}.eq.on i:nth-child(3){animation-delay:.45s}
+@keyframes eq{0%,100%{height:4px}50%{height:12px}}
+.npt{font:400 32px/1.05 'Instrument Serif',Georgia,serif;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npc{display:flex;gap:6px;margin-top:auto}
+.nc{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 18px/1 'DM Sans',system-ui,sans-serif;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.nc.main{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
+.cd.reminder{background:#C98A3A}
+@media (prefers-reduced-motion: reduce){.eq i,.tchip.tdone{animation:none!important}}
+.bbar{position:relative;display:block;height:8px;border-radius:8px;background:var(--line);overflow:hidden;margin-top:16px}
+.bfill{position:absolute;left:0;top:0;bottom:0;border-radius:8px;background-color:#6E9A68;transition:width .6s}
+.bfill.chg,.bfill.dis{background-image:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.6) 50%,rgba(255,255,255,0) 100%);background-size:60px 100%;background-repeat:no-repeat;animation:shim 1.8s linear infinite}
+.bfill.dis{animation-direction:reverse}
+.bfill.out{background-color:var(--urg)}
+@keyframes shim{from{background-position:-60px 0}to{background-position:calc(100% + 60px) 0}}
+.gd{display:flex;gap:7px;margin-top:12px}
+.gd i{width:16px;height:16px;border-radius:50%;display:block;background:#9BC096}
+.dark .gd i{background:#3E5A44}
+.gd i.dry{background:var(--urg)}
+.gd i.wet{background:#8EC3CF}
+.dark .gd i.wet{background:#2E4F4C}
+/* sheets */
+.scrim{position:absolute;inset:0;background:rgba(30,22,15,.38);z-index:20;animation:fade .3s ease-out;border:0;padding:0;cursor:pointer}
+.dark .scrim{background:rgba(0,0,0,.55)}
+.sheet{position:absolute;left:24px;right:24px;bottom:0;height:612px;z-index:21;box-sizing:border-box;padding:14px 36px 30px;border-radius:34px 34px 0 0;background:var(--card);border:1px solid var(--line);border-bottom:0;box-shadow:0 -20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;animation:up .38s cubic-bezier(.2,.8,.25,1)}
+@keyframes up{0%{transform:translateY(100%)}100%{transform:none}}
+@keyframes fade{0%{opacity:0}100%{opacity:1}}
+.handle{width:56px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 10px}
+.shead{display:flex;align-items:center;gap:16px}
+.stitle{font:400 44px/1 'Instrument Serif',Georgia,serif;margin:0}
+.done{margin-left:auto;height:48px;padding:0 24px;border-radius:24px;border:none;background:var(--btn);color:var(--btnInk);font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.sbody{flex:1;min-height:0;display:grid;gap:22px;margin-top:22px}
+/* energy sheet */
+.esb{grid-template-columns:1fr 340px}
+.ewin{border-radius:26px;background:#1C221E;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ewin.out{box-shadow:inset 0 0 0 1.5px #C46A50}
+.nlbl{fill:#CDBDA6;font:700 10.5px 'DM Sans',system-ui,sans-serif;letter-spacing:.1em}
+.nval{fill:#FAEDD8;font:700 16px 'DM Sans',system-ui,sans-serif}
+.hval{fill:#FFE1AA;font:700 19px 'DM Sans',system-ui,sans-serif}
+.flow .wire{fill:none;stroke:#A59986;stroke-width:2;opacity:.3;stroke-dasharray:2 7;stroke-linecap:round}
+.flow .pk{fill:none;stroke-linecap:round;stroke-width:5;stroke-dasharray:1 15;display:none}
+.flow.on .wire{stroke:var(--w);opacity:.55;stroke-dasharray:none;stroke-width:2.4}
+.flow.on .pk{display:inline;stroke:var(--w);animation:pkt 1.6s linear infinite;filter:drop-shadow(0 0 3px var(--w))}
+.flow.on.rev .pk{animation-direction:reverse}
+.w-sun{--w:#FFC580}.w-grid{--w:#A8C9D9}.w-bat{--w:#ADDFB9}
+@keyframes pkt{to{stroke-dashoffset:-32}}
+.moon,.cut{display:none}
+.dark .sunic{display:none}.dark .moon{display:inline}
+.out .cut{display:inline}
+.out .gridnode{stroke:#FAA192;fill:#352A22}
+.win{fill:#6B5240}
+.dark .win{fill:#FFD28D;filter:drop-shadow(0 0 4px #FFC580)}
+.stats{display:flex;flex-direction:column;gap:10px}
+.lead{font:400 30px/1.12 'Instrument Serif',Georgia,serif}
+.leadsub{font:400 15px/1.45 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-top:4px}
+.stat{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);font:500 15px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
+.stat b{font:700 17px 'DM Sans',system-ui,sans-serif;color:var(--ink)}
+.bigbtn{height:56px;border-radius:28px;border:none;background:var(--urg);color:#fff;font:700 16px 'DM Sans',system-ui,sans-serif;cursor:pointer;margin-top:6px}
+.bigbtn.ink{background:var(--btn);color:var(--btnInk)}
+/* plants sheet */
+.psb{grid-template-columns:1fr 330px}
+.plist{display:flex;flex-direction:column}
+.prow{flex:1;display:grid;grid-template-columns:34px 1fr 210px 52px 76px 104px;align-items:center;gap:14px;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}
+.stopn{width:28px;height:28px;border-radius:50%;background:var(--urg);color:#fff;font:700 13px/28px 'DM Sans',system-ui,sans-serif;text-align:center}
+.okdot{width:12px;height:12px;border-radius:50%;background:#9BC096;margin-left:8px}
+.dark .okdot{background:#5E8A5A}
+.wet .okdot{background:#8EC3CF}
+.pname b{display:block;font:600 18px 'DM Sans',system-ui,sans-serif}
+.pname span{display:block;font:400 13px 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-top:2px}
+.meter{position:relative;height:8px;border-radius:8px;background:var(--soft);overflow:hidden}
+.mfill{position:absolute;left:0;top:0;bottom:0;border-radius:8px;background:#7FAE79;transition:width .6s}
+.mtick{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.5}
+.dry .mfill{background:var(--urg)}.wet .mfill{background:#6FB0C2}
+.ppct{font:700 18px 'DM Sans',system-ui,sans-serif;text-align:right}
+.pst{font:600 13px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
+.dry .ppct,.dry .pst{color:var(--urg)}
+.wbtn{height:44px;border-radius:22px;border:none;background:var(--btn);color:var(--btnInk);font:700 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.rcol{display:flex;flex-direction:column;gap:10px;padding:22px;border-radius:26px;background:var(--soft)}
+.rstop{display:flex;align-items:center;gap:12px;font:600 16px 'DM Sans',system-ui,sans-serif}
+.rstop .rp{margin-left:auto;font:500 14px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
+.note{font:400 13px/1.5 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-top:auto}
+/* home sheet */
+.hsb{grid-template-columns:1.1fr 1.3fr 1fr}
+.hpanel{padding:22px 24px;border-radius:26px;background:var(--soft);display:flex;flex-direction:column}
+.thermo{display:flex;align-items:center;justify-content:center;gap:22px;margin:auto 0}
+.tbtn{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font:400 30px/1 'DM Sans',system-ui,sans-serif;cursor:pointer;padding:0}
+.tset{font:400 96px/1 'Instrument Serif',Georgia,serif}
+.csub{font:500 14px 'DM Sans',system-ui,sans-serif;color:var(--muted);text-align:center}
+.lights{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.lp{height:64px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 17px 'DM Sans',system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;gap:12px;padding:0 18px}
+.lp i{width:14px;height:14px;border-radius:50%;background:var(--line);display:block}
+.lp small{margin-left:auto;font:600 13px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
+.lp.on{border-color:#D8953F}
+.lp.on i{background:#F0A54E;box-shadow:0 0 12px #F0A54E}
+.zone{padding:12px 0;border-bottom:1px solid var(--line)}
+.zone b{display:block;font:600 17px 'DM Sans',system-ui,sans-serif}
+.zone span{display:block;font:400 14px 'DM Sans',system-ui,sans-serif;color:var(--muted);margin-top:3px}
+.zbtn{margin-top:10px;height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.cam{margin-top:auto;height:56px;border-radius:28px;border:none;background:var(--btn);color:var(--btnInk);font:700 15px 'DM Sans',system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.toast{position:absolute;left:50%;top:34px;transform:translateX(-50%);z-index:30;padding:13px 22px;border-radius:24px;background:var(--btn);color:var(--btnInk);font:600 14px 'DM Sans',system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:toastin .35s ease-out;white-space:nowrap}
+@keyframes toastin{0%{opacity:0;transform:translate(-50%,-10px)}100%{opacity:1;transform:translate(-50%,0)}}
+.app.night{--bg:#0B0F12;--glow:#141B1E}
+.night .pebs{opacity:.3}
+.night .top{opacity:.55}
+.night .pikbtn{transform:scale(.84)}
+.pikbtn{transition:transform .6s}
+.night .bubble:not(.urgent){opacity:.72}
+.night .top .clock{color:var(--muted)}
+.night .pik{filter:brightness(.8)}
+@media (prefers-reduced-motion: reduce){.flow .pk,.dots i,.sheet,.scrim{animation:none!important}}
+/* Pik */
+.pik svg{display:block;overflow:visible}
+.pik .ring{fill:none;stroke:#A99070;stroke-width:1.45;opacity:.58;transform-origin:128px 128px;transition:stroke .4s,opacity .4s,stroke-width .4s}
+.pik .hs{stop-color:#A99070;transition:stop-color .5s}
+.pik .mute,.pik .badge2{opacity:0;transition:opacity .4s}
+.pik .light{transition:opacity .4s}
+.pik .f{opacity:0;transition:opacity .28s}
+.pik .body{transform-origin:128px 128px}
+.pik .mouth{transform-origin:135px 145px}
+.p-rest .f-rest,.p-listen .f-listen,.p-think .f-think,.p-speak .f-speak,.p-muted .f-muted,.p-alert .f-alert{opacity:1}
+.p-listen .ring{stroke:#ADDFB9;stroke-width:2.4;opacity:.96;animation:pkPulse 1.8s ease-in-out infinite}
+.p-listen .hs{stop-color:#ADDFB9}
+.p-think .ring{stroke:#C1AFF6;opacity:.96;stroke-dasharray:1 9;stroke-linecap:round;animation:pkSpin 8s linear infinite}
+.p-think .hs{stop-color:#C1AFF6}
+.p-speak .ring{stroke:#FFD28D;stroke-width:2.4;opacity:.96}
+.p-speak .hs{stop-color:#FFD28D}
+.p-speak .body{animation:pkBob 1.6s ease-in-out infinite}
+.p-speak .mouth{animation:pkTalk .34s ease-in-out infinite alternate}
+.p-muted .ring{stroke:#A9AAA1;opacity:.96;stroke-dasharray:4 8}
+.p-muted .hs{stop-color:#A9AAA1}
+.p-muted .mute,.p-muted .badge2{opacity:1}
+.p-muted .light{opacity:.4}
+.p-alert .ring{stroke:#FF8F6B;stroke-width:2.8;opacity:1;animation:pkPulse 1.1s ease-in-out infinite}
+.p-alert .hs{stop-color:#FF8F6B}
+@keyframes pkPulse{0%,100%{transform:scale(1);opacity:.96}50%{transform:scale(1.045);opacity:.5}}
+@keyframes pkSpin{to{transform:rotate(360deg)}}
+@keyframes pkBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes pkTalk{from{transform:scaleY(.35)}to{transform:scaleY(1.1)}}
+@media (prefers-reduced-motion: reduce){.pik *{animation:none!important}}
+
+
+
+</style>
+</head><body><template id="t">
+<div class="app {{appCls}} {{themeCls}}">
+<header class="top">
+<div class="clock">{{clock}}<span>{{ampm}}</span></div>
+<div class="date">{{dayName}}<br>{{monthDay}}</div>
+<div class="sep"></div>
+<div class="wx"><b>{{outTemp}}</b>{{outLine}} · <span class="{{airCls2}}">{{airShort}}</span></div>
+<div class="sep"></div>
+<div class="wx"><b>68°</b>inside</div>
+<div class="demo">
+<button type="button" class="dbtn" onclick="{{next}}">＋ {{demoLabel}}</button>
+<button type="button" class="{{dayBtnCls}}" onclick="{{previewDay}}">{{dayBtn}}</button>
+<button type="button" class="{{nightBtnCls}}" onclick="{{previewNight}}">{{nightBtn}}</button>
+</div>
+</header>
+<section class="stage">
+<div class="pikcol {{tmodeCls}}">
+<button type="button" class="pikbtn pik p-{{pik}}" aria-label="Talk to Pik" onclick="{{talk}}">
+<svg viewBox="0 0 256 256" width="280" height="280" role="img" aria-label="{{pikAria}}">
+<defs>
+<radialGradient id="pkHalo"><stop class="hs" offset="0" stop-opacity=".25"></stop><stop class="hs" offset="1" stop-opacity="0"></stop></radialGradient>
+<linearGradient id="pkClay" x1=".14" y1=".03" x2=".79" y2=".95"><stop offset="0" stop-color="#FFDF9B"></stop><stop offset=".52" stop-color="#F0AF64"></stop><stop offset="1" stop-color="#BD6A42"></stop></linearGradient>
+<linearGradient id="pkMute" x1=".14" y1=".03" x2=".79" y2=".95"><stop offset="0" stop-color="#CDC1A4"></stop><stop offset="1" stop-color="#9E846D"></stop></linearGradient>
+<radialGradient id="pkLight" cx=".28" cy=".15" r=".77"><stop offset="0" stop-color="#FFF3C3" stop-opacity=".64"></stop><stop offset="1" stop-color="#FFF3C3" stop-opacity="0"></stop></radialGradient>
+</defs>
+<circle cx="128" cy="130" r="124" fill="url(#pkHalo)"></circle>
+<circle class="ring" cx="128" cy="128" r="98"></circle>
+<ellipse cx="129" cy="196" rx="52" ry="8" fill="#20160C" opacity=".28"></ellipse>
+<g class="body">
+<path d="M57 139C55 110 67 70 98 59c25-9 67-7 82 13 20 25 27 72 13 96-12 20-36 27-69 26-41 0-65-17-67-55Z" fill="url(#pkClay)" stroke="#FFDC9C" stroke-opacity=".53" stroke-width="1.2"></path>
+<path class="mute" d="M57 139C55 110 67 70 98 59c25-9 67-7 82 13 20 25 27 72 13 96-12 20-36 27-69 26-41 0-65-17-67-55Z" fill="url(#pkMute)"></path>
+<path class="light" d="M57 139C55 110 67 70 98 59c25-9 67-7 82 13 20 25 27 72 13 96-12 20-36 27-69 26-41 0-65-17-67-55Z" fill="url(#pkLight)"></path>
+<path d="M82 99q11-24 30-27" fill="none" stroke="#FFF3C8" opacity=".58" stroke-width="3.2" stroke-linecap="round"></path>
+<path d="M89 154l8 1m76-7 7-2" fill="none" stroke="#8B452E" stroke-opacity=".31" stroke-width="2" stroke-linecap="round"></path>
+<g fill="none" stroke="#3B291C" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+<g class="f f-rest"><path d="M101 135q11-10 22 0m23-2q11-10 22 0m-37 14q5 4 10-1"></path></g>
+<g class="f f-listen"><ellipse cx="111" cy="130" rx="5" ry="9" fill="#3B291C" stroke="none"></ellipse><ellipse cx="155" cy="125" rx="5" ry="9" fill="#3B291C" stroke="none"></ellipse><path d="M131 144q6 5 12-1"></path></g>
+<g class="f f-think"><ellipse cx="117" cy="125" rx="4.5" ry="7" fill="#3B291C" stroke="none"></ellipse><ellipse cx="160" cy="120" rx="4.5" ry="7" fill="#3B291C" stroke="none"></ellipse><path d="M135 146l9-1"></path></g>
+<g class="f f-speak"><path d="M101 130q10-10 20 0m26-4q10-10 20 0"></path><ellipse class="mouth" cx="135" cy="145" rx="8" ry="6" fill="#3B291C" stroke="none"></ellipse></g>
+<g class="f f-muted"><path d="M103 134l17-2m28-2 17-2m-34 18 9-1"></path></g>
+<g class="f f-alert"><ellipse cx="111" cy="129" rx="6" ry="10.5" fill="#3B291C" stroke="none"></ellipse><ellipse cx="155" cy="124" rx="6" ry="10.5" fill="#3B291C" stroke="none"></ellipse><path d="M103 111q8-5 15-2m30-5q8-3 15 2" stroke-width="3.5"></path><ellipse cx="134" cy="148" rx="4.5" ry="5.5" fill="#3B291C" stroke="none"></ellipse></g>
+</g>
+</g>
+<g class="badge2" transform="translate(203 187)"><circle r="22" fill="#242925" stroke="#A9AAA1"></circle><path d="M-10-10 10 10M-4-5v-3a4 4 0 0 1 8 0v7M-8-1v1a8 8 0 0 0 14 5M0 8v4" fill="none" stroke="#F0E8D9" stroke-width="2" stroke-linecap="round"></path></g>
+</svg>
+</button>
+<div class="pikname"><b>Pik</b><span class="{{pillCls}}">{{pikLabel}}</span><button type="button" class="{{micCls}}" aria-pressed="{{micPressed}}" aria-label="{{micLabel}}" onclick="{{toggleMic}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"></path><path d="{{micSlash}}"></path></svg></button></div>
+<sc-if value="{{hasTimers}}" hint-placeholder-val="{{ false }}"><div class="timers"><sc-for list="{{timers}}" as="tm" hint-placeholder-count="1"><div class="{{tm.cls}}"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle class="tr-bg" cx="32" cy="32" r="26"></circle><circle class="tr-fg" cx="32" cy="32" r="26" style="{{tm.dash}}"></circle></svg><div class="tt"><b>{{tm.left}}</b><span>{{tm.label}}</span></div><button type="button" class="tx" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.btn}}</button></div></sc-for></div></sc-if>
+</div>
+<div class="{{bubbleCls}}" aria-live="polite">
+<sc-if value="{{showTalk}}" hint-placeholder-val="{{ false }}">
+<div class="btop"><span class="eb">You asked</span></div>
+<p class="q">“{{q}}”</p>
+<p class="ans">{{a}}</p>
+</sc-if>
+<sc-if value="{{showCard}}" hint-placeholder-val="{{ true }}">
+<div class="btop"><span class="eb">{{pagerTxt}}</span><span class="pdots"><sc-for list="{{pdots}}" as="d" hint-placeholder-count="3"><i class="{{d.cls}}"></i></sc-for></span><sc-if value="{{hasWaiting}}" hint-placeholder-val="{{ false }}"><span class="wait">· {{waiting}} waiting for morning</span></sc-if>
+<span class="nav"><button type="button" class="{{prevCls}}" aria-label="Previous" onclick="{{goPrev}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button><button type="button" class="{{nextCls}}" aria-label="Next" onclick="{{goNext}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button></span></div>
+<div class="cat"><i class="cd {{cur.cat}}"></i><span class="eb"><sc-if value="{{cur.urgent}}" hint-placeholder-val="{{ false }}"><span class="utag">Urgent · </span></sc-if>{{cur.label}}</span></div>
+<h2 class="btitle">{{cur.title}}</h2>
+<p class="bdetail">{{cur.detail}}</p>
+<div class="acts"><button type="button" class="pbtn" onclick="{{cur.onPrimary}}">{{cur.primary}}</button><sc-if value="{{cur.hasSecondary}}" hint-placeholder-val="{{ true }}"><button type="button" class="sbtn" onclick="{{cur.onSecondary}}">{{cur.secondary}}</button></sc-if><sc-if value="{{hasPeek}}" hint-placeholder-val="{{ true }}"><button type="button" class="peek" onclick="{{goNext}}"><span class="eb">Next</span><span class="pt">{{peekTitle}}</span><span aria-hidden="true">›</span></button></sc-if></div>
+</sc-if>
+<sc-if value="{{showEmpty}}" hint-placeholder-val="{{ false }}">
+<div class="btop"><span class="eb">{{emptyEb}}</span></div>
+<h2 class="btitle" style="margin-top: 26px">{{emptyT}}</h2>
+<p class="bdetail">{{emptyS}}</p>
+</sc-if>
+</div>
+</section>
+<section class="{{pebsCls}}">
+<sc-if value="{{hasNp}}" hint-placeholder-val="{{ true }}">
+<div class="peb np">
+<span class="nphead"><span class="{{eqCls}}"><i></i><i></i><i></i></span><span class="eb">Now playing</span></span>
+<span class="npt">{{npTitle}}</span>
+<span class="ps" style="margin-top: 4px">{{npSub}}</span>
+<span class="npc">
+<button type="button" class="nc main" aria-label="{{npToggleLbl}}" onclick="{{npToggle}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{npIcon}}"></path></svg></button>
+<button type="button" class="nc" aria-label="Volume down" onclick="{{volDown}}">−</button>
+<button type="button" class="nc" aria-label="Volume up" onclick="{{volUp}}">+</button>
+<button type="button" class="nc" aria-label="Stop" onclick="{{npStop}}">×</button>
+</span>
+</div>
+</sc-if>
+<button type="button" class="{{pebEnCls}}" onclick="{{openEnergy}}">
+<span class="eb">Energy · {{modeTxt}}</span>
+<span class="pv">{{e.pct}}%<small>Powerwall</small></span>
+<span class="bbar"><span class="{{bfillCls}}" style="{{bfillStyle}}"></span></span>
+<span class="ps">{{pebEnLine}}</span>
+</button>
+<button type="button" class="peb" onclick="{{openPlants}}">
+<span class="eb">Plants · 7 groups</span>
+<span class="{{pebPlCls}}">{{plBig}}<small>{{plBigSub}}</small></span>
+<span class="gd"><sc-for list="{{gdots}}" as="g" hint-placeholder-count="7"><i class="{{g.cls}}"></i></sc-for></span>
+<span class="ps">{{plShort}}</span>
+</button>
+<button type="button" class="peb" onclick="{{openControls}}">
+<span class="eb">Heat · Ecobee</span>
+<span class="pv">{{setpoint}}°<small>{{heatWord}}</small></span>
+<span class="ps">It's 68° inside</span>
+</button>
+<button type="button" class="peb" onclick="{{openControls}}">
+<span class="eb">Lights &amp; watering</span>
+<span class="pv">{{nOn}}<small>of 3 lights on</small></span>
+<span class="ps">{{waterWord}}</span>
+</button>
+</section>
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{ false }}">
+<button type="button" class="scrim" aria-label="Close" onclick="{{goHome}}"></button>
+</sc-if>
+<sc-if value="{{onEnergy}}" hint-placeholder-val="{{ false }}">
+<div class="sheet">
+<div class="handle"></div>
+<div class="shead"><span class="eb">Energy · Tesla</span><h2 class="stitle">Power in motion</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
+<div class="sbody esb">
+<div class="{{ewinCls}}">
+<svg class="emap" viewBox="0 0 392 214" width="760" height="415" role="img" aria-label="{{energyAria}}">
+<defs>
+<radialGradient id="eGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#E8B97C" stop-opacity=".18"></stop><stop offset="1" stop-color="#E8B97C" stop-opacity="0"></stop></radialGradient>
+<linearGradient id="eBat" x1="0" x2="0" y1="1" y2="0"><stop offset="0" stop-color="#609975"></stop><stop offset="1" stop-color="#C5E5A4"></stop></linearGradient>
+<linearGradient id="eRoof" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FEE0A4"></stop><stop offset="1" stop-color="#BC7D4B"></stop></linearGradient>
+</defs>
+<ellipse cx="196" cy="98" rx="170" ry="96" fill="url(#eGlow)"></ellipse>
+<g fill="none" stroke="#E4C29B" opacity=".12"><ellipse cx="196" cy="98" rx="96" ry="62"></ellipse><ellipse cx="196" cy="98" rx="140" ry="86" stroke-dasharray="2 7"></ellipse></g>
+<g class="{{solarFlow}}"><path class="wire" d="M80 54Q122 60 156 82"></path><path class="pk" d="M80 54Q122 60 156 82"></path></g>
+<g class="{{gridFlow}}"><path class="wire" d="M80 150Q122 140 156 116"></path><path class="pk" d="M80 150Q122 140 156 116"></path></g>
+<g class="{{batFlow}}"><path class="wire" d="M312 150Q270 140 236 116"></path><path class="pk" d="M312 150Q270 140 236 116"></path></g>
+<g transform="translate(52 46)">
+<circle r="28" fill="#23271F" stroke="#7B6A50"></circle>
+<g class="sunic" stroke="#FFC580" stroke-width="2" stroke-linecap="round"><circle r="10" fill="#FFC580" fill-opacity=".32"></circle><path d="M0-19v4M0 15v4M-19 0h4M15 0h4M-13-13l3 3M10 10l3 3M13-13l-3 3M-10 10l-3 3"></path></g>
+<path class="moon" d="M6 12A13 13 0 0 1-7-10c-1.5 7 3 14 10.5 15.5 3 .7 5.8.4 7.6-.5A13 13 0 0 1 6 12Z" fill="#BCD0DD" stroke="#E0EDF2" stroke-width="1"></path>
+</g>
+<text class="nlbl" x="90" y="24">{{solarLbl}}</text>
+<text class="nval" x="90" y="43">{{solarVal}}</text>
+<g transform="translate(196 98)">
+<circle r="40" fill="#28291F" stroke="#A88958" stroke-opacity=".75"></circle>
+<circle r="34" fill="none" stroke="#E6C086" stroke-opacity=".28" stroke-dasharray="1 5"></circle>
+<path d="M-17 0V15H17V0" fill="#8A6448" stroke="#33271E" stroke-width="1.2"></path>
+<path d="M-22 2 0-17 22 2Z" fill="url(#eRoof)" stroke="#33271E" stroke-width="1.2"></path>
+<rect class="win" x="-11" y="4" width="7" height="6" rx="1"></rect>
+<rect class="win" x="4" y="4" width="7" height="6" rx="1"></rect>
+<rect x="-3" y="8" width="6" height="7" fill="#4A3628"></rect>
+<text class="nlbl" text-anchor="middle" y="29">HOUSE</text>
+</g>
+<text class="hval" text-anchor="middle" x="196" y="162">{{houseVal}}</text>
+<g transform="translate(52 158)">
+<circle class="gridnode" r="28" fill="#222820" stroke="#697D75"></circle>
+<path d="M-10 16-3-14h6l7 30M-7 2H7M-4-6h8M-14-8h28" fill="none" stroke="#C2D8DD" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+<path class="cut" d="M-14 14 14-14" stroke="#FAA192" stroke-width="4" stroke-linecap="round"></path>
+</g>
+<text class="nlbl" text-anchor="middle" x="52" y="200">{{gridLbl}}</text>
+<text class="nval" text-anchor="middle" x="52" y="214" style="font-size: 13px">{{gridVal}}</text>
+<g transform="translate(340 158)">
+<circle r="30" fill="#222820" stroke="#74937A"></circle>
+<rect x="-12" y="-20" width="24" height="40" rx="4" fill="#18231D" stroke="#B0D3AC" stroke-width="1.5"></rect>
+<path d="M-5-21v-3H5v3" fill="none" stroke="#B0D3AC" stroke-width="1.5"></path>
+<rect class="batfill" x="-8.5" width="17" rx="2" fill="url(#eBat)" style="{{batStyle}}"></rect>
+</g>
+<text class="nlbl" text-anchor="middle" x="334" y="200">POWERWALL 2</text>
+<text class="nval" text-anchor="middle" x="334" y="214" style="font-size: 13px">{{batVal}}</text>
+</svg>
+</div>
+<div class="stats">
+<div class="lead">{{e.main}}</div>
+<div class="leadsub">{{e.sub}}</div>
+<div class="stat">Solar right now<b>{{solarVal}}</b></div>
+<div class="stat">House is using<b>{{houseVal}}</b></div>
+<div class="stat">Powerwall<b>{{batVal}}</b></div>
+<div class="stat">Grid<b>{{gridStat}}</b></div>
+<sc-if value="{{showEssentials}}" hint-placeholder-val="{{ false }}"><button type="button" class="bigbtn" onclick="{{essentialsOn}}">Switch to essentials only</button></sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{onPlants}}" hint-placeholder-val="{{ false }}">
+<div class="sheet">
+<div class="handle"></div>
+<div class="shead"><span class="eb">Plants · 40 in 7 groups</span><h2 class="stitle">{{plHead}}</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
+<div class="sbody psb">
+<div class="plist">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="7">
+<div class="{{g.cls}}">
+<sc-if value="{{g.hasStop}}" hint-placeholder-val="{{ false }}"><span class="stopn">{{g.stop}}</span></sc-if><sc-if value="{{g.noStop}}" hint-placeholder-val="{{ true }}"><span class="okdot"></span></sc-if>
+<span class="pname"><b>{{g.room}}</b><span>{{g.sub}}</span></span>
+<span class="meter"><span class="mfill" style="{{g.fill}}"></span><span class="mtick" style="{{g.tick}}"></span></span>
+<span class="ppct">{{g.m}}%</span>
+<span class="pst">{{g.status}}</span>
+<sc-if value="{{g.isDry}}" hint-placeholder-val="{{ false }}"><button type="button" class="wbtn" onclick="{{g.tap}}">Watered</button></sc-if><sc-if value="{{g.notDry}}" hint-placeholder-val="{{ true }}"><span></span></sc-if>
+</div>
+</sc-for>
+</div>
+<div class="rcol">
+<span class="eb">{{routeLbl}}</span>
+<div class="lead">{{routeHead}}</div>
+<sc-for list="{{routeStops}}" as="r" hint-placeholder-count="2"><div class="rstop"><span class="stopn">{{r.n}}</span>{{r.room}}<span class="rp">{{r.plants}} plants</span></div></sc-for>
+<sc-if value="{{hasRoute}}" hint-placeholder-val="{{ true }}"><button type="button" class="bigbtn ink" onclick="{{logRoute}}">{{routeBtn}}</button></sc-if>
+<p class="note">One sensor sits in each group's thirstiest plant. When it dips below its line (the tick on the bar), the whole group gets water.</p>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{onControls}}" hint-placeholder-val="{{ false }}">
+<div class="sheet">
+<div class="handle"></div>
+<div class="shead"><span class="eb">Around the house</span><h2 class="stitle">Home</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
+<div class="sbody hsb">
+<div class="hpanel"><span class="eb">Heat · Ecobee</span><div class="thermo"><button type="button" class="tbtn" aria-label="Lower the heat" onclick="{{down}}">−</button><span class="tset">{{setpoint}}°</span><button type="button" class="tbtn" aria-label="Raise the heat" onclick="{{up}}">+</button></div><div class="csub">{{thermoSub}}</div></div>
+<div class="hpanel"><span class="eb">Lights · Wemo + Leviton</span><div class="lights"><sc-for list="{{lights}}" as="l" hint-placeholder-count="3"><button type="button" class="{{l.cls}}" aria-pressed="{{l.pressed}}" onclick="{{l.toggle}}"><i></i>{{l.name}}<small>{{l.state}}</small></button></sc-for></div></div>
+<div class="hpanel"><span class="eb">Outside</span>
+<div class="zone"><b>Yard · Rachio</b><span>Skipping while it's freezing</span></div>
+<div class="zone"><b>Garden · B-Hyve</b><span>{{gardenTxt}}</span><button type="button" class="zbtn" onclick="{{toggleGarden}}">{{gardenBtn}}</button></div>
+<button type="button" class="cam" onclick="{{camera}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="M16 10l5-3v10l-5-3"></path></svg>Ring live view</button>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div class="toast" role="status">{{toast}}</div></sc-if>
+</div>
+</template><div id="root"></div><script>
+class DCLogic{constructor(){this.props={};this.state=null;}setState(p){this.state=Object.assign({},this.state||{},p);schedule();}}
+
+
+
+var ICON = {
+  plant: "M5 19c0-8 6-14 14-14 0 8-6 14-14 14zM5 19l8-8",
+  weather: "M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9",
+  bill: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6",
+  home: "M4 11l8-7 8 7v9H4zM10 20v-5h4v5",
+  package: "M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10",
+  energy: "M13 2L4 14h7l-1 8 9-12h-7z",
+  door: "M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4",
+  air: "M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7",
+  light: "M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z",
+  water: "M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"
+};
+// Sample groups in walking order. Swap in Tyler's real rooms and indicator plants later.
+var GROUPS = [
+  { id: "kitchen", room: "Kitchen", ind: "basil", plants: 3, thr: 25, m: 15 },
+  { id: "dining", room: "Dining room", ind: "pothos", plants: 6, thr: 24, m: 43 },
+  { id: "living", room: "Living room", ind: "Boston fern", plants: 8, thr: 30, m: 38 },
+  { id: "office", room: "Office", ind: "fiddle leaf fig", plants: 6, thr: 25, m: 18 },
+  { id: "bedroom", room: "Bedroom", ind: "snake plant", plants: 7, thr: 15, m: 41 },
+  { id: "guest", room: "Guest room", ind: "monstera", plants: 4, thr: 28, m: 34 },
+  { id: "sunroom", room: "Sunroom", ind: "calathea", plants: 6, thr: 35, m: 61 }
+];
+var ALL = {
+  freeze: { cat: "weather", label: "Weather · Rachio", title: "First freeze tonight. Low of 28°", detail: "Rachio already skipped tomorrow's yard watering. Bring the 3 patio pots in before dark.", primary: "Done", toast: "Nice. The patio pots are safe." },
+  internet: { cat: "bill", label: "Bills · from email", title: "Your internet bill went up $12", detail: "The promo rate ended. Want a short script for the call to get it back?", primary: "Write the script", secondary: "Ignore", toast: "Script's ready in this week's report." },
+  doorbell: { cat: "door", urgent: true, label: "Front door · Ring", title: "Someone's at the front door", detail: "The doorbell rang just now. It looks like a delivery driver.", primary: "Show camera", secondary: "Dismiss", toast: "Opening the front door camera." },
+  outage: { cat: "energy", urgent: true, label: "Energy · Powerwall", title: "The power's out. The Powerwall has it.", detail: "The grid went down a minute ago. Switch to essentials only to stretch the battery?", primary: "Essentials only", secondary: "Keep everything on", fx: "essentials", arrive: "outageOn", toast: "Essentials only. That roughly doubles the time left." },
+  heat: { cat: "home", label: "Heat · Ecobee", title: "Nobody's home and the heat is at 70°", detail: "Want me to drop it to 64° until one of you gets back?", primary: "Drop to 64°", secondary: "Leave it", fx: "heat64", toast: "Done. Holding 64° until someone's home." },
+  restore: { cat: "energy", label: "Energy · Powerwall", title: "The power's back", detail: "The grid came back. The Powerwall got you through and is topping itself off.", primary: "Nice", arrive: "outageOff", toast: "Back to normal." },
+  garden: { cat: "water", label: "Garden · B-Hyve", title: "Time to winterize the garden drip?", detail: "Three nights below freezing this week. Pause the garden schedule until March?", primary: "Pause until March", secondary: "Not yet", fx: "gardenOff", toast: "The garden drip is paused until March 1." },
+  smoke: { cat: "air", label: "Air · outdoor sensor", title: "Smoky air outside", detail: "The air sensor is picking up wood smoke (PM2.5 at 48). Keep the windows closed tonight.", primary: "Got it", arrive: "smokeOn", fx: "smokeOff", toast: "Windows stay shut. I'll tell you when it clears." },
+  soil: { cat: "package", label: "Delivery · Ring", title: "Your potting soil was delivered", detail: "Ring saw it land on the porch at 2:41 PM. It's 40 pounds, so bring a friend.", primary: "Got it", toast: "I'll stop thinking about the soil now." },
+  lamps: { cat: "light", label: "Lights · Wemo", title: "The living room lamps are on. Nobody's home.", detail: "They've been keeping an empty room company for 2 hours.", primary: "Turn them off", secondary: "Leave them on", fx: "livingOff", toast: "Lamps off. The room will cope." },
+  trash: { cat: "reminder", label: "Reminder · every Tuesday, 8 AM", title: "Trash goes out this morning", detail: "Bins to the curb before pickup. This one comes back every Tuesday.", primary: "Done", secondary: "In an hour", toast: "Nice. See you next Tuesday." },
+  report: { cat: "home", label: "Weekly report", title: "Your Sunday house report is ready", detail: "2 bills due, 1 price change, nothing broken. Solar covered 71% of the house this week.", primary: "Open report", toast: "Opening this week's report." }
+};
+var INITIAL = ["freeze", "plants", "internet"];
+var QUEUE = ["doorbell", "trash", "ferns", "outage", "heat", "restore", "garden", "smoke", "soil", "lamps", "report"];
+var QUESTIONS = ["Set a pasta timer for one minute.", "Play some Robyn.", "What's tonight looking like?", "Put Judy Justice back on.", "How's the Powerwall doing?", "Which plants need water?", "Turn off the porch light."];
+var PLAY = "M8 5v14l11-7z";
+var PAUSE = "M7 5h4v14H7zM13 5h4v14h-4z";
+var LABELS = { rest: "Resting", listen: "Listening", think: "Thinking", speak: "Speaking", muted: "Mic off", alert: "Heads up" };
+var CAP = 13.5; // Powerwall 2 usable kWh
+
+function kw(v) { return Math.abs(v).toFixed(1) + " kW"; }
+
+class Component extends DCLogic {
+  componentDidMount() {
+    this._tick = setInterval(() => this.setState({ now: Date.now() }), 30000);
+    // When nothing is urgent, Pik moves to the next item every 25 seconds (paused for a minute after you page by hand).
+    this._cycle = setInterval(() => this.autoAdvance(), 25000);
+    this._sec = setInterval(() => this.tickTimers(), 1000);
+  }
+  componentWillUnmount() {
+    clearInterval(this._tick);
+    clearInterval(this._cycle);
+    clearInterval(this._sec);
+    clearTimeout(this._toastT);
+    clearTimeout(this._idle);
+    this.clearTalk();
+  }
+  tickTimers() {
+    var st = this.state || {};
+    var ts = st.timers || [];
+    if (!ts.length) return;
+    var now = Date.now();
+    var rang = false;
+    var next = ts.map((x) => {
+      if (!x.rang && x.end <= now) { rang = true; return Object.assign({}, x, { rang: true }); }
+      return x;
+    });
+    if (rang) this.chime();
+    this.setState({ timers: next, sec: now });
+  }
+  chime() {
+    // Three soft beeps. Browsers may block sound until the screen has been tapped once.
+    try {
+      var A = window.AudioContext || window.webkitAudioContext;
+      var ctx = this._ac || (this._ac = new A());
+      [0, 0.35, 0.7].forEach((off) => {
+        var o = ctx.createOscillator(); var g = ctx.createGain();
+        o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
+        var t0 = ctx.currentTime + off;
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
+        o.start(t0); o.stop(t0 + 0.3);
+      });
+    } catch (err) {}
+  }
+  addTimer(label, ms) {
+    var st = this.state || {};
+    var now = Date.now();
+    var ts = (st.timers || []).concat([{ id: now, label: label, total: ms, end: now + ms, rang: false }]).slice(-2);
+    this.setState({ timers: ts });
+  }
+  stopTimer(id) {
+    var st = this.state || {};
+    this.setState({ timers: (st.timers || []).filter((x) => x.id !== id) });
+  }
+  autoAdvance() {
+    var L = this._last;
+    var st = this.state || {};
+    if (!L || L.count < 2 || L.urgent || st.talk || (st.page && st.page !== "home")) return;
+    if (Date.now() < (this._hold || 0)) return;
+    this.setState({ idx: (L.curIdx + 1) % L.count, focus: null });
+  }
+  go(page) {
+    clearTimeout(this._idle);
+    this.clearTalk();
+    this.setState({ page: page, talk: null });
+    // A detail page drifts back home after 90 seconds untouched.
+    if (page !== "home") this._idle = setTimeout(() => this.setState({ page: "home" }), 90000);
+  }
+  clearTalk() {
+    clearTimeout(this._t1);
+    clearTimeout(this._t2);
+    clearTimeout(this._t3);
+  }
+  cur() {
+    var s = this.state || {};
+    var m = s.moist;
+    if (!m) { m = {}; GROUPS.forEach((g) => { m[g.id] = g.m; }); }
+    return {
+      cards: s.cards || INITIAL.slice(),
+      queue: s.queue || QUEUE.slice(),
+      newest: s.newest || null,
+      moist: m,
+      setpoint: s.setpoint || 70,
+      lights: s.lights || { living: true, porch: true, kitchen: false },
+      garden: s.garden === undefined ? true : s.garden,
+      outage: !!s.outage,
+      essentials: !!s.essentials,
+      smoky: !!s.smoky,
+      np: s.np === undefined ? { kind: "video", title: "Judy Justice", sub: "Prime Video", playing: true } : s.np
+    };
+  }
+  hour() {
+    var st = this.state || {};
+    if (st.mode === "day") return 16;
+    if (st.mode === "night") return 23;
+    return new Date(st.now || Date.now()).getHours();
+  }
+  thirsty(moist) {
+    return GROUPS.filter((g) => moist[g.id] < g.thr);
+  }
+  energy(s, dark) {
+    var e;
+    if (s.outage) {
+      var house = dark ? (s.essentials ? 0.7 : 1.4) : (s.essentials ? 0.9 : 1.7);
+      e = dark ? { solar: 0, house: house, bat: -house, grid: null, pct: 71 } : { solar: 4.8, house: house, bat: 4.8 - house, grid: null, pct: 82 };
+    } else if (dark) {
+      e = { solar: 0, house: 1.5, bat: -1.5, grid: 0, pct: 71 };
+    } else {
+      e = { solar: 4.8, house: 1.6, bat: 2.1, grid: 1.1, pct: 78 };
+    }
+    e.hours = e.bat < 0 ? Math.round((e.pct / 100) * CAP / -e.bat) : null;
+    if (s.outage && dark) { e.main = "Power's out. The Powerwall has it."; e.sub = (s.essentials ? "Essentials only · about " : "About ") + e.hours + " hours left at this rate"; }
+    else if (s.outage) { e.main = "Power's out. Solar and the Powerwall have it."; e.sub = "Still charging the battery while the grid is down"; }
+    else if (dark) { e.main = "The Powerwall is running the house"; e.sub = "Solar's asleep until about 7 AM"; }
+    else { e.main = "The sun is running the house"; e.sub = "Charging the Powerwall · sending the extra to the grid"; }
+    return e;
+  }
+  flash(msg) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: "" }), 2600);
+  }
+  water(ids) {
+    var s = this.cur();
+    var m = Object.assign({}, s.moist);
+    GROUPS.forEach((g) => { if (ids.indexOf(g.id) >= 0) m[g.id] = Math.min(60, g.thr + 22); });
+    this.setState({ moist: m });
+    return m;
+  }
+  applyFx(fx) {
+    var s = this.cur();
+    if (fx === "heat64") this.setState({ setpoint: 64 });
+    if (fx === "gardenOff") this.setState({ garden: false });
+    if (fx === "livingOff") this.setState({ lights: Object.assign({}, s.lights, { living: false }) });
+    if (fx === "porchOff") this.setState({ lights: Object.assign({}, s.lights, { porch: false }) });
+    if (fx === "essentials") this.setState({ essentials: true });
+    if (fx === "outageOn") this.setState({ outage: true, essentials: false });
+    if (fx === "outageOff") this.setState({ outage: false, essentials: false });
+    if (fx === "smokeOn") this.setState({ smoky: true });
+    if (fx === "smokeOff") this.setState({ smoky: false });
+  }
+  resolve(id, msg, snooze, fx) {
+    var s = this.cur();
+    var queue = snooze ? s.queue.concat([id]) : s.queue;
+    this.setState({ cards: s.cards.filter((x) => x !== id), queue: queue, newest: null, focus: null });
+    if (fx) this.applyFx(fx);
+    this.flash(msg);
+  }
+  next() {
+    var s = this.cur();
+    if (!s.queue.length) {
+      var m = {}; GROUPS.forEach((g) => { m[g.id] = g.m; });
+      this.setState({ cards: INITIAL.slice(), queue: QUEUE.slice(), newest: null, moist: m, setpoint: 70, garden: true, outage: false, essentials: false, smoky: false, lights: { living: true, porch: true, kitchen: false }, timers: [], np: undefined });
+      this.flash("Demo restarted.");
+      return;
+    }
+    var id = s.queue[0];
+    var rest = s.queue.slice(1);
+    if (id === "ferns") {
+      var g = GROUPS.find((x) => x.id === "living");
+      var mm = Object.assign({}, s.moist); mm.living = g.thr - 8;
+      this.setState({ moist: mm, cards: ["plants"].concat(s.cards.filter((x) => x !== "plants")), queue: rest, newest: "plants", focus: "plants" });
+      return;
+    }
+    if (ALL[id] && ALL[id].arrive) this.applyFx(ALL[id].arrive);
+    if (ALL[id] && ALL[id].urgent) { clearTimeout(this._idle); this.setState({ page: "home" }); }
+    this.setState({ cards: [id].concat(s.cards.filter((x) => x !== id)), queue: rest, newest: id, focus: id });
+  }
+  answer(i) {
+    var s = this.cur();
+    var dark = this.hour() >= 17 || this.hour() < 7;
+    var e = this.energy(s, dark);
+    var q = QUESTIONS[i];
+    if (q.indexOf("pasta timer") >= 0) { this.addTimer("Pasta", 60000); return "Pasta timer, one minute. Starting now."; }
+    if (q.indexOf("Robyn") >= 0) { this.setState({ np: { kind: "music", title: "Robyn", sub: "Amazon Music", playing: true } }); return "Playing Robyn on the Echo Show."; }
+    if (q.indexOf("Judy") >= 0) { this.setState({ np: { kind: "video", title: "Judy Justice", sub: "Prime Video", playing: true } }); return "Judy Justice is back on the Echo Show. Court is in session."; }
+    if (q.indexOf("tonight") >= 0) return (dark ? "31° now" : "48° now") + ", down to 28° tonight. It's the first freeze, so the patio pots should come in.";
+    if (q.indexOf("Powerwall") >= 0) {
+      if (s.outage) return "The grid's down. The Powerwall is at " + e.pct + "%" + (e.hours ? " with about " + e.hours + " hours left." : " and still charging from solar.");
+      if (dark) return "It's at " + e.pct + "% and running the house. Solar picks back up around 7.";
+      return "Solar's making 4.8 kW, the house is using 1.6, and the Powerwall is at 78% and charging. Smug, but earned.";
+    }
+    if (q.indexOf("plants") >= 0) {
+      var t = this.thirsty(s.moist);
+      if (!t.length) return "Nobody. All 7 groups are fine.";
+      var n = t.reduce((a, g) => a + g.plants, 0);
+      return t.map((g) => g.room).join(", then ") + ". That's " + n + " plants, about " + n + " minutes. The " + t[0].ind + " is doing most of the complaining.";
+    }
+    this.applyFx("porchOff");
+    return "Done. The porch light is off.";
+  }
+  talk() {
+    var st = this.state || {};
+    if (st.muted) { this.flash("My mic is off. Tap “Mic off” to turn it back on."); return; }
+    if (st.talk) return;
+    var i = (st.qi || 0) % QUESTIONS.length;
+    this.clearTalk();
+    this.setState({ talk: "listen", q: QUESTIONS[i], a: "", qi: i + 1 });
+    this._t1 = setTimeout(() => this.setState({ talk: "think" }), 1600);
+    this._t2 = setTimeout(() => this.setState({ talk: "speak", a: this.answer(i) }), 2900);
+    this._t3 = setTimeout(() => this.setState({ talk: null }), 8000);
+  }
+  renderVals() {
+    var s = this.cur();
+    var st = this.state || {};
+    var h = this.hour();
+    var quiet = h >= 23 || h < 7;
+    var dark = h >= 17 || h < 7;
+    var d = new Date(st.now || Date.now());
+    var mins = d.getMinutes();
+    var clock, ampm;
+    if (st.mode === "day") { clock = "4:32"; ampm = "PM"; }
+    else if (st.mode === "night") { clock = "11:42"; ampm = "PM"; }
+    else { clock = (h % 12 === 0 ? 12 : h % 12) + ":" + (mins < 10 ? "0" : "") + mins; ampm = h < 12 ? "AM" : "PM"; }
+    var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    // plants
+    var thirsty = this.thirsty(s.moist);
+    var thirstyIds = thirsty.map((g) => g.id);
+    var routeOn = thirsty.length >= 2;
+    var groups = GROUPS.map((g) => {
+      var m = s.moist[g.id];
+      var tone = m < g.thr ? "dry" : m >= 55 ? "wet" : "ok";
+      var stop = routeOn ? thirstyIds.indexOf(g.id) + 1 : 0;
+      var status = tone === "dry" ? "Thirsty" : tone === "wet" ? "Moist" : "Steady";
+      return {
+        cls: "prow " + tone,
+        room: g.room,
+        sub: g.ind.charAt(0).toUpperCase() + g.ind.slice(1) + " · " + g.plants + " plants",
+        m: m,
+        status: status,
+        fill: "width:" + Math.min(100, (m / 70) * 100).toFixed(0) + "%",
+        tick: "left:" + ((g.thr / 70) * 100).toFixed(0) + "%",
+        hasStop: stop > 0,
+        isDry: tone === "dry",
+        noStop: !(stop > 0),
+        notDry: tone !== "dry",
+        stop: stop,
+        aria: g.room + ", " + g.plants + " plants, soil at " + m + " percent, " + status + (tone === "dry" ? ". Tap to log watering." : "."),
+        tap: () => {
+          if (s.moist[g.id] < g.thr) { this.water([g.id]); this.flash("Logged: " + g.room.toLowerCase() + " group watered."); }
+          else this.flash(g.room + " is at " + m + "%. No water needed.");
+        }
+      };
+    });
+    var plantsNeeded = thirsty.reduce((a, g) => a + g.plants, 0);
+
+    // cards
+    var ids = s.cards.filter((id) => id !== "plants" || thirsty.length > 0);
+    var visibleIds = quiet ? ids.filter((id) => ALL[id] && ALL[id].urgent) : ids;
+    visibleIds = visibleIds.filter((id) => ALL[id] && ALL[id].urgent).concat(visibleIds.filter((id) => !(ALL[id] && ALL[id].urgent)));
+    var waiting = ids.length - visibleIds.length;
+    var urgent = ids.some((id) => ALL[id] && ALL[id].urgent);
+    var cards = visibleIds.map((id) => {
+      var c = ALL[id];
+      if (id === "plants") {
+        var one = thirsty.length === 1;
+        c = {
+          cat: "plant",
+          label: "Plants · indicator sensors",
+          title: one ? (thirsty[0].id === "living" ? "The ferns are being dramatic" : "The " + thirsty[0].room.toLowerCase() + " group is thirsty") : thirsty.length + " plant groups need water",
+          detail: one ? "The " + thirsty[0].ind + " is at " + s.moist[thirsty[0].id] + "%. Water all " + thirsty[0].plants + " plants in the " + thirsty[0].room.toLowerCase() + "." : thirsty.map((g) => g.room).join(" → ") + ". " + plantsNeeded + " plants, about " + plantsNeeded + " minutes. Tap Plants for the route.",
+          primary: one ? "Watered" : "Watered them all",
+          secondary: "Snooze 1 day",
+          toast: one ? "Logged: " + thirsty[0].room.toLowerCase() + " group watered." : "Logged: " + thirsty.length + " groups watered."
+        };
+      }
+      return {
+        cls: "card" + (c.urgent ? " urgent" : "") + (id === s.newest ? " new" : ""),
+        cat: c.cat,
+        icon: ICON[c.cat],
+        urgent: !!c.urgent,
+        label: c.label,
+        title: c.title,
+        detail: c.detail,
+        primary: c.primary,
+        secondary: c.secondary || "",
+        hasSecondary: !!c.secondary,
+        onPrimary: () => {
+          if (id === "plants") this.water(thirstyIds);
+          this.resolve(id, c.toast, false, c.fx);
+        },
+        onSecondary: () => this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null)
+      };
+    });
+    var count = visibleIds.length;
+
+    // energy
+    var e = this.energy(s, dark);
+    var batH = (e.pct * 0.34).toFixed(1);
+    var gridFlow = e.grid === null ? "flow w-grid" : e.grid > 0 ? "flow w-grid on rev" : e.grid < 0 ? "flow w-grid on" : "flow w-grid";
+
+    // pik
+    var nowMs = Date.now();
+    var tlist = st.timers || [];
+    var doneT = tlist.filter((x) => x.end <= nowMs);
+    var timerDone = doneT.length > 0;
+    var pik = st.talk || (urgent || timerDone ? "alert" : st.muted ? "muted" : "rest");
+    var line;
+    if (st.talk === "listen") line = "I'm listening.";
+    else if (st.talk === "think") line = "One second.";
+    else if (st.talk === "speak") line = "Here's what I found.";
+    else if (timerDone) line = "Your " + doneT[0].label.toLowerCase() + " timer is done.";
+    else if (urgent) line = "Heads up. This one's worth a look.";
+    else if (st.muted) line = "My mic is off. Tap below to turn it back on.";
+    else if (quiet) line = "Quiet hours. I'll only wake you for the important stuff.";
+    else if (count === 0) line = "Nothing needs you. Go sit down.";
+    else if (count === 1) line = "One thing needs you. Tap me to ask anything.";
+    else line = count + " things need you. None of them are on fire.";
+
+
+    var page = st.page || "home";
+    var nOn = ["living", "porch", "kitchen"].filter((k) => s.lights[k]).length;
+    var SUN = "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4";
+    var MOON = "M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z";
+    var stops = thirsty.map((g, i) => ({ n: i + 1, room: g.room, plants: g.plants }));
+
+    var anyUrg = visibleIds.some((x) => ALL[x] && ALL[x].urgent);
+    var focusOk = st.focus && visibleIds.indexOf(st.focus) >= 0 && (!anyUrg || (ALL[st.focus] && ALL[st.focus].urgent));
+    var curIdx = focusOk ? visibleIds.indexOf(st.focus) : anyUrg ? 0 : Math.min(st.idx || 0, Math.max(0, count - 1));
+    this._last = { count: count, curIdx: curIdx, urgent: visibleIds.some((x) => ALL[x] && ALL[x].urgent) };
+    var curCard = cards[curIdx] || { cat: "", label: "", title: "", detail: "", primary: "", hasSecondary: false, urgent: false };
+    var L = s.lights;
+    return {
+      appCls: (quiet ? "night " : "") + (dark ? "dark" : ""),
+      pik: pik,
+      pikAria: "Pik: " + LABELS[pik],
+      pikLabel: LABELS[pik],
+      pillCls: pik === "alert" ? "pill alert" : "pill",
+      pikLine: line,
+      talk: () => this.talk(),
+      talking: !!st.talk,
+      q: st.q || "",
+      a: st.talk === "listen" ? "Listening…" : st.talk === "think" ? "Thinking…" : (st.a || ""),
+      micCls: st.muted ? "mic off" : "mic",
+      micPressed: st.muted ? "true" : "false",
+      micLabel: st.muted ? "Mic off" : "Mic on",
+      micSlash: st.muted ? "M3 3l18 18" : "",
+      toggleMic: () => { this.clearTalk(); this.setState({ muted: !st.muted, talk: null }); },
+      clock: clock,
+      ampm: ampm,
+      dateLine: days[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate(),
+      outTemp: dark ? "31°" : "48°",
+      outLine: (dark ? "Clear" : "Sunny") + " · low 28°",
+      airCls: s.smoky ? "" : "good",
+      airLine: s.smoky ? "Air: smoky · PM2.5 48" : "Air: good · PM2.5 6",
+      insideLine: s.setpoint > 68 ? "Heating to " + s.setpoint + "°" : "Holding at " + s.setpoint + "°",
+      quietLine: quiet ? "Quiet hours until 7 AM" : "Quiet hours 11 PM – 7 AM",
+      dayBtnCls: st.mode === "day" ? "ghost on" : "ghost",
+      dayPressed: st.mode === "day" ? "true" : "false",
+      dayBtn: st.mode === "day" ? "Back to live" : "Preview day",
+      previewDay: () => this.setState({ mode: st.mode === "day" ? null : "day" }),
+      nightBtnCls: st.mode === "night" ? "ghost on" : "ghost",
+      nightPressed: st.mode === "night" ? "true" : "false",
+      nightBtn: st.mode === "night" ? "Back to live" : "Preview night",
+      previewNight: () => this.setState({ mode: st.mode === "night" ? null : "night" }),
+      heading: quiet ? "Quiet hours" : "Needs you",
+      hasCards: count > 0,
+      count: count,
+      hasWaiting: quiet && waiting > 0,
+      waiting: waiting,
+      isEmpty: count === 0,
+      emptyT: quiet ? "Nothing urgent" : "All caught up",
+      emptyS: quiet ? (waiting > 0 ? waiting + (waiting === 1 ? " thing is" : " things are") + " waiting for 7 AM. Sleep well." : "Nothing is waiting. Sleep well.") : "Even the ferns have nothing to say.",
+      cards: cards,
+      demoLabel: s.queue.length ? "Simulate event" : "Restart demo",
+      next: () => this.next(),
+      setpoint: s.setpoint,
+      down: () => this.setState({ setpoint: Math.max(60, s.setpoint - 1) }),
+      up: () => this.setState({ setpoint: Math.min(78, s.setpoint + 1) }),
+      lights: [["living", "Living room"], ["porch", "Porch"], ["kitchen", "Kitchen"]].map((x) => ({
+        name: x[1],
+        cls: L[x[0]] ? "lp on" : "lp",
+        state: L[x[0]] ? "On" : "Off",
+        pressed: L[x[0]] ? "true" : "false",
+        toggle: () => { var nl = Object.assign({}, L); nl[x[0]] = !L[x[0]]; this.setState({ lights: nl }); }
+      })),
+      yardTxt: "Freeze skip",
+      gardenTxt: s.garden ? "Drip runs on its schedule" : "Paused until March 1",
+      camera: () => this.flash("Opening the front door camera."),
+      energyCls: "panel epanel" + (dark ? " dark" : "") + (s.outage ? " out" : ""),
+      modeTxt: s.outage ? "Grid outage" : dark ? "After dark" : "Solar day",
+      energyAria: e.main + ". " + e.sub + ".",
+      solarFlow: e.solar > 0 ? "flow w-sun on" : "flow w-sun",
+      gridFlow: gridFlow,
+      batFlow: e.bat < 0 ? "flow w-bat on" : e.bat > 0 ? "flow w-bat on rev" : "flow w-bat",
+      solarLbl: dark ? "SOLAR · ASLEEP" : "SOLAR",
+      solarVal: kw(e.solar),
+      houseVal: kw(e.house),
+      gridLbl: s.outage ? "GRID · DOWN" : e.grid > 0 ? "GRID · EXPORT" : e.grid < 0 ? "GRID · IMPORT" : "GRID · IDLE",
+      gridVal: s.outage ? "Offline" : kw(e.grid),
+      batStyle: "height:" + batH + "px;y:" + (17 - batH).toFixed(1) + "px",
+      batVal: e.pct + "% · " + (e.bat > 0 ? "+" : "−") + kw(e.bat),
+      sumMain: e.main,
+      sumSub: e.sub,
+      groups: groups,
+      pcount: thirsty.length ? thirsty.length + " thirsty" : "All happy",
+      pcountCls: thirsty.length ? "" : "ok",
+      routeCls: thirsty.length ? "route" : "route clear",
+      routeLbl: thirsty.length ? "Watering route" : "All caught up",
+      routeTxt: thirsty.length ? thirsty.map((g) => g.room).join(" → ") : "The ferns can wait.",
+      hasRoute: thirsty.length > 0,
+      routeBtn: routeOn ? "Log the whole route" : "Log it",
+      logRoute: () => {
+        this.water(thirstyIds);
+        this.setState({ cards: this.cur().cards.filter((x) => x !== "plants") });
+        this.flash(routeOn ? "Logged: " + thirsty.length + " groups watered." : "Logged: watered.");
+      },
+      page: page,
+      onHome: page === "home",
+      onEnergy: page === "energy",
+      onPlants: page === "plants",
+      onControls: page === "controls",
+      goHome: () => this.go("home"),
+      openEnergy: () => this.go("energy"),
+      openPlants: () => this.go("plants"),
+      openControls: () => this.go("controls"),
+      e: e,
+      enModCls: "mod m-en" + (s.outage ? " out" : ""),
+      modeCls: "mode" + (s.outage ? " out" : ""),
+      miniSrcIcon: dark ? MOON : SUN,
+      miniSrcColor: dark ? "#BCD0DD" : "#FFC580",
+      miniA: e.solar > 0 ? "dots on" : "dots",
+      miniB: e.bat > 0 ? "dots on" : e.bat < 0 ? "dots on rev" : "dots",
+      mapPanelCls: "panel emapwrap" + (s.outage ? " out" : ""),
+      sumCardCls: "sumcard" + (s.outage ? " out" : ""),
+      gridStat: s.outage ? "Down" : e.grid > 0 ? "Sending " + kw(e.grid) : e.grid < 0 ? "Using " + kw(e.grid) : "Idle",
+      showEssentials: s.outage && !s.essentials,
+      essentialsOn: () => { this.applyFx("essentials"); this.setState({ cards: this.cur().cards.filter((x) => x !== "outage") }); this.flash("Essentials only. That roughly doubles the time left."); },
+      showTodayLine: !s.outage,
+      plBig: thirsty.length ? String(thirsty.length) : "40",
+      plBigSub: thirsty.length ? (thirsty.length === 1 ? "group thirsty" : "groups thirsty") : "plants happy",
+      plBigCls: "big " + (thirsty.length ? "dry" : "ok"),
+      plHead: thirsty.length ? thirsty.length + " thirsty" : "All happy",
+      plHeadCls: thirsty.length ? "phl dry" : "phl ok",
+      gdots: GROUPS.map((g) => { var m = s.moist[g.id]; return { cls: m < g.thr ? "dry" : m >= 55 ? "wet" : "" }; }),
+      plLine: thirsty.length ? thirsty.map((g) => g.room).join(" → ") + " · about " + plantsNeeded + " min" : "Everyone's had a drink.",
+      heatWord: s.setpoint > 68 ? "heating" : "holding",
+      lightsOn: nOn + " of 3 on",
+      waterWord: s.garden ? "Freeze skip · drip on" : "Both paused",
+      thermoSub: s.setpoint > 68 ? "Heating · it's 68° inside" : "Holding · it's 68° inside",
+      routeHead: thirsty.length > 1 ? thirsty.length + " stops, about " + plantsNeeded + " minutes" : thirsty.length ? "One stop, about " + plantsNeeded + " minutes" : "Nothing to water today",
+      routeStops: stops,
+      toggleGarden: () => { this.setState({ garden: !s.garden }); this.flash(s.garden ? "The garden drip is paused until March 1." : "The garden drip is back on schedule."); },
+      gardenBtn: s.garden ? "Pause until March" : "Resume",
+      themeCls: dark ? "" : "light",
+      dayName: days[d.getDay()],
+      monthDay: months[d.getMonth()] + " " + d.getDate(),
+      airShort: s.smoky ? "air smoky" : "air good",
+      airCls2: s.smoky ? "" : "airok",
+      showTalk: !!st.talk,
+      showCard: !st.talk && count > 0,
+      showEmpty: !st.talk && count === 0,
+      emptyEb: quiet ? "Quiet hours" : "Pik's list",
+      bubbleCls: "bubble" + (!st.talk && curCard.urgent ? " urgent" : ""),
+      cur: curCard,
+      pagerTxt: count === 1 ? "1 thing for you" : (curIdx + 1) + " of " + count,
+      pdots: count > 1 ? visibleIds.map((x, i) => ({ cls: i === curIdx ? "on" : "" })) : [],
+      prevCls: count > 1 ? "nbtn" : "nbtn dim",
+      nextCls: count > 1 ? "nbtn" : "nbtn dim",
+      goPrev: () => { if (count > 1) { this._hold = Date.now() + 60000; this.setState({ idx: (curIdx - 1 + count) % count, focus: null }); } },
+      goNext: () => { if (count > 1) { this._hold = Date.now() + 60000; this.setState({ idx: (curIdx + 1) % count, focus: null }); } },
+      hasPeek: count > 1,
+      peekTitle: count > 1 ? cards[(curIdx + 1) % count].title : "",
+      bfillCls: "bfill" + (e.bat > 0 ? " chg" : e.bat < 0 ? " dis" : "") + (s.outage ? " out" : ""),
+      bfillStyle: "width:" + e.pct + "%",
+      pebEnCls: "peb" + (s.outage ? " out" : ""),
+      pebEnLine: s.outage ? "Grid's down · tap for details" : dark ? "The battery is running the house" : "Charging from the sun",
+      pebPlCls: "pv" + (thirsty.length ? " dry" : ""),
+      plShort: thirsty.length ? thirsty.map((g) => g.room).join(" → ") : "Everyone's had a drink",
+      nOn: nOn,
+      ewinCls: "ewin" + (s.outage ? " out" : ""),
+      tmodeCls: tlist.length ? "tmode" : "",
+      hasTimers: tlist.length > 0,
+      timers: tlist.map((x) => {
+        var left = Math.max(0, x.end - nowMs);
+        var secs = Math.ceil(left / 1000);
+        var done = left <= 0;
+        return {
+          cls: "tchip" + (done ? " tdone" : ""),
+          left: done ? "Done" : Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2),
+          label: x.label,
+          dash: "stroke-dashoffset:" + (163.4 * (1 - left / x.total)).toFixed(1),
+          btn: done ? "Stop" : "×",
+          aria: done ? "Stop the " + x.label + " timer" : "Cancel the " + x.label + " timer",
+          stop: () => { this.stopTimer(x.id); if (!done) this.flash(x.label + " timer canceled."); }
+        };
+      }),
+      pebsCls: s.np ? "pebs five" : "pebs",
+      hasNp: !!s.np,
+      npTitle: s.np ? s.np.title : "",
+      npSub: s.np ? (s.np.playing ? "" : "Paused · ") + "Echo Show · " + s.np.sub : "",
+      eqCls: s.np && s.np.playing ? "eq on" : "eq",
+      npIcon: s.np && s.np.playing ? PAUSE : PLAY,
+      npToggleLbl: s.np && s.np.playing ? "Pause" : "Play",
+      npToggle: () => { if (s.np) this.setState({ np: Object.assign({}, s.np, { playing: !s.np.playing }) }); },
+      volDown: () => { var v = Math.max(1, (st.vol || 5) - 1); this.setState({ vol: v }); this.flash("Echo volume " + v); },
+      volUp: () => { var v = Math.min(10, (st.vol || 5) + 1); this.setState({ vol: v }); this.flash("Echo volume " + v); },
+      npStop: () => { this.setState({ np: null }); this.flash("Stopped the Echo Show."); },
+      hasToast: !!st.toast,
+      toast: st.toast || ""
+    };
+  }
+}
+
+
+
+const comp=new Component(); let pending=false;
+function schedule(){if(!pending){pending=true;setTimeout(()=>{pending=false;paint();},0);}}
+function look(expr,scope){expr=expr.trim();let v=scope;for(const k of expr.split('.')){if(v==null)return undefined;v=v[k];}return v;}
+function sub(str,scope){return str.replace(/\{\{([^}]+)\}\}/g,(m,e)=>{const v=look(e,scope);return v==null?'':String(v);});}
+function walk(node,scope){
+  for(const ch of [...node.childNodes]){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue;}
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){const list=look(ch.getAttribute('list').replace(/[{}]/g,''),scope)||[];const as=ch.getAttribute('as');
+      const frag=document.createDocumentFragment();
+      for(const item of list){const c=ch.cloneNode(true);const s2=Object.assign({},scope,{[as]:item});walk(c,s2);while(c.firstChild)frag.appendChild(c.firstChild);}
+      ch.replaceWith(frag);continue;}
+    if(tag==='sc-if'){const v=look(ch.getAttribute('value').replace(/[{}]/g,''),scope);
+      if(v){walk(ch,scope);const frag=document.createDocumentFragment();while(ch.firstChild)frag.appendChild(ch.firstChild);ch.replaceWith(frag);}else ch.remove();continue;}
+    for(const a of [...ch.attributes]){
+      if(a.name==='onclick'){const f=look(a.value.replace(/[{}]/g,''),scope);ch.removeAttribute('onclick');if(typeof f==='function')ch.addEventListener('click',f);continue;}
+      if(a.value.includes('{{'))ch.setAttribute(a.name,sub(a.value,scope));
+    }
+    walk(ch,scope);
+  }
+}
+function paint(){const vals=comp.renderVals();const root=document.getElementById('root');root.innerHTML='';
+  const c=document.getElementById('t').content.cloneNode(true);const holder=document.createElement('div');holder.appendChild(c);walk(holder,vals);
+  while(holder.firstChild)root.appendChild(holder.firstChild);}
+window.comp=comp; paint(); if(comp.componentDidMount)comp.componentDidMount();
+</script></body></html>
