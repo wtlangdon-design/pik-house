@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Pik: Mic off">
+  <defs>
+    <radialGradient id="mutedhalo"><stop stop-color="#A9AAA1" stop-opacity=".25"/><stop offset="1" stop-color="#A9AAA1" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mutedclay" x1=".14" y1=".03" x2=".79" y2=".95" gradientUnits="objectBoundingBox"><stop stop-color="#FFDF9B"/><stop offset=".52" stop-color="#F0AF64"/><stop offset="1" stop-color="#BD6A42"/></linearGradient>
+    <linearGradient id="mutedmutedglow" x1=".14" y1=".03" x2=".79" y2=".95"><stop stop-color="#CDC1A4"/><stop offset="1" stop-color="#9E846D"/></linearGradient>
+    <radialGradient id="mutedlight" cx=".28" cy=".15" r=".77"><stop stop-color="#FFF3C3" stop-opacity=".64"/><stop offset="1" stop-color="#FFF3C3" stop-opacity="0"/></radialGradient>
+  </defs>
+  <circle cx="128" cy="130" r="124" fill="url(#mutedhalo)"/>
+  <circle cx="128" cy="128" r="98" stroke="#A9AAA1" stroke-width="1.45" opacity="0.96" fill="none" stroke-dasharray="4 8"/>
+  <ellipse cx="129" cy="196" rx="52" ry="8" fill="#20160C" opacity=".28"/>
+  <path d="M57 139C55 110 67 70 98 59c25-9 67-7 82 13 20 25 27 72 13 96-12 20-36 27-69 26-41 0-65-17-67-55Z" fill="url(#mutedmutedglow)" stroke="#FFDC9C" stroke-opacity=".53" stroke-width="1.2"/>
+  <path d="M57 139C55 110 67 70 98 59c25-9 67-7 82 13 20 25 27 72 13 96-12 20-36 27-69 26-41 0-65-17-67-55Z" fill="url(#mutedlight)" opacity="0.4"/>
+  <path d="M82 99q11-24 30-27" fill="none" stroke="#FFF3C8" opacity=".58" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M89 154l8 1m76-7 7-2" fill="none" stroke="#8B452E" stroke-opacity=".31" stroke-width="2" stroke-linecap="round"/>
+  <g fill="none" stroke="#3B291C" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M103 134l17-2m28-2 17-2m-34 18 9-1"/></g>
+  <g transform="translate(203 187)"><circle r="22" fill="#242925" stroke="#A9AAA1"/><path d="M-10-10 10 10M-4-5v-3a4 4 0 0 1 8 0v7M-8-1v1a8 8 0 0 0 14 5M0 8v4" fill="none" stroke="#F0E8D9" stroke-width="2" stroke-linecap="round"/></g>
+</svg>
