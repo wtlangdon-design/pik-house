@@ -93,6 +93,15 @@ body{margin:0}
 .tt b{display:block;font:400 34px 'Instrument Serif',Georgia,serif;font-variant-numeric:tabular-nums}
 .tt span{display:block;font:600 12px 'DM Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .tx{height:44px;min-width:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.timers.many .tchip{padding:6px 8px 6px 16px}
+.timers.many .tchip svg{display:none}
+.timers.many .tt{display:flex;align-items:baseline;gap:10px}
+.timers.many .tt b{font-size:26px}
+.timers.many .tt span{margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timers.many .tx{height:38px;min-width:38px}
+.tmore{height:40px;border-radius:20px;border:1px dashed var(--line);background:none;color:var(--ink);font:700 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.tsb{grid-template-columns:1fr;align-content:start;overflow-y:auto;overscroll-behavior:contain}
+.tsb .ctimers{gap:14px}
 .tchip.tdone{border-color:var(--urg);background:var(--urgBg);animation:tpulse 1s ease-in-out infinite}
 .tchip.tdone .tr-fg{stroke:var(--urg)}
 .tchip.tdone .tt b{color:var(--urg)}
@@ -345,7 +354,7 @@ body{margin:0}
 </svg>
 </button>
 <div class="pikname"><b>Pik</b><span class="{{pillCls}}">{{pikLabel}}</span><button type="button" class="{{micCls}}" aria-pressed="{{micPressed}}" aria-label="{{micLabel}}" onclick="{{toggleMic}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"></path><path d="{{micSlash}}"></path></svg></button></div>
-<sc-if value="{{hasTimers}}" hint-placeholder-val="{{ false }}"><div class="timers"><sc-for list="{{timers}}" as="tm" hint-placeholder-count="1"><div class="{{tm.cls}}"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle class="tr-bg" cx="32" cy="32" r="26"></circle><circle class="tr-fg" cx="32" cy="32" r="26" style="{{tm.dash}}"></circle></svg><div class="tt"><b>{{tm.left}}</b><span>{{tm.label}}</span></div><button type="button" class="tx" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.btn}}</button></div></sc-for></div></sc-if>
+<sc-if value="{{hasTimers}}" hint-placeholder-val="{{ false }}"><div class="{{timersCls}}"><sc-for list="{{timersShown}}" as="tm" hint-placeholder-count="1"><div class="{{tm.cls}}"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle class="tr-bg" cx="32" cy="32" r="26"></circle><circle class="tr-fg" cx="32" cy="32" r="26" style="{{tm.dash}}"></circle></svg><div class="tt"><b>{{tm.left}}</b><span>{{tm.label}}</span></div><button type="button" class="tx" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.btn}}</button></div></sc-for><sc-if value="{{hasMoreTimers}}" hint-placeholder-val="{{ false }}"><button type="button" class="tmore" onclick="{{openTimers}}">{{moreTimersTxt}}</button></sc-if></div></sc-if>
 </div>
 <div class="{{bubbleCls}}" aria-live="polite">
 <sc-if value="{{showTalk}}" hint-placeholder-val="{{ false }}">
@@ -529,6 +538,16 @@ body{margin:0}
 <sc-if value="{{hasCookTimers}}" hint-placeholder-val="{{ true }}"><div class="ctimers"><sc-for list="{{timers}}" as="tm" hint-placeholder-count="1"><div class="{{tm.ccls}}"><b>{{tm.left}}</b>{{tm.label}}<button type="button" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.cbtn}}</button></div></sc-for></div></sc-if>
 <div class="cnav"><button type="button" class="cback" onclick="{{stepBack}}">Back</button><button type="button" class="bigbtn ink" onclick="{{stepNext}}">{{nextLbl}}</button></div>
 </div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{onTimers}}" hint-placeholder-val="{{ false }}">
+<div class="sheet">
+<div class="handle"></div>
+<div class="shead"><span class="eb">Kitchen timers</span><h2 class="stitle">{{timersHead}}</h2><button type="button" class="done" onclick="{{goHome}}">Done</button></div>
+<div class="sbody tsb">
+<div class="ctimers"><sc-for list="{{timers}}" as="tm" hint-placeholder-count="4"><div class="{{tm.ccls}}"><b>{{tm.left}}</b>{{tm.label}}<button type="button" aria-label="{{tm.aria}}" onclick="{{tm.stop}}">{{tm.cbtn}}</button></div></sc-for></div>
+<p class="note">No limit on timers. Up to three show next to Pik, soonest first; the rest live here.</p>
 </div>
 </div>
 </sc-if>
@@ -736,7 +755,7 @@ class Component extends DCLogic {
   addTimer(label, ms) {
     var st = this.state || {};
     var now = Date.now();
-    var ts = (st.timers || []).concat([{ id: now, label: label, total: ms, end: now + ms, rang: false }]).slice(-2);
+    var ts = (st.timers || []).concat([{ id: now + Math.random(), label: label, total: ms, end: now + ms, rang: false }]);
     this.setState({ timers: ts });
   }
   stopTimer(id) {
@@ -829,14 +848,22 @@ class Component extends DCLogic {
     return (this.state || {}).guide === "fix" ? FIX : RECIPE;
   }
   startCook(kind) {
-    this.setState({ guide: kind === "fix" ? "fix" : "cook", cookStep: 0, cookStarted: {} });
+    var st = this.state || {};
+    var g = kind === "fix" ? "fix" : "cook";
+    // Already in progress: pick up where you left off instead of starting over.
+    if (st.cookActive && st.guide === g) { this.go("cook"); return; }
+    this.setState({ guide: g, cookStep: 0, cookStarted: {}, cookActive: true });
     this.go("cook");
+  }
+  endCook() {
+    this.setState({ cookActive: false, cookStep: 0, cookStarted: {} });
   }
   cookTo(i) {
     var st = this.state || {};
     var G = this.guide();
     var n = G.steps.length;
     if (i >= n) {
+      this.endCook();
       this.log(G.done, G.how, "Kitchen screen");
       this.go("home");
       this.flash(G === FIX ? "Drip fixed. I added it to the house history." : "Dinner's on. I added it to the house history.");
@@ -881,7 +908,7 @@ class Component extends DCLogic {
     var s = this.cur();
     if (!s.queue.length) {
       var m = {}; GROUPS.forEach((g) => { m[g.id] = g.m; });
-      this.setState({ cards: INITIAL.slice(), queue: QUEUE.slice(), newest: null, moist: m, setpoint: 70, garden: true, outage: false, essentials: false, smoky: false, lights: { living: true, porch: true, kitchen: false }, timers: [], np: undefined, log: [], cookStep: 0, cookStarted: {}, concert: false, sticker: false, guide: "cook" });
+      this.setState({ cards: INITIAL.slice(), queue: QUEUE.slice(), newest: null, moist: m, setpoint: 70, garden: true, outage: false, essentials: false, smoky: false, lights: { living: true, porch: true, kitchen: false }, timers: [], np: undefined, log: [], cookStep: 0, cookStarted: {}, cookActive: false, concert: false, sticker: false, guide: "cook" });
       this.flash("Demo restarted.");
       return;
     }
@@ -988,12 +1015,27 @@ class Component extends DCLogic {
 
     // cards
     var ids = s.cards.filter((id) => id !== "plants" || thirsty.length > 0);
+    if (st.cookActive) ids = ["cooking"].concat(ids);
     var visibleIds = quiet ? ids.filter((id) => ALL[id] && ALL[id].urgent) : ids;
     visibleIds = visibleIds.filter((id) => ALL[id] && ALL[id].urgent).concat(visibleIds.filter((id) => !(ALL[id] && ALL[id].urgent)));
     var waiting = ids.length - visibleIds.length;
     var urgent = ids.some((id) => ALL[id] && ALL[id].urgent);
     var cards = visibleIds.map((id) => {
       var c = ALL[id];
+      if (id === "cooking") {
+        var RG = this.guide();
+        var ci = Math.min(st.cookStep || 0, RG.steps.length - 1);
+        var running = (st.timers || []).filter((x) => x.end > Date.now()).length;
+        c = {
+          cat: RG === FIX ? "fix" : "cook",
+          label: (RG === FIX ? "Fix-it" : "Cooking") + " · in progress",
+          title: (RG === FIX ? "Back to the faucet?" : "Back to the soup?") + " You're on step " + (ci + 1) + " of " + RG.steps.length,
+          detail: RG.steps[ci].t + (running ? " " + running + (running === 1 ? " timer is" : " timers are") + " still going." : ""),
+          primary: "Back to it",
+          secondary: "I'm done",
+          resume: true
+        };
+      }
       if (id === "plants") {
         var one = thirsty.length === 1;
         c = {
@@ -1018,10 +1060,11 @@ class Component extends DCLogic {
         secondary: c.secondary || "",
         hasSecondary: !!c.secondary,
         onPrimary: () => {
+          if (c.resume) { this.go("cook"); return; }
           if (id === "plants") this.water(thirstyIds);
           this.resolve(id, c.toast, false, c.fx);
         },
-        onSecondary: () => c.secUndo ? (this.resolve(id, "Undone. It's off both calendars.", false, null), this.setState({ concert: false })) : c.secPage ? (this.resolve(id, "Opening the house history.", false, null), this.go(c.secPage)) : c.secondary === "Remind me at 4" ? this.resolve(id, "Okay. I'll bring it back at 4.", true, null) : this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null)
+        onSecondary: () => c.resume ? (this.endCook(), this.flash("Okay. I closed it out. Your timers keep running.")) : c.secUndo ? (this.resolve(id, "Undone. It's off both calendars.", false, null), this.setState({ concert: false })) : c.secPage ? (this.resolve(id, "Opening the house history.", false, null), this.go(c.secPage)) : c.secondary === "Remind me at 4" ? this.resolve(id, "Okay. I'll bring it back at 4.", true, null) : this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null)
       };
     });
     var count = visibleIds.length;
@@ -1065,6 +1108,22 @@ class Component extends DCLogic {
     var G = this.guide();
     var cookI = Math.min(st.cookStep || 0, G.steps.length - 1);
     var cookStep = G.steps[cookI];
+    var timerVals = tlist.slice().sort((p, q) => p.end - q.end).map((x) => {
+        var left = Math.max(0, x.end - nowMs);
+        var secs = Math.ceil(left / 1000);
+        var done = left <= 0;
+        return {
+          cls: "tchip" + (done ? " tdone" : ""),
+          left: done ? "Done" : Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2),
+          label: x.label,
+          dash: "stroke-dashoffset:" + (163.4 * (1 - left / x.total)).toFixed(1),
+          btn: done ? "Stop" : "×",
+          ccls: "ctime" + (done ? " tdone" : ""),
+          cbtn: done ? "Stop" : "Cancel",
+          aria: done ? "Stop the " + x.label + " timer" : "Cancel the " + x.label + " timer",
+          stop: () => { this.stopTimer(x.id); if (!done) this.flash(x.label + " timer canceled."); }
+        };
+    });
     var cal = CAL.concat(st.concert ? [CONCERT] : []);
     var dayOrder = [];
     cal.forEach((x) => { if (dayOrder.indexOf(x.day) < 0) dayOrder.push(x.day); });
@@ -1220,22 +1279,14 @@ class Component extends DCLogic {
       ewinCls: "ewin" + (s.outage ? " out" : ""),
       tmodeCls: tlist.length ? "tmode" : "",
       hasTimers: tlist.length > 0,
-      timers: tlist.map((x) => {
-        var left = Math.max(0, x.end - nowMs);
-        var secs = Math.ceil(left / 1000);
-        var done = left <= 0;
-        return {
-          cls: "tchip" + (done ? " tdone" : ""),
-          left: done ? "Done" : Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2),
-          label: x.label,
-          dash: "stroke-dashoffset:" + (163.4 * (1 - left / x.total)).toFixed(1),
-          btn: done ? "Stop" : "×",
-          ccls: "ctime" + (done ? " tdone" : ""),
-          cbtn: done ? "Stop" : "Cancel",
-          aria: done ? "Stop the " + x.label + " timer" : "Cancel the " + x.label + " timer",
-          stop: () => { this.stopTimer(x.id); if (!done) this.flash(x.label + " timer canceled."); }
-        };
-      }),
+      timersCls: "timers" + (tlist.length > 2 ? " many" : ""),
+      timersShown: timerVals.slice(0, tlist.length > 3 ? 2 : 3),
+      hasMoreTimers: tlist.length > 3,
+      moreTimersTxt: "+" + (tlist.length - 2) + " more timers",
+      openTimers: () => this.go("timers"),
+      onTimers: page === "timers",
+      timersHead: tlist.length === 1 ? "1 timer" : tlist.length + " timers",
+      timers: timerVals,
       pebsCls: s.np ? "pebs five" : "pebs",
       hasNp: !!s.np,
       npTitle: s.np ? s.np.title : "",
