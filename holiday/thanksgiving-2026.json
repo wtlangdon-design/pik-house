@@ -1,0 +1,2859 @@
+{
+ "id": "thanksgiving_2026",
+ "title": "Thanksgiving",
+ "subtitle": "Thursday, November 26 · dinner for 7 at 4:00 PM",
+ "tz": "-08:00",
+ "dinner": "2026-11-26T16:00:00-08:00",
+ "days": {
+  "tue": "2026-11-24",
+  "wed": "2026-11-25",
+  "thu": "2026-11-26"
+ },
+ "dayNames": {
+  "tue": "Tuesday night",
+  "wed": "Wednesday",
+  "thu": "Thursday"
+ },
+ "recipes": [
+  {
+   "id": "eggs",
+   "n": 1,
+   "name": "Dijon deviled eggs with crisp prosciutto and chives",
+   "tag": "Family recipe",
+   "gf": "Gluten-free",
+   "yield": "16 halves",
+   "active": "35 min",
+   "passive": "35 min (boil, ice bath)",
+   "src": null,
+   "equip": [
+    "Saucepan with lid",
+    "Bowl of ice water",
+    "Small bowl and fork",
+    "Piping bag or zip-top bag",
+    "Skillet and paper towels (prosciutto)",
+    "Egg plate or platter"
+   ],
+   "ingr": [
+    [
+     "8",
+     "large eggs"
+    ],
+    [
+     "¼ cup",
+     "mayonnaise"
+    ],
+    [
+     "2 tsp",
+     "Dijon mustard"
+    ],
+    [
+     "1 splash",
+     "apple cider vinegar",
+     "about ½ tsp; family recipe says a splash"
+    ],
+    [
+     "≈2 oz",
+     "prosciutto",
+     "amount is our suggestion for 16 halves"
+    ],
+    [
+     "2 tbsp",
+     "fresh chives, finely chopped"
+    ]
+   ],
+   "done": "Yolks fully set and pale yellow all the way through. Prosciutto is crisp when it snaps after cooling.",
+   "ahead": "Boil, peel and make the filling Wednesday. Keep whites and filling separate, covered, in the fridge. Crisp the prosciutto Thursday morning.",
+   "store": "Filling and whites: fridge up to 2 days. Assembled eggs go back in the fridge within 2 hours of coming out. Prosciutto: airtight at room temperature, same day.",
+   "steps": [
+    {
+     "d": "wed",
+     "t": "Put eggs in the saucepan, cover with cold water by an inch, and bring to a boil over high heat.",
+     "tm": [
+      "Eggs: water boiling?",
+      10,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "As soon as it boils, cover, turn off the heat and let the eggs sit. At Reno's elevation this takes a little longer: check one egg.",
+     "tm": [
+      "Eggs: check one egg",
+      14,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Move eggs to ice water until cold.",
+     "tm": [
+      "Eggs: cooled",
+      10,
+      "done"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Peel, halve lengthwise, and pop the yolks into a bowl. Cover the whites and refrigerate."
+    },
+    {
+     "d": "wed",
+     "t": "Mash yolks with the mayo, Dijon and a splash of cider vinegar until smooth. Taste. Spoon into the piping bag, seal, refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "9:00 AM: crisp the prosciutto in a dry skillet over medium, turning once, until it darkens and stops sizzling. Drain on paper towels; it crisps as it cools. Crumble.",
+     "tm": [
+      "Prosciutto: flip / check",
+      3,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "1:45 PM: pipe the filling into the whites. Cover and refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "2:30 PM: top with prosciutto and chives right before they go out. Back in the fridge by 4:30."
+    }
+   ]
+  },
+  {
+   "id": "dip",
+   "n": 2,
+   "name": "Ina Garten's salmon roe dip with kettle chips",
+   "tag": "Ina Garten",
+   "gf": "Dip is gluten-free; check the chips",
+   "yield": "About 2 cups",
+   "active": "15 min",
+   "passive": "Chill until serving",
+   "src": [
+    "Barefoot Contessa",
+    "https://barefootcontessa.com/recipes/caviar-dip"
+   ],
+   "equip": [
+    "Stand mixer with paddle (or hand mixer)",
+    "Rubber spatula",
+    "Serving bowl",
+    "Plastic wrap"
+   ],
+   "ingr": [
+    [
+     "8 oz",
+     "cream cheese, room temperature"
+    ],
+    [
+     "½ cup",
+     "sour cream"
+    ],
+    [
+     "2 tsp",
+     "fresh lemon juice"
+    ],
+    [
+     "2 tbsp",
+     "fresh dill, minced, plus sprigs to garnish"
+    ],
+    [
+     "1",
+     "scallion, minced (white and green)"
+    ],
+    [
+     "1 tbsp",
+     "cream",
+     "from your cream; replaces the recipe's milk/half-and-half"
+    ],
+    [
+     "¼ tsp",
+     "kosher salt",
+     "fine Himalayan works; use a scant ¼ tsp"
+    ],
+    [
+     "to taste",
+     "black pepper"
+    ],
+    [
+     "≈100 g",
+     "Keta salmon roe",
+     "both 1.75-oz jars"
+    ],
+    [
+     "1–2 bags",
+     "salty kettle chips"
+    ]
+   ],
+   "done": "Smooth, no cream-cheese lumps; roe beads stay whole (fold, don't beat).",
+   "ahead": "Make Thursday morning and keep cold. The recipe gives no make-ahead time, so same-day is the safe call.",
+   "store": "Cold until serving. Out no more than 2 hours. Leftovers covered in the fridge; best the next day.",
+   "steps": [
+    {
+     "d": "thu",
+     "t": "8:30 AM: take the cream cheese out to soften."
+    },
+    {
+     "d": "thu",
+     "t": "9:15 AM: beat the cream cheese until smooth."
+    },
+    {
+     "d": "thu",
+     "t": "On medium, mix in sour cream, lemon juice, dill, scallion, cream, salt and pepper."
+    },
+    {
+     "d": "thu",
+     "t": "Gently fold in about three-quarters of the roe with a spatula. Scrape into the serving bowl, cover, refrigerate. Keep the rest of the roe cold."
+    },
+    {
+     "d": "thu",
+     "t": "2:30 PM: top with the remaining roe and dill sprigs. Serve with chips."
+    }
+   ]
+  },
+  {
+   "id": "turkey",
+   "n": 3,
+   "name": "Smoked spatchcock turkey with garlic-herb butter",
+   "tag": "smoking-meat.com, adapted",
+   "gf": "Gluten-free",
+   "yield": "16-lb bird (planned), dinner for 7 plus leftovers",
+   "active": "1 hr 30 min over 3 days",
+   "passive": "≈10 hr brine, overnight drying, ≈3½–4½ hr smoke, 30–45 min rest",
+   "src": [
+    "Jeff Phillips, smoking-meat.com",
+    "https://www.smoking-meat.com/spatchcocked-turkey-with-herbed-butter"
+   ],
+   "equip": [
+    "Poultry shears and a big cutting board",
+    "Brining bag (from the Kinder's kit) set inside a container or cooler",
+    "Rimmed baking sheet with a rack (drying, carrying)",
+    "Disposable deep roaster as a drip pan under the grate",
+    "Leave-in probe + instant-read thermometer",
+    "Foil, paper towels",
+    "Carving board with a groove",
+    "Fat separator (optional, for drippings)"
+   ],
+   "ingr": [
+    [
+     "—",
+     "Brine, per gallon (make enough to cover; likely 2 gallons)"
+    ],
+    [
+     "1 gal",
+     "cold water"
+    ],
+    [
+     "230 g",
+     "Himalayan salt (weigh it)",
+     "on your kitchen scale; matches the recipe's 1 cup coarse kosher salt"
+    ],
+    [
+     "¾ cup",
+     "brown sugar"
+    ],
+    [
+     "—",
+     "Garlic-herb butter (the recipe's)"
+    ],
+    [
+     "8 tbsp",
+     "unsalted butter, softened"
+    ],
+    [
+     "¼ cup each",
+     "chopped fresh parsley, thyme, chives, sage, and onion"
+    ],
+    [
+     "5",
+     "garlic cloves, minced"
+    ],
+    [
+     "2 tbsp",
+     "homemade rub (below)"
+    ],
+    [
+     "—",
+     "Homemade salt-free rub (your choice)"
+    ],
+    [
+     "2 tbsp",
+     "paprika"
+    ],
+    [
+     "2 tbsp",
+     "garlic powder"
+    ],
+    [
+     "2 tbsp",
+     "onion powder"
+    ],
+    [
+     "1 tbsp",
+     "black pepper"
+    ],
+    [
+     "1 tbsp",
+     "dried thyme"
+    ],
+    [
+     "",
+     "2 tbsp go in the butter; the rest goes lightly on the outside"
+    ]
+   ],
+   "done": "USDA: 165°F in all three places: thickest part of the breast, innermost thigh, innermost wing. The recipe's 160°F breast target is overridden. Log readings on the Turkey tab.",
+   "ahead": "Spatchcock and brine Tuesday night; dry uncovered in the fridge Wednesday to Thursday morning. Butter and rub Wednesday.",
+   "store": "Carve the rest off the bone, into shallow containers, in the fridge within 2 hours of serving. Eat within 3–4 days; reheat to 165°F.",
+   "flags": [
+    [
+     "warn",
+     "Provisional until confirmed",
+     "Lock these before brining: actual weight, fresh vs. thawed, added-solution label."
+    ],
+    [
+     "note",
+     "Rub and bag",
+     "Homemade salt-free rub only: no commercial rub, no Kinder's seasoning packets. The Kinder's bag is a brining bag, not an oven bag. Butter stays at one stick even though the bird is bigger than the recipe's."
+    ],
+    [
+     "conf",
+     "Confirm when it arrives",
+     "Weight and label. If the label says enhanced, basted, self-basting, kosher, or lists a salt solution, don't brine; tell me and we'll switch plans."
+    ],
+    [
+     "note",
+     "Brine strength",
+     "Your first salt brine (last year was buttermilk), so this follows the recipe as written: 230 g per gallon, the usual reading of its \"1 cup coarse kosher\", for 10 hours. Weigh the salt on your kitchen scale. The drippings will be saltier than last year's, so taste before they go in the gravy."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "tue",
+     "t": "7:00 PM: unwrap, check the label, weigh it. Pull out the neck and giblets and any pop-up timer or leg clip. Keep the neck in the fridge (optional gravy flavor)."
+    },
+    {
+     "d": "tue",
+     "t": "Spatchcock: breast down, cut along both sides of the backbone with shears and remove it. Flip, press firmly on the breastbone to flatten."
+    },
+    {
+     "d": "tue",
+     "t": "Mix brine: for each gallon, dissolve 230 g salt and ¾ cup brown sugar in 1 quart hot water, then add 3 quarts cold water and ice. It must be 40°F or colder before the turkey goes in."
+    },
+    {
+     "d": "tue",
+     "t": "8:30 PM: turkey into the brining bag, brine over it until covered, seal, into the fridge or a cooler packed with ice (check it stays at or below 40°F).",
+     "tm": [
+      "Turkey: out of the brine",
+      600,
+      "done"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "6:30 AM: lift the turkey out and discard the brine. Pat completely dry, including under the wings. Set skin-up on the rack over the sheet and refrigerate uncovered until Thursday morning."
+    },
+    {
+     "d": "wed",
+     "t": "2:30 PM: make the rub. Mash the butter with parsley, thyme, chives, sage, onion, garlic and 2 tbsp rub. Cover and refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "8:30 AM: take the herb butter out to soften."
+    },
+    {
+     "d": "thu",
+     "t": "9:30 AM: fill the pellet hopper and start the smoker at 250°F. Load the turkey only once the smoker reads 250°F.",
+     "tm": [
+      "Smoker at 250°F?",
+      20,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "9:40 AM: loosen the skin over breast, thighs and legs with your fingers. Push all the herb butter under the skin and spread it flat. Dust the outside lightly with the remaining rub."
+    },
+    {
+     "d": "thu",
+     "t": "10:15 AM: turkey on the grate skin-side up, drip pan underneath. Probe in the innermost thigh, not touching bone.",
+     "tm": [
+      "Turkey: first temperature check",
+      60,
+      "temp"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Check and log the probe every hour; add pellets as needed.",
+     "tm": [
+      "Turkey: temperature check",
+      60,
+      "temp"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "About 12:30 PM (or once the thigh reads ~130°F): raise the smoker to 325–350°F to crisp the skin. From here, check every 20–30 minutes.",
+     "tm": [
+      "Turkey: temperature check",
+      25,
+      "temp"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Done only when breast, thigh and wing all read 165°F (log all three on the Turkey tab). Expected window: 2:00–2:45 PM. It's an estimate, not a timer."
+    },
+    {
+     "d": "thu",
+     "t": "Off the smoker onto the rack, tent loosely with foil, rest 30–45 minutes. Drippings to the gravy cook. Set the smoker to its lowest setting (200–225°F): it becomes the hot hold for the stuffing and GBC.",
+     "tm": [
+      "Turkey: rest check",
+      30,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:20 PM: carve. Legs off, split drums and thighs, wings off, lift each breast half off in one piece and slice across. Platter, foil, into the 200°F smoker hold until 3:55."
+    }
+   ]
+  },
+  {
+   "id": "gravy",
+   "n": 4,
+   "name": "Gluten-free turkey gravy, served separately",
+   "tag": "Delish, adapted",
+   "gf": "Gluten-free",
+   "yield": "About 3 cups",
+   "active": "20 min",
+   "passive": "—",
+   "src": [
+    "Delish",
+    "https://www.delish.com/holiday-recipes/thanksgiving/a24520700/gluten-free-gravy-recipe/"
+   ],
+   "equip": [
+    "Saucepan",
+    "Whisk",
+    "Measuring jug",
+    "Fat separator",
+    "Gravy boat"
+   ],
+   "ingr": [
+    [
+     "3 tbsp",
+     "butter"
+    ],
+    [
+     "3 tbsp",
+     "gluten-free flour"
+    ],
+    [
+     "1 cup",
+     "turkey drippings, fat separated",
+     "taste first: the turkey is brined"
+    ],
+    [
+     "2 cups",
+     "low-sodium chicken or turkey broth",
+     "no drippings? use 3 cups broth total"
+    ],
+    [
+     "1 tsp each",
+     "fresh thyme and sage, minced",
+     "use the fresh sage"
+    ],
+    [
+     "to taste",
+     "salt and pepper"
+    ]
+   ],
+   "done": "Thick enough to coat a spoon after about 10 minutes of simmering. Keep it hot (140°F or hotter) on the lowest burner until serving.",
+   "ahead": "Made Thursday while the turkey rests, so no reheating needed. Measure the broth into the jug Wednesday.",
+   "store": "Leftovers: fridge within 2 hours, 3–4 days; reheat to a rolling boil.",
+   "flags": [
+    [
+     "note",
+     "Drippings",
+     "Skim the fat, then taste before measuring them in. If they're very salty, use less and make up the difference with broth."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "thu",
+     "t": "2:45 PM: pour the drippings into the fat separator. Taste them."
+    },
+    {
+     "d": "thu",
+     "t": "2:50 PM (burner 4): melt the butter over medium, whisk in the gluten-free flour, and cook 1 minute.",
+     "tm": [
+      "Gravy: roux 1 minute",
+      1,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Gradually whisk in the drippings and broth. Bring to a boil, then simmer, stirring, until it thickens.",
+     "tm": [
+      "Gravy: thickened?",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Add thyme and sage; simmer about 10 more minutes. Adjust with broth and season to taste.",
+     "tm": [
+      "Gravy: taste and adjust",
+      10,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Hold on the lowest heat, stirring now and then. 3:50 PM: into the gravy boat. Served separately."
+    }
+   ]
+  },
+  {
+   "id": "stuffing",
+   "n": 5,
+   "name": "Great-Grandma Pesch's sage stuffing",
+   "tag": "Family recipe · non-negotiable",
+   "gf": "Gluten-free",
+   "yield": "One large buttered casserole",
+   "active": "50 min",
+   "passive": "Bread drying; ≈55 min bake",
+   "equip": [
+    "2 sheet pans (bread drying)",
+    "Large skillet",
+    "Very large bowl",
+    "Buttered casserole (your own; deep 13×9 or larger)",
+    "Foil",
+    "Instant-read thermometer"
+   ],
+   "ingr": [
+    [
+     "2 loaves",
+     "Carbonaut white gluten-free bread",
+     "cubed and dried"
+    ],
+    [
+     "2 sticks",
+     "butter (16 tbsp)",
+     "plus a little for the dish"
+    ],
+    [
+     "½–1 cup",
+     "onion, minced"
+    ],
+    [
+     "½–1 cup",
+     "celery, minced"
+    ],
+    [
+     "≈¼ lb",
+     "chicken hearts, minced",
+     "our practical estimate (≈8–10 hearts), not a family measurement. Hearts only; no gizzards."
+    ],
+    [
+     "≈¼ lb",
+     "chicken liver, minced",
+     "our practical estimate (≈2–3 livers), not a family measurement"
+    ],
+    [
+     "to moisten",
+     "chicken broth",
+     "add gradually by how the bread absorbs it. 4–6 cups is the shopping allowance, not a pour."
+    ],
+    [
+     "to taste",
+     "dried parsley, dried sage, salt"
+    ]
+   ],
+   "done": "Center reads 165°F (USDA) and the top is crisp at the edges.",
+   "ahead": "Bread cubes dry Tuesday night. Wednesday: cook the butter, onion, celery and organs (the 'wet' mix) and refrigerate. Combine with bread and broth only right before baking: USDA says never refrigerate mixed, uncooked stuffing.",
+   "store": "Leftovers in shallow containers within 2 hours; fridge 3–4 days; reheat to 165°F.",
+   "flags": [
+    [
+     "jc",
+     "Our estimate, not the family's",
+     "The family recipe gives no organ amounts. About ¼ lb each of hearts and liver is our practical starting point; adjust to taste. Broth goes in gradually."
+    ],
+    [
+     "jc",
+     "Bake time and temperature",
+     "The family recipe doesn't say. We scheduled 350°F: ≈35 min covered, then ≈20 uncovered, until the center reads 165°F."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "tue",
+     "t": "8:30 PM: cut both loaves into ¾-inch cubes, spread on sheet pans, and leave out overnight to dry."
+    },
+    {
+     "d": "wed",
+     "t": "8:00 AM: if the cubes are still soft, dry them in a 250°F oven, stirring once, until crisp-dry. Cool; store in bags.",
+     "tm": [
+      "Bread: dry yet?",
+      30,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "11:00 AM: melt the butter; cook onion and celery until soft.",
+     "tm": [
+      "Onion & celery soft?",
+      8,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Add the minced hearts and liver and cook through completely (no pink). Season with dried parsley, sage and salt. Cool in a shallow container; refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "1:30 PM: warm the wet mix gently until the butter melts."
+    },
+    {
+     "d": "thu",
+     "t": "1:45 PM: in the big bowl, toss bread with the wet mix. Add broth a cup at a time until evenly moist. Taste for salt. Pack into the buttered casserole; cover with foil."
+    },
+    {
+     "d": "thu",
+     "t": "2:05 PM: bake at 350°F, covered.",
+     "tm": [
+      "Stuffing: uncover",
+      35,
+      "done"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "2:40 PM: uncover and bake until the center reads 165°F and the top crisps.",
+     "tm": [
+      "Stuffing: check center 165°F",
+      20,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:00 PM: out, covered, into the smoker hot hold (200–225°F). Check it reads 140°F or hotter at 3:30 and 3:50."
+    }
+   ]
+  },
+  {
+   "id": "gbc",
+   "n": 6,
+   "name": "Kenji's green bean casserole",
+   "tag": "Serious Eats, adapted",
+   "gf": "Not gluten-free (crispy onions)",
+   "yield": "One 13×9 pan",
+   "active": "45 min",
+   "passive": "≈40 min bake from cold",
+   "src": [
+    "Serious Eats",
+    "https://www.seriouseats.com/homemade-green-bean-casserole-recipe"
+   ],
+   "equip": [
+    "Large pot",
+    "Colander",
+    "Ice-bath bowl",
+    "Large skillet",
+    "13×9 baking dish (disposable, on a sheet pan)",
+    "Foil"
+   ],
+   "ingr": [
+    [
+     "2 lb",
+     "green beans, trimmed"
+    ],
+    [
+     "1½ lb",
+     "mushrooms (purchased sliced)",
+     "chop smaller if you like"
+    ],
+    [
+     "2 tbsp",
+     "butter"
+    ],
+    [
+     "2 tbsp",
+     "neutral oil",
+     "replaces the fried-shallot oil"
+    ],
+    [
+     "2",
+     "garlic cloves, minced"
+    ],
+    [
+     "¼ cup",
+     "gluten-free flour"
+    ],
+    [
+     "2 cups",
+     "broth"
+    ],
+    [
+     "1½ cups",
+     "cream"
+    ],
+    [
+     "1 tsp",
+     "dark soy sauce",
+     "the recipe's 2 tsp is for regular soy; dark is stronger, so start with half and taste"
+    ],
+    [
+     "2 tsp",
+     "lemon juice"
+    ],
+    [
+     "to taste",
+     "salt and pepper"
+    ],
+    [
+     "2 cups",
+     "Fresh Gourmet crispy onions",
+     "1 cup folded in; 1 cup on top at serving"
+    ]
+   ],
+   "done": "Bubbling at the edges and hot through after the covered and uncovered stages.",
+   "ahead": "Assemble Wednesday; cool, cover, refrigerate. Thursday: about 30 minutes covered + 10 uncovered at 350°F from cold.",
+   "store": "Leftovers: fridge within 2 hours, 3–4 days; reheat to 165°F.",
+   "flags": [
+    [
+     "note",
+     "Dark soy",
+     "You have dark soy, which is stronger and darker than regular, so the amount is halved to 1 tsp. Taste the sauce and add more only if it needs it."
+    ],
+    [
+     "note",
+     "Your changes",
+     "Gluten-free flour, neutral oil with the butter, purchased crispy onions (no shallot frying). Not gluten-free because of the onions."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "wed",
+     "t": "12:00 PM: big pot of salted water to a boil (it takes longer at Reno's elevation).",
+     "tm": [
+      "Bean water boiling?",
+      15,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Blanch the beans 5 minutes, then into ice water. Drain well.",
+     "tm": [
+      "Beans: bright and just tender?",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Sauté the mushrooms in the butter and oil until their liquid is gone and they brown.",
+     "tm": [
+      "Mushrooms browned?",
+      8,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Add garlic for 30 seconds, then the gluten-free flour for 1–2 minutes, stirring."
+    },
+    {
+     "d": "wed",
+     "t": "Whisk in the broth, cream, soy sauce and lemon juice; simmer 5 minutes. Season.",
+     "tm": [
+      "Sauce: simmered 5 min",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Fold in the beans and 1 cup crispy onions. Into the 13×9. Cool about 30 minutes, then cover and refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "2:30 PM: into the 350°F oven, covered with foil.",
+     "tm": [
+      "GBC: covered stage (check heat)",
+      30,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:00 PM: out, still covered, into the smoker hot hold (200–225°F)."
+    },
+    {
+     "d": "thu",
+     "t": "3:40 PM: back in the oven, uncovered, until bubbling. The oven is cooling from 425°F and still hotter than 350°F, so look at 5 minutes.",
+     "tm": [
+      "GBC: bubbling?",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:50 PM: top with the remaining 1 cup crispy onions right before serving."
+    }
+   ]
+  },
+  {
+   "id": "sprouts",
+   "n": 7,
+   "name": "Momofuku Brussels sprouts with mint",
+   "tag": "Food & Wine, adapted",
+   "gf": "Gluten-free (GF rice crisps)",
+   "yield": "Serves 7 as a side",
+   "active": "35 min",
+   "passive": "Boil earlier, char at the end",
+   "src": [
+    "Food & Wine",
+    "https://www.foodandwine.com/recipes/spicy-brussels-sprouts-mint"
+   ],
+   "equip": [
+    "Pot",
+    "Colander",
+    "Large heavy skillet",
+    "Mixing bowl",
+    "Separate topping dish"
+   ],
+   "ingr": [
+    [
+     "2 lb",
+     "halved Brussels sprouts",
+     "the recipe starts with them already cooked"
+    ],
+    [
+     "2 tbsp",
+     "oil",
+     "1 tbsp for the cereal; 1 tbsp split across the charring batches"
+    ],
+    [
+     "½ cup",
+     "GF brown rice crisps (ordered)"
+    ],
+    [
+     "¼ tsp",
+     "cayenne"
+    ],
+    [
+     "to taste",
+     "salt"
+    ],
+    [
+     "—",
+     "Dressing"
+    ],
+    [
+     "¼ cup",
+     "fish sauce"
+    ],
+    [
+     "2 tbsp",
+     "water"
+    ],
+    [
+     "2 tbsp",
+     "sugar"
+    ],
+    [
+     "1 tbsp",
+     "rice vinegar"
+    ],
+    [
+     "1 tbsp",
+     "lime juice"
+    ],
+    [
+     "1 small",
+     "garlic clove, minced"
+    ],
+    [
+     "1 small",
+     "red chile, minced"
+    ],
+    [
+     "¼ cup",
+     "cilantro, chopped",
+     "add near serving"
+    ],
+    [
+     "2 tbsp",
+     "mint, chopped",
+     "add near serving"
+    ]
+   ],
+   "done": "Sprouts tender with deeply charred cut sides. Dress with only enough to coat.",
+   "ahead": "Wednesday: dressing base (no herbs), refrigerated; toast the cereal with cayenne, cool, store airtight. Thursday: boil and dry the sprouts, char at the end.",
+   "store": "Best right away. Leftovers: fridge within 2 hours.",
+   "flags": [
+    [
+     "jc",
+     "Our addition: first cooking method",
+     "The recipe assumes cooked sprouts and doesn't say how. Our plan: boil until just tender, starting checks at 4–6 minutes (size matters), then drain and dry well."
+    ],
+    [
+     "note",
+     "Batches",
+     "Don't crowd the skillet. Two batches of about 5 minutes each, oil split between them."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "wed",
+     "t": "3:30 PM: mix fish sauce, water, sugar, rice vinegar, lime juice, garlic and chile until the sugar dissolves. Refrigerate (no herbs yet)."
+    },
+    {
+     "d": "wed",
+     "t": "Toast the rice crisps with the cayenne and a pinch of salt in 1 tbsp oil, about 30 seconds. Cool completely; store airtight.",
+     "tm": [
+      "Crisps: toasted?",
+      1,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "12:00 PM (our method): boil the sprouts in salted water until just tender.",
+     "tm": [
+      "Sprouts: just tender? (check 4–6 min)",
+      4,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Drain, spread on towels to dry thoroughly, then refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "3:40 PM: chop the cilantro and mint; stir into the dressing."
+    },
+    {
+     "d": "thu",
+     "t": "3:40 PM (burner 5, batch 1): very hot skillet, half the remaining oil, half the sprouts cut-side down. Char without stirring.",
+     "tm": [
+      "Sprouts batch 1: charred?",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Batch 2 the same way.",
+     "tm": [
+      "Sprouts batch 2: charred?",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:52 PM: toss with just enough dressing to coat. Crispy rice in its own dish on the side."
+    }
+   ]
+  },
+  {
+   "id": "mash",
+   "n": 8,
+   "name": "Brown-butter mashed red potatoes",
+   "tag": "For the Love of Cooking, your version",
+   "gf": "Gluten-free",
+   "yield": "Serves 7 (shared bowl)",
+   "active": "25 min",
+   "passive": "≈35 min water + simmer",
+   "src": [
+    "For the Love of Cooking",
+    "https://fortheloveofcooking.net/2015/01/brown-butter-mashed-red-potatoes.html"
+   ],
+   "equip": [
+    "Big pot with lid",
+    "Small light-colored saucepan (to see the butter brown)",
+    "Masher",
+    "Heatproof measuring cup (reserved water)"
+   ],
+   "ingr": [
+    [
+     "3 lb",
+     "red potatoes, 1-inch chunks, partly skin-on"
+    ],
+    [
+     "6 tbsp",
+     "unsalted butter, browned"
+    ],
+    [
+     "to taste",
+     "sea salt"
+    ],
+    [
+     "as needed",
+     "hot reserved potato cooking water",
+     "instead of milk"
+    ]
+   ],
+   "done": "A knife slides into a chunk with no resistance.",
+   "ahead": "Cut Thursday 1:15 PM and hold in cold water in the fridge. Cook at the end.",
+   "store": "Hold covered on the lowest burner up to ~30 min, stirring; loosen with hot water. Leftovers: fridge within 2 hours; reheat to 165°F.",
+   "flags": [
+    [
+     "note",
+     "Your version",
+     "No pepper, chives, garlic, onion or stock. Gravy stays separate."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "thu",
+     "t": "1:15 PM: cut the potatoes; cover with cold water; refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "2:40 PM: drain, cover with fresh cold water, salt it, and bring to a boil.",
+     "tm": [
+      "Potato water boiling?",
+      20,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:00 PM: simmer until tender (allow extra time at Reno's elevation).",
+     "tm": [
+      "Potatoes: knife-tender?",
+      15,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Meanwhile brown the butter over medium until nutty and amber. Watch closely; pull it right away.",
+     "tm": [
+      "Butter: browned?",
+      4,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Save 1½ cups of the hot cooking water, then drain. Back in the pot: pour in the brown butter, mash coarsely, add hot water a splash at a time, salt to taste."
+    },
+    {
+     "d": "thu",
+     "t": "Cover; hold on burner 1 at the lowest heat until 3:55, stirring once or twice. It should stay steaming (140°F or hotter)."
+    }
+   ]
+  },
+  {
+   "id": "mac",
+   "n": 9,
+   "name": "Rob Li's gochujang lobster mac and cheese",
+   "tag": "Rob Li, adapted",
+   "gf": "Not gluten-free (regular elbows)",
+   "yield": "One batch, as a side",
+   "active": "40 min",
+   "passive": "20–25 min bake",
+   "src": [
+    "Rob Li",
+    "https://robli.substack.com/p/gochujang-lobster-mac-and-cheese"
+   ],
+   "equip": [
+    "Pot for lobster and pasta",
+    "Wide saucepan for the sauce",
+    "Small skillet (topping)",
+    "Microplane",
+    "Disposable 13×9 on a sheet pan (or a 2–3 qt dish)"
+   ],
+   "ingr": [
+    [
+     "—",
+     "Sauce"
+    ],
+    [
+     "3 tbsp",
+     "butter"
+    ],
+    [
+     "1 tbsp",
+     "olive oil"
+    ],
+    [
+     "2 tbsp",
+     "shallot, grated"
+    ],
+    [
+     "1 tbsp",
+     "garlic, grated"
+    ],
+    [
+     "2 tbsp",
+     "fresh thyme leaves"
+    ],
+    [
+     "2 tbsp",
+     "gochujang"
+    ],
+    [
+     "2 tbsp",
+     "gochugaru"
+    ],
+    [
+     "½ cup",
+     "Holland House sherry cooking wine",
+     "salted: taste before adding any salt"
+    ],
+    [
+     "3 cups",
+     "heavy cream"
+    ],
+    [
+     "1½ cups",
+     "aged white cheddar, shredded"
+    ],
+    [
+     "1 cup",
+     "gruyère, shredded"
+    ],
+    [
+     "⅓ cup",
+     "mascarpone"
+    ],
+    [
+     "2 tsp",
+     "Worcestershire"
+    ],
+    [
+     "2 tsp",
+     "hot sauce"
+    ],
+    [
+     "to taste",
+     "salt (after tasting) and pepper"
+    ],
+    [
+     "—",
+     "Assembly"
+    ],
+    [
+     "8 oz dry",
+     "elbow macaroni (regular)",
+     "weigh dry, then cook: our planning choice"
+    ],
+    [
+     "3",
+     "lobster tails"
+    ],
+    [
+     "½ cup",
+     "aged white cheddar"
+    ],
+    [
+     "½ cup",
+     "gruyère"
+    ],
+    [
+     "⅓ cup",
+     "pecorino romano, grated"
+    ],
+    [
+     "—",
+     "Garlic-herb GF panko"
+    ],
+    [
+     "1 tbsp",
+     "butter"
+    ],
+    [
+     "1 tbsp",
+     "olive oil"
+    ],
+    [
+     "1 tbsp",
+     "shallot, grated"
+    ],
+    [
+     "½ tbsp",
+     "garlic, grated"
+    ],
+    [
+     "1 tbsp",
+     "thyme"
+    ],
+    [
+     "½ cup",
+     "gluten-free panko"
+    ],
+    [
+     "⅓ cup",
+     "parsley, chopped"
+    ],
+    [
+     "to finish",
+     "chives"
+    ]
+   ],
+   "done": "Bubbling at the edges and golden on top.",
+   "ahead": "Cook and chop the lobster and shred the cheeses Wednesday. Toast the panko Wednesday (store airtight; fold in parsley Thursday). Sauce, pasta and bake happen Thursday.",
+   "store": "Leftovers in the fridge within 2 hours; eat within 2 days (seafood); reheat to 165°F.",
+   "flags": [
+    [
+     "note",
+     "Left out on purpose",
+     "Fried shallots, MSG, extra egg yolk, truffle, caviar. Usual heat level; both gochujang and gochugaru stay."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "wed",
+     "t": "10:30 AM: boil the lobster tails in salted water just until the shells turn red (slightly under). Ice, then pull the meat, chop, refrigerate.",
+     "tm": [
+      "Lobster: shells red?",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Shred the cheddar and gruyère; grate the pecorino. Refrigerate."
+    },
+    {
+     "d": "wed",
+     "t": "3:45 PM: topping. Sauté shallot, garlic and thyme in butter and oil, add the GF panko and toast until golden. Cool; store airtight.",
+     "tm": [
+      "Panko: golden?",
+      3,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "2:40 PM: pasta water on (salted).",
+     "tm": [
+      "Pasta water boiling?",
+      15,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "2:45 PM: sauce. Sauté shallot, garlic and thyme in butter and oil 2–3 min; stir in gochujang and gochugaru; add the cooking sherry and reduce by about a third."
+    },
+    {
+     "d": "thu",
+     "t": "Add the cream and simmer until reduced by about a third.",
+     "tm": [
+      "Sauce: reduced by a third?",
+      10,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Off the heat: stir in cheddar and gruyère in three additions, then mascarpone. Add Worcestershire and hot sauce. Taste, then salt only if needed."
+    },
+    {
+     "d": "thu",
+     "t": "3:00 PM: cook the elbows about 2 minutes short of the box's al dente time. Drain.",
+     "tm": [
+      "Pasta: 2 min short of al dente",
+      7,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:08 PM: layer in the dish: half the pasta, half the sauce, all the lobster, the rest of the pasta and sauce, then the topping cheeses."
+    },
+    {
+     "d": "thu",
+     "t": "3:12 PM: bake at 425°F.",
+     "tm": [
+      "Mac: bubbling and golden?",
+      20,
+      "check"
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "3:35 PM: out. Fold parsley into the panko; scatter on with chives. Tent loosely with foil and rest until 3:55 (it sets the sauce); check it's 140°F or hotter before serving."
+    }
+   ]
+  },
+  {
+   "id": "cran",
+   "n": 10,
+   "name": "Orange cranberry sauce (original orange/maple)",
+   "tag": "Ambitious Kitchen",
+   "gf": "Gluten-free",
+   "yield": "About 1½ cups",
+   "active": "5 min",
+   "passive": "15 min simmer, cool",
+   "src": [
+    "Ambitious Kitchen",
+    "https://www.ambitiouskitchen.com/15-minute-homemade-orange-cranberry-sauce-naturally-sweetened/"
+   ],
+   "equip": [
+    "Small pot with lid",
+    "Zester",
+    "Airtight container",
+    "Serving bowl"
+   ],
+   "ingr": [
+    [
+     "1 lb",
+     "cranberries"
+    ],
+    [
+     "1 cup",
+     "fresh-squeezed orange juice",
+     "≈3–4 oranges"
+    ],
+    [
+     "½ cup",
+     "pure maple syrup"
+    ],
+    [
+     "1 tsp",
+     "vanilla"
+    ],
+    [
+     "1",
+     "orange, zested",
+     "garnish at serving"
+    ]
+   ],
+   "done": "Berries popped; thick enough to coat a spoon (it thickens more as it cools).",
+   "ahead": "Make Wednesday (up to 3 days ahead is fine).",
+   "store": "Airtight in the fridge 3–5 days; freezes up to 2 months.",
+   "flags": [
+    [
+     "note",
+     "Kept original",
+     "No alcohol, no spicy version. Bottled orange juice was ordered but isn't used unless you say so."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "wed",
+     "t": "9:00 AM: combine cranberries, orange juice, maple syrup and vanilla in the pot (save the zest). Bring to a boil over medium-high.",
+     "tm": [
+      "Cranberries boiling?",
+      5,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Cover, lower the heat and simmer until berries pop and it coats a spoon.",
+     "tm": [
+      "Cranberries: popped and thick?",
+      10,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Uncover and simmer a few more minutes to thicken.",
+     "tm": [
+      "Thick enough?",
+      4,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Cool, then into an airtight container in the fridge."
+    },
+    {
+     "d": "thu",
+     "t": "3:00 PM: out of the fridge. 3:50 PM: into the bowl; zest on top."
+    }
+   ]
+  },
+  {
+   "id": "salad",
+   "n": 11,
+   "name": "Via Carota–inspired green salad",
+   "tag": "Eater, adapted",
+   "gf": "Gluten-free",
+   "yield": "7 small plates",
+   "active": "25 min",
+   "passive": "—",
+   "src": [
+    "Eater",
+    "https://www.eater.com/23379089/insalata-verde-recipe-via-carota-jody-williams-rita-sodi"
+   ],
+   "equip": [
+    "Strainer",
+    "Whisk",
+    "Salad spinner or clean towels",
+    "Large tossing bowl",
+    "7 small plates"
+   ],
+   "ingr": [
+    [
+     "—",
+     "Greens (from what you bought)"
+    ],
+    [
+     "2 heads",
+     "butter lettuce"
+    ],
+    [
+     "as needed",
+     "romaine hearts",
+     "from the package; you won't need all of them"
+    ],
+    [
+     "2",
+     "Belgian endive heads",
+     "the bag has 3; the third is spare"
+    ],
+    [
+     "—",
+     "Sherry vinaigrette (≈1 cup)"
+    ],
+    [
+     "¼ cup",
+     "shallot, finely chopped"
+    ],
+    [
+     "1",
+     "garlic clove, finely grated"
+    ],
+    [
+     "¾ tsp",
+     "sugar"
+    ],
+    [
+     "½ tsp",
+     "salt"
+    ],
+    [
+     "≈1 tsp",
+     "fresh thyme leaves, chopped"
+    ],
+    [
+     "¼ cup",
+     "O Olive aged sherry vinegar",
+     "not the cooking sherry"
+    ],
+    [
+     "2 tsp",
+     "warm water"
+    ],
+    [
+     "¾ cup",
+     "extra-virgin olive oil"
+    ]
+   ],
+   "done": "Leaves completely dry before dressing; tossed only right before plating.",
+   "ahead": "Vinaigrette Wednesday (keeps up to 3 days in the fridge). Wash and dry greens Thursday at noon.",
+   "store": "Undressed greens keep a day in towels; dressed salad doesn't keep.",
+   "flags": [
+    [
+     "note",
+     "Mom's plate",
+     "Set aside plain lettuce for Mom before any seasoning or dressing."
+    ],
+    [
+     "note",
+     "Use what you need",
+     "Add dressing gradually; you won't use the whole batch."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "wed",
+     "t": "3:30 PM: rinse the chopped shallot in a strainer; drain."
+    },
+    {
+     "d": "wed",
+     "t": "Combine shallot, garlic, sugar, salt, thyme, sherry vinegar and warm water. Slowly whisk in the oil. Refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "12:00 PM: wash the lettuces; spin or towel completely dry; roll in towels; refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "3:00 PM: vinaigrette out of the fridge; whisk again before using."
+    },
+    {
+     "d": "thu",
+     "t": "3:45 PM: slice the endive. Set aside plain lettuce for Mom first."
+    },
+    {
+     "d": "thu",
+     "t": "3:52 PM: toss the rest with dressing a little at a time; plate."
+    }
+   ]
+  },
+  {
+   "id": "cake",
+   "n": 12,
+   "name": "Paula Deen's pumpkin gooey butter cake",
+   "tag": "Family recipe · non-negotiable",
+   "gf": "Gluten-free",
+   "yield": "One 13×9 (≈15 squares)",
+   "active": "20 min",
+   "passive": "40–50 min bake, cool, chill overnight",
+   "src": [
+    "Food.com",
+    "https://www.food.com/recipe/pumpkin-gooey-butter-cake-paula-deen-47326"
+   ],
+   "equip": [
+    "Disposable 13×9 on a sheet pan (lightly greased)",
+    "Mixer",
+    "Kitchen scale (cake mix)",
+    "Cooling rack",
+    "Foil or wrap"
+   ],
+   "ingr": [
+    [
+     "—",
+     "Crust"
+    ],
+    [
+     "18¼ oz",
+     "King Arthur GF yellow cake mix",
+     "weigh it from the 22-oz box; save the rest"
+    ],
+    [
+     "1",
+     "egg"
+    ],
+    [
+     "8 tbsp",
+     "butter, melted"
+    ],
+    [
+     "—",
+     "Filling"
+    ],
+    [
+     "8 oz",
+     "cream cheese, softened"
+    ],
+    [
+     "15 oz",
+     "canned pumpkin"
+    ],
+    [
+     "3",
+     "eggs"
+    ],
+    [
+     "1 tsp",
+     "vanilla"
+    ],
+    [
+     "8 tbsp",
+     "butter, melted"
+    ],
+    [
+     "16 oz",
+     "powdered sugar"
+    ],
+    [
+     "1 tsp",
+     "cinnamon"
+    ],
+    [
+     "1 tsp",
+     "nutmeg"
+    ]
+   ],
+   "done": "Edges set and golden; center still a little gooey with a slight jiggle. Don't overbake.",
+   "ahead": "Bake Wednesday. It cuts cleaner after a night in the fridge.",
+   "store": "Cream cheese and eggs make it perishable: cool, cover, refrigerate. Out no more than 2 hours. Fridge 3–4 days.",
+   "flags": [
+    [
+     "note",
+     "Follow the gooey recipe",
+     "Use these ingredients, not the cake-mix box's directions. No milk or buttermilk. Don't apply the box's high-altitude changes; go by the jiggle."
+    ]
+   ],
+   "steps": [
+    {
+     "d": "wed",
+     "t": "1:00 PM: heat the oven to 350°F. Grease the 13×9.",
+     "tm": [
+      "Oven at 350°F?",
+      15,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Mix the 18¼ oz cake mix, 1 egg and 8 tbsp melted butter; pat evenly into the pan."
+    },
+    {
+     "d": "wed",
+     "t": "Beat cream cheese and pumpkin smooth. Beat in 3 eggs, vanilla and melted butter. Mix in powdered sugar, cinnamon and nutmeg."
+    },
+    {
+     "d": "wed",
+     "t": "1:20 PM: spread the filling over the crust and bake.",
+     "tm": [
+      "Cake: first doneness check",
+      40,
+      "check"
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Pull when the edges are set and the center still jiggles slightly. Cool on a rack, then cover and refrigerate."
+    },
+    {
+     "d": "thu",
+     "t": "≈4:45 PM: out of the fridge 30 minutes before dessert (if you like it less cold). Cut into squares."
+    }
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "id": "tue_1900_turkey",
+   "day": "tue",
+   "hm": "19:00",
+   "lane": "prep",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Turkey: confirm weight, fresh vs. thawed, and the label (no added solution). Remove giblets and hardware.",
+   "tm": null
+  },
+  {
+   "id": "tue_1915_turkey",
+   "day": "tue",
+   "hm": "19:15",
+   "lane": "prep",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Spatchcock the turkey.",
+   "tm": null
+  },
+  {
+   "id": "tue_1945_turkey",
+   "day": "tue",
+   "hm": "19:45",
+   "lane": "prep",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Mix brine (230 g salt + ¾ cup brown sugar per gallon); chill it to 40°F or colder.",
+   "tm": null
+  },
+  {
+   "id": "tue_2030_turkey",
+   "day": "tue",
+   "hm": "20:30",
+   "lane": "fridge",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Turkey into the brine (fridge, or cooler with ice at 40°F or colder).",
+   "tm": [
+    "Turkey: out of the brine",
+    600,
+    "done"
+   ]
+  },
+  {
+   "id": "tue_2030_stuffing",
+   "day": "tue",
+   "hm": "20:30",
+   "lane": "prep",
+   "who": "B",
+   "rid": "stuffing",
+   "text": "Cube both loaves; spread on sheet pans to dry overnight.",
+   "tm": null
+  },
+  {
+   "id": "tue_2100_x",
+   "day": "tue",
+   "hm": "21:00",
+   "lane": "fridge",
+   "who": "AB",
+   "rid": null,
+   "text": "Clear one full fridge shelf for Wednesday's turkey drying tray.",
+   "tm": null
+  },
+  {
+   "id": "wed_0630_turkey",
+   "day": "wed",
+   "hm": "06:30",
+   "lane": "fridge",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Turkey out of brine, patted very dry, uncovered on a rack in the fridge until Thursday.",
+   "tm": null
+  },
+  {
+   "id": "wed_0800_stuffing",
+   "day": "wed",
+   "hm": "08:00",
+   "lane": "oven",
+   "who": "A",
+   "rid": "stuffing",
+   "text": "Oven to 250°F; finish drying bread cubes if still soft. Cool; bag.",
+   "tm": [
+    "Bread: dry yet?",
+    30,
+    "check"
+   ]
+  },
+  {
+   "id": "wed_0900_cran",
+   "day": "wed",
+   "hm": "09:00",
+   "lane": "stove",
+   "who": "B",
+   "rid": "cran",
+   "text": "Cranberry sauce; cool; fridge.",
+   "tm": null
+  },
+  {
+   "id": "wed_0930_eggs",
+   "day": "wed",
+   "hm": "09:30",
+   "lane": "stove",
+   "who": "B",
+   "rid": "eggs",
+   "text": "Hard-boil eggs (check one at 14 min), ice, peel; filling; fridge separately.",
+   "tm": null
+  },
+  {
+   "id": "wed_1030_mac",
+   "day": "wed",
+   "hm": "10:30",
+   "lane": "stove",
+   "who": "A",
+   "rid": "mac",
+   "text": "Lobster tails, ice, chop, fridge. Shred and grate cheeses.",
+   "tm": null
+  },
+  {
+   "id": "wed_1100_stuffing",
+   "day": "wed",
+   "hm": "11:00",
+   "lane": "stove",
+   "who": "A",
+   "rid": "stuffing",
+   "text": "Stuffing wet mix (butter, onion, celery, hearts, liver cooked through); cool in a shallow container; fridge.",
+   "tm": null
+  },
+  {
+   "id": "wed_1200_gbc",
+   "day": "wed",
+   "hm": "12:00",
+   "lane": "stove",
+   "who": "B",
+   "rid": "gbc",
+   "text": "Green bean casserole: boil water, blanch, sauce, assemble; cool 30 min; fridge.",
+   "tm": null
+  },
+  {
+   "id": "wed_1300_cake",
+   "day": "wed",
+   "hm": "13:00",
+   "lane": "oven",
+   "who": "A",
+   "rid": "cake",
+   "text": "Oven to 350°F; gooey butter cake in at 1:20; check at 2:00; cool; fridge.",
+   "tm": [
+    "Cake: first doneness check",
+    40,
+    "check"
+   ]
+  },
+  {
+   "id": "wed_1430_turkey",
+   "day": "wed",
+   "hm": "14:30",
+   "lane": "prep",
+   "who": "B",
+   "rid": "turkey",
+   "text": "Salt-free rub; one-stick garlic-herb butter; fridge.",
+   "tm": null
+  },
+  {
+   "id": "wed_1530_salad",
+   "day": "wed",
+   "hm": "15:30",
+   "lane": "prep",
+   "who": "B",
+   "rid": "salad",
+   "text": "Sherry vinaigrette; fridge.",
+   "tm": null
+  },
+  {
+   "id": "wed_1530_sprouts",
+   "day": "wed",
+   "hm": "15:30",
+   "lane": "stove",
+   "who": "A",
+   "rid": "sprouts",
+   "text": "Sprouts dressing base (no herbs); toast rice crisps with cayenne; cool; airtight.",
+   "tm": null
+  },
+  {
+   "id": "wed_1545_mac",
+   "day": "wed",
+   "hm": "15:45",
+   "lane": "stove",
+   "who": "A",
+   "rid": "mac",
+   "text": "GF panko topping; cool; airtight.",
+   "tm": null
+  },
+  {
+   "id": "wed_1630_x",
+   "day": "wed",
+   "hm": "16:30",
+   "lane": "smoker",
+   "who": "A",
+   "rid": null,
+   "text": "Pellets: full hopper plus a spare bag for Thursday's smoke and 200°F hot hold.",
+   "tm": null
+  },
+  {
+   "id": "wed_1730_x",
+   "day": "wed",
+   "hm": "17:30",
+   "lane": "fridge",
+   "who": "AB",
+   "rid": null,
+   "text": "Fridge plan for Thursday; label each dish with its pull time. Check deliveries against the shopping list.",
+   "tm": null
+  },
+  {
+   "id": "thu_0830_dip",
+   "day": "thu",
+   "hm": "08:30",
+   "lane": "fridge",
+   "who": "B",
+   "rid": "dip",
+   "text": "Cream cheese (dip) and herb butter out to soften.",
+   "tm": null
+  },
+  {
+   "id": "thu_0900_eggs",
+   "day": "thu",
+   "hm": "09:00",
+   "lane": "stove",
+   "who": "B",
+   "rid": "eggs",
+   "text": "Crisp the prosciutto; drain; airtight at room temperature.",
+   "tm": null
+  },
+  {
+   "id": "thu_0915_dip",
+   "day": "thu",
+   "hm": "09:15",
+   "lane": "prep",
+   "who": "B",
+   "rid": "dip",
+   "text": "Make the roe dip (¾ of the roe folded in); cover; fridge.",
+   "tm": null
+  },
+  {
+   "id": "thu_0930_turkey",
+   "day": "thu",
+   "hm": "09:30",
+   "lane": "smoker",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Fill hopper; smoker to 250°F.",
+   "tm": [
+    "Smoker at 250°F?",
+    20,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_0940_turkey",
+   "day": "thu",
+   "hm": "09:40",
+   "lane": "prep",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Herb butter under the skin; rub lightly outside.",
+   "tm": null
+  },
+  {
+   "id": "thu_1015_turkey",
+   "day": "thu",
+   "hm": "10:15",
+   "lane": "smoker",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Turkey on, skin up, drip pan below, probe in the thigh.",
+   "tm": [
+    "Turkey: first temperature check",
+    60,
+    "temp"
+   ]
+  },
+  {
+   "id": "thu_1115_turkey",
+   "day": "thu",
+   "hm": "11:15",
+   "lane": "smoker",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Log temperature; check pellets.",
+   "tm": [
+    "Turkey: temperature check",
+    60,
+    "temp"
+   ]
+  },
+  {
+   "id": "thu_1200_sprouts",
+   "day": "thu",
+   "hm": "12:00",
+   "lane": "stove",
+   "who": "B",
+   "rid": "sprouts",
+   "text": "Sprouts: boil until just tender (our method), dry well, fridge.",
+   "tm": [
+    "Sprouts: just tender? (check 4–6 min)",
+    4,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1200_salad",
+   "day": "thu",
+   "hm": "12:00",
+   "lane": "fridge",
+   "who": "B",
+   "rid": "salad",
+   "text": "Wash and dry greens; roll in towels; fridge.",
+   "tm": null
+  },
+  {
+   "id": "thu_1215_turkey",
+   "day": "thu",
+   "hm": "12:15",
+   "lane": "smoker",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Log temperature. If the thigh is about 130°F, raise the smoker to 325–350°F now.",
+   "tm": [
+    "Turkey: temperature check",
+    30,
+    "temp"
+   ]
+  },
+  {
+   "id": "thu_1245_turkey",
+   "day": "thu",
+   "hm": "12:45",
+   "lane": "smoker",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Smoker at 325–350°F (crisp skin). Check every 20–30 min from now.",
+   "tm": [
+    "Turkey: temperature check",
+    25,
+    "temp"
+   ]
+  },
+  {
+   "id": "thu_1315_mash",
+   "day": "thu",
+   "hm": "13:15",
+   "lane": "prep",
+   "who": "B",
+   "rid": "mash",
+   "text": "Cut potatoes; cold water; fridge.",
+   "tm": null
+  },
+  {
+   "id": "thu_1330_stuffing",
+   "day": "thu",
+   "hm": "13:30",
+   "lane": "stove",
+   "who": "A",
+   "rid": "stuffing",
+   "text": "Warm the stuffing wet mix until the butter melts.",
+   "tm": null
+  },
+  {
+   "id": "thu_1345_eggs",
+   "day": "thu",
+   "hm": "13:45",
+   "lane": "prep",
+   "who": "B",
+   "rid": "eggs",
+   "text": "Pipe deviled eggs; cover; fridge.",
+   "tm": null
+  },
+  {
+   "id": "thu_1345_stuffing",
+   "day": "thu",
+   "hm": "13:45",
+   "lane": "prep",
+   "who": "A",
+   "rid": "stuffing",
+   "text": "Mix stuffing (bread + wet mix + broth added gradually); taste; into buttered casserole; foil on.",
+   "tm": null
+  },
+  {
+   "id": "thu_1350_x",
+   "day": "thu",
+   "hm": "13:50",
+   "lane": "oven",
+   "who": "A",
+   "rid": null,
+   "text": "Oven to 350°F.",
+   "tm": [
+    "Oven at 350°F?",
+    15,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1400_turkey",
+   "day": "thu",
+   "hm": "14:00",
+   "lane": "smoker",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Turkey done window opens (2:00–2:45). Done only at 165°F in breast, thigh and wing.",
+   "tm": [
+    "Turkey: temperature check",
+    20,
+    "temp"
+   ]
+  },
+  {
+   "id": "thu_1405_stuffing",
+   "day": "thu",
+   "hm": "14:05",
+   "lane": "oven",
+   "who": "A",
+   "rid": "stuffing",
+   "text": "Stuffing in, covered.",
+   "tm": [
+    "Stuffing: uncover",
+    35,
+    "done"
+   ]
+  },
+  {
+   "id": "thu_1430_gbc",
+   "day": "thu",
+   "hm": "14:30",
+   "lane": "oven",
+   "who": "A",
+   "rid": "gbc",
+   "text": "Green bean casserole in from the fridge, covered.",
+   "tm": [
+    "GBC: covered stage (check heat)",
+    30,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1430_eggs",
+   "day": "thu",
+   "hm": "14:30",
+   "lane": "prep",
+   "who": "B",
+   "rid": "eggs",
+   "text": "Appetizers out: eggs garnished, dip topped, chips. Back in the fridge by 4:30.",
+   "tm": null
+  },
+  {
+   "id": "thu_1440_stuffing",
+   "day": "thu",
+   "hm": "14:40",
+   "lane": "oven",
+   "who": "A",
+   "rid": "stuffing",
+   "text": "Uncover stuffing; bake to 165°F in the center.",
+   "tm": [
+    "Stuffing: check center 165°F",
+    20,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1440_mash",
+   "day": "thu",
+   "hm": "14:40",
+   "lane": "stove",
+   "who": "B",
+   "rid": "mash",
+   "text": "Burner 1: potato water on. Burner 2: pasta water on.",
+   "tm": [
+    "Water boiling?",
+    20,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1445_turkey",
+   "day": "thu",
+   "hm": "14:45",
+   "lane": "smoker",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Turkey off once it's 165°F everywhere: tent, rest. Smoker to its lowest setting for the hot hold (aim 200–225°F); open the lid a few minutes so it drops faster.",
+   "tm": null
+  },
+  {
+   "id": "thu_1445_mac",
+   "day": "thu",
+   "hm": "14:45",
+   "lane": "stove",
+   "who": "B",
+   "rid": "mac",
+   "text": "Burner 3: mac sauce.",
+   "tm": [
+    "Sauce: reduced by a third?",
+    10,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1450_gravy",
+   "day": "thu",
+   "hm": "14:50",
+   "lane": "stove",
+   "who": "A",
+   "rid": "gravy",
+   "text": "Burner 4: gravy from drippings + broth (taste drippings first); hold on lowest.",
+   "tm": [
+    "Gravy: thickened?",
+    5,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1500_x",
+   "day": "thu",
+   "hm": "15:00",
+   "lane": "oven",
+   "who": "A",
+   "rid": null,
+   "text": "Stuffing (165°F) and GBC out, covered, into the 200°F smoker hold. Oven up to 425°F.",
+   "tm": [
+    "Oven at 425°F?",
+    12,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1500_mash",
+   "day": "thu",
+   "hm": "15:00",
+   "lane": "stove",
+   "who": "B",
+   "rid": "mash",
+   "text": "Burner 1: potatoes in.",
+   "tm": [
+    "Potatoes: knife-tender?",
+    15,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1500_mac",
+   "day": "thu",
+   "hm": "15:00",
+   "lane": "stove",
+   "who": "B",
+   "rid": "mac",
+   "text": "Burner 2: elbows in, 2 min short of al dente.",
+   "tm": [
+    "Pasta: 2 min short of al dente",
+    7,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1500_x_1",
+   "day": "thu",
+   "hm": "15:00",
+   "lane": "fridge",
+   "who": "B",
+   "rid": null,
+   "text": "Cranberry sauce and vinaigrette out of the fridge.",
+   "tm": null
+  },
+  {
+   "id": "thu_1508_mac",
+   "day": "thu",
+   "hm": "15:08",
+   "lane": "prep",
+   "who": "B",
+   "rid": "mac",
+   "text": "Assemble the mac and cheese.",
+   "tm": null
+  },
+  {
+   "id": "thu_1512_mac",
+   "day": "thu",
+   "hm": "15:12",
+   "lane": "oven",
+   "who": "A",
+   "rid": "mac",
+   "text": "Mac in at 425°F.",
+   "tm": [
+    "Mac: bubbling and golden?",
+    20,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1515_mash",
+   "day": "thu",
+   "hm": "15:15",
+   "lane": "stove",
+   "who": "B",
+   "rid": "mash",
+   "text": "Burner 3: brown butter. Drain potatoes (save water); mash; hold covered on burner 1, lowest.",
+   "tm": null
+  },
+  {
+   "id": "thu_1520_turkey",
+   "day": "thu",
+   "hm": "15:20",
+   "lane": "prep",
+   "who": "A",
+   "rid": "turkey",
+   "text": "Carve; platter; foil; into the 200°F smoker hold.",
+   "tm": null
+  },
+  {
+   "id": "thu_1530_x",
+   "day": "thu",
+   "hm": "15:30",
+   "lane": "smoker",
+   "who": "A",
+   "rid": null,
+   "text": "Hot-hold check: stuffing and GBC read 140°F or hotter.",
+   "tm": null
+  },
+  {
+   "id": "thu_1535_mac",
+   "day": "thu",
+   "hm": "15:35",
+   "lane": "oven",
+   "who": "A",
+   "rid": "mac",
+   "text": "Mac out; panko + chives on; tent loosely with foil. Oven off, door cracked so it falls toward 350°F.",
+   "tm": null
+  },
+  {
+   "id": "thu_1540_gbc",
+   "day": "thu",
+   "hm": "15:40",
+   "lane": "oven",
+   "who": "A",
+   "rid": "gbc",
+   "text": "GBC back in uncovered. The oven is still hotter than 350°F, so look at 5 minutes.",
+   "tm": [
+    "GBC: bubbling?",
+    5,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1540_sprouts",
+   "day": "thu",
+   "hm": "15:40",
+   "lane": "stove",
+   "who": "B",
+   "rid": "sprouts",
+   "text": "Burner 5: char sprouts, batch 1 then 2 (herbs into the dressing first).",
+   "tm": [
+    "Sprouts batch 1: charred?",
+    5,
+    "check"
+   ]
+  },
+  {
+   "id": "thu_1545_salad",
+   "day": "thu",
+   "hm": "15:45",
+   "lane": "prep",
+   "who": "A",
+   "rid": "salad",
+   "text": "Slice endive; plain lettuce for Mom first.",
+   "tm": null
+  },
+  {
+   "id": "thu_1550_x",
+   "day": "thu",
+   "hm": "15:50",
+   "lane": "prep",
+   "who": "AB",
+   "rid": null,
+   "text": "Finish: toss salad; dress sprouts lightly (rice on the side); onions on GBC; gravy to the boat; zest on cranberry.",
+   "tm": null
+  },
+  {
+   "id": "thu_1555_x",
+   "day": "thu",
+   "hm": "15:55",
+   "lane": "prep",
+   "who": "AB",
+   "rid": null,
+   "text": "Spot-check every hot dish: 140°F or hotter. Anything cooler goes back in the still-warm oven for 5 minutes. Then to the table.",
+   "tm": null
+  },
+  {
+   "id": "thu_1600_x",
+   "day": "thu",
+   "hm": "16:00",
+   "lane": "prep",
+   "who": "AB",
+   "rid": null,
+   "text": "Dinner.",
+   "tm": null
+  },
+  {
+   "id": "thu_1645_cake",
+   "day": "thu",
+   "hm": "16:45",
+   "lane": "fridge",
+   "who": "AB",
+   "rid": "cake",
+   "text": "Cake out of the fridge (dessert about 5:15, proposed).",
+   "tm": null
+  },
+  {
+   "id": "thu_1800_x",
+   "day": "thu",
+   "hm": "18:00",
+   "lane": "fridge",
+   "who": "AB",
+   "rid": null,
+   "text": "Two-hour rule: everything back in the fridge. Turkey off the bone into shallow containers.",
+   "tm": null
+  }
+ ],
+ "finalHour": [
+  {
+   "id": "fh01",
+   "hm": "15:00",
+   "who": "A",
+   "text": "Stuffing reads 165°F in the center → out, covered, into the 200°F smoker hold with the covered GBC."
+  },
+  {
+   "id": "fh02",
+   "hm": "15:00",
+   "who": "A",
+   "text": "Oven up to 425°F."
+  },
+  {
+   "id": "fh03",
+   "hm": "15:00",
+   "who": "B",
+   "text": "Burner 1 potatoes in · burner 2 pasta in. Cranberry sauce and vinaigrette out."
+  },
+  {
+   "id": "fh04",
+   "hm": "15:05",
+   "who": "A",
+   "text": "Gravy (burner 4): thickened and seasoned; hold on lowest."
+  },
+  {
+   "id": "fh05",
+   "hm": "15:08",
+   "who": "B",
+   "text": "Mac assembled."
+  },
+  {
+   "id": "fh06",
+   "hm": "15:12",
+   "who": "A",
+   "text": "Mac in at 425°F (check at 3:32)."
+  },
+  {
+   "id": "fh07",
+   "hm": "15:15",
+   "who": "B",
+   "text": "Burner 3 brown butter; drain potatoes (save 1½ cups water); mash; cover on burner 1, lowest."
+  },
+  {
+   "id": "fh08",
+   "hm": "15:20",
+   "who": "A",
+   "text": "Carve; platter; foil; into the 200°F smoker hold."
+  },
+  {
+   "id": "fh09",
+   "hm": "15:30",
+   "who": "A",
+   "text": "Hot-hold check: stuffing and GBC at 140°F or hotter."
+  },
+  {
+   "id": "fh10",
+   "hm": "15:35",
+   "who": "A",
+   "text": "Mac out; parsley into panko; panko + chives on; tent loosely with foil. Oven off, door cracked so it falls toward 350°F."
+  },
+  {
+   "id": "fh11",
+   "hm": "15:40",
+   "who": "A",
+   "text": "GBC in uncovered. Oven is still hot, so look at 5 min; out when bubbling."
+  },
+  {
+   "id": "fh12",
+   "hm": "15:40",
+   "who": "B",
+   "text": "Herbs into the sprouts dressing. Burner 5: char sprouts, two batches."
+  },
+  {
+   "id": "fh13",
+   "hm": "15:45",
+   "who": "A",
+   "text": "Slice endive. Plain lettuce for Mom first."
+  },
+  {
+   "id": "fh14",
+   "hm": "15:50",
+   "who": "B",
+   "text": "Toss salad a little dressing at a time; dress sprouts lightly; crispy rice in its own dish."
+  },
+  {
+   "id": "fh15",
+   "hm": "15:50",
+   "who": "A",
+   "text": "GBC out; remaining crispy onions on top. Gravy to the boat. Zest on cranberry."
+  },
+  {
+   "id": "fh16",
+   "hm": "15:55",
+   "who": "AB",
+   "text": "Thermometer check on every hot dish (140°F+): turkey, stuffing, mac, GBC, potatoes, gravy. Anything cooler: 5 min in the warm oven. Splash of hot water in the potatoes if stiff."
+  },
+  {
+   "id": "fh17",
+   "hm": "16:00",
+   "who": "AB",
+   "text": "Serve. Appetizers back in the fridge by 4:30."
+  }
+ ],
+ "shop": [
+  [
+   "Butter",
+   "55 tbsp + pan greasing: turkey 8, stuffing 16, cake 16, mash 6, mac 4, gravy 3, GBC 2",
+   "64 tbsp ordered",
+   "ok",
+   "Matches your earlier total exactly."
+  ],
+  [
+   "Heavy cream",
+   "4½ cups + 1 tbsp: mac 3 c, GBC 1½ c, dip 1 tbsp",
+   "6 cups ordered",
+   "ok",
+   ""
+  ],
+  [
+   "Chicken broth",
+   "≈9–11 cups allowance: stuffing 4–6 (added gradually), GBC 2, gravy 2–3",
+   "12 cups ordered",
+   "ok",
+   "Keep a cup back in case drippings are scarce."
+  ],
+  [
+   "Eggs",
+   "12: deviled 8, cake 4",
+   "18 ordered",
+   "ok",
+   ""
+  ],
+  [
+   "Cream cheese",
+   "16 oz: dip 8, cake 8",
+   "2 × 8 oz",
+   "ok",
+   ""
+  ],
+  [
+   "Fresh thyme",
+   "≈7 tbsp + 2 tsp leaves: butter 4 tbsp, mac 3 tbsp, gravy 1 tsp, vinaigrette ≈1 tsp",
+   "3 packages",
+   "chk",
+   "Pick and measure Wednesday."
+  ],
+  [
+   "Sage",
+   "Fresh: ¼ cup chopped (turkey butter) + 1 tsp (gravy). Dried: stuffing, to taste",
+   "Fresh and dried on hand",
+   "ok",
+   "Fresh for the turkey butter and gravy; dried for the stuffing, as the family recipe has it."
+  ],
+  [
+   "Soy sauce",
+   "1 tsp dark (GBC)",
+   "On hand (dark)",
+   "ok",
+   "Halved from the recipe's 2 tsp regular."
+  ],
+  [
+   "Salt for brine",
+   "≈460 g for 2 gallons (Himalayan)",
+   "On hand, amount unknown",
+   "chk",
+   "Weigh it on your kitchen scale; make sure there's at least 460 g."
+  ],
+  [
+   "Brown sugar",
+   "1½ cups for 2 gallons of brine",
+   "On hand",
+   "chk",
+   "Check the amount."
+  ],
+  [
+   "Fresh parsley",
+   "≈⅔ cup: butter ¼ c, panko ⅓ c",
+   "Not in your notes",
+   "chk",
+   "Stuffing uses dried parsley flakes (on hand)."
+  ],
+  [
+   "Chives",
+   "≈½ cup: butter ¼ c, eggs 2 tbsp, mac garnish",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Dill, scallion, lemons",
+   "Dip: 2 tbsp dill + sprigs, 1 scallion; lemon for dip + GBC",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Mint, cilantro, lime, red chile",
+   "Sprouts dressing",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Shallots",
+   "≈2: mac 3 tbsp, vinaigrette ¼ cup",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Garlic",
+   "≈1 head",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Onion, celery",
+   "Turkey butter ¼ c onion; stuffing ½–1 c each",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Sour cream",
+   "½ cup (dip)",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Mac cheeses",
+   "Cheddar 2 c, gruyère 1½ c, pecorino ⅓ c, mascarpone ⅓ c",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Gochujang, gochugaru",
+   "2 tbsp each",
+   "Not in your notes",
+   "chk",
+   "Regular gochujang (not GF) is fine for the mac."
+  ],
+  [
+   "Hot sauce",
+   "2 tsp (mac)",
+   "Not in pantry list",
+   "chk",
+   ""
+  ],
+  [
+   "Paprika, garlic powder, onion powder",
+   "2 tbsp each (rub)",
+   "Not in pantry list",
+   "chk",
+   "Pepper and dried thyme are on hand."
+  ],
+  [
+   "Powdered sugar",
+   "16 oz (cake)",
+   "On a grocery order",
+   "chk",
+   "Needed by Wednesday 1:00 PM for the cake. Tick it off when it arrives; check it wasn't substituted."
+  ],
+  [
+   "Fresh oranges",
+   "≈4 (1 cup juice + zest)",
+   "On a grocery order",
+   "chk",
+   "Needed by Wednesday 9:00 AM for the cranberry sauce. If they don't come, the bottled OJ is the backup."
+  ],
+  [
+   "Maple syrup",
+   "½ cup (cranberry)",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "GF brown rice crisps",
+   "½ cup",
+   "Ordered",
+   "ok",
+   ""
+  ],
+  [
+   "Gluten-free flour",
+   "¼ cup + 3 tbsp: GBC ¼ c, gravy 3 tbsp",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Gluten-free panko",
+   "½ cup",
+   "Not in your notes",
+   "chk",
+   ""
+  ],
+  [
+   "Neutral oil",
+   "2 tbsp GBC + 2 tbsp sprouts",
+   "Not in your notes",
+   "chk",
+   "Olive oil is on hand."
+  ],
+  [
+   "Salad greens",
+   "2 butter lettuces, romaine hearts as needed, 2 of 3 endive",
+   "Ordered",
+   "ok",
+   "Third endive is spare."
+  ],
+  [
+   "Salmon roe",
+   "≈100 g",
+   "2 × 1.75 oz (≈99 g)",
+   "ok",
+   ""
+  ],
+  [
+   "Lobster tails",
+   "3",
+   "Ordered",
+   "ok",
+   ""
+  ],
+  [
+   "Chicken hearts + liver",
+   "≈¼ lb each (our estimate); hearts only from the mixed pack",
+   "Ordered",
+   "jc",
+   "Gizzards not used."
+  ],
+  [
+   "Turkey",
+   "16 lb planned",
+   "Sprouts, 16–20 lb range",
+   "jc",
+   "Weight, fresh vs. thawed and label unconfirmed until it arrives."
+  ],
+  [
+   "Almond milk, bottled OJ",
+   "Not used",
+   "Ordered",
+   "no",
+   "Kept out of the recipes as agreed."
+  ]
+ ],
+ "assume": [
+  "Turkey arrives Monday or Tuesday, about 16 lb, fresh, with no added salt solution. Everything turkey-related is provisional until it's weighed and the label is checked.",
+  "Two cooks: A runs the turkey, oven and gravy; B runs the potatoes, pasta, mac sauce, sprouts and cold dishes. Burners (5-burner stove): 1 potatoes · 2 pasta, then free as a spare · 3 mac sauce, then brown butter · 4 gravy · 5 sprouts skillet.",
+  "Appetizers at 2:30 PM and dessert around 5:15 PM are proposed defaults.",
+  "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), 10 hours. Your first salt brine (last year was buttermilk), so this is the recipe as written.",
+  "Hot hold: the pellet smoker set to 200°F once the turkey comes off, verified with a thermometer at 140°F or hotter. Foil alone doesn't count. You've confirmed it holds 200°F.",
+  "Reno is about 4,500 ft up: water boils cooler and takes longer, so every boil has a tenderness check, not a fixed time. The cake gets no altitude changes.",
+  "Fridge: one full shelf for the turkey Wednesday night, plus room for the GBC, cake, cranberry, eggs, lobster, vinaigrette and dressing. A cooler with ice can take drinks and produce.",
+  "Mom: only the potato bowl and her plain lettuce are agreed. No other dish is labeled for her."
+ ],
+ "optional": [
+  "Simmer the turkey neck and backbone Wednesday into a little stock for the gravy (more turkey flavor if smoker drippings are thin).",
+  "Whipped cream for the gooey cake (Paula Deen's suggestion).",
+  "A leave-in probe thermometer with an alarm set to 160°F as a heads-up. The 165°F checks in three spots still decide."
+ ],
+ "ifs": [
+  [
+   "Smoker won't hold 200°F, or the turkey is still on it",
+   "Hot-hold backup: a dry cooler, preheated with hot water for 10 minutes then dried, lined with towels. Pans go in covered; check 140°F or hotter at 3:30 and 3:50. Reheat anything that drops below to 165°F."
+  ],
+  [
+   "Turkey finishes early (before about 2:15)",
+   "Rest it tented 30 minutes, then foil and into the smoker at 200°F (or the cooler hot box). Check it stays 140°F or hotter. Carve at 3:20 as planned."
+  ],
+  [
+   "Turkey running late",
+   "1:45 PM, breast under 145°F: smoker to 350°F now. 2:45 PM, any spot under 155°F: keep going; sides hold in the cooler hot box. 3:15 PM, still not 165°F everywhere: cut off the leg quarters, or move it to the oven after the mac (3:35, at 350–425°F). Push dinner to 4:30 rather than serve it under 165°F."
+  ],
+  [
+   "Smoker trouble (pellets, wind, flame-out)",
+   "Turkey to the oven at 350°F on its sheet pan; stuffing and GBC to the cooler hot box; mac bakes after."
+  ],
+  [
+   "Stuffing isn't 165°F by 3:00",
+   "Leave it in while the oven climbs to 425°F; it fits beside the mac. Pull it at 165°F, then into the hold."
+  ],
+  [
+   "Too little drippings",
+   "Make the gravy with 3 cups broth; that's why broth is held back."
+  ]
+ ],
+ "safe": [
+  [
+   "Turkey",
+   "165°F in the thickest part of the breast, the innermost thigh and the innermost wing.",
+   "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/poultry/happy-thanksgiving"
+  ],
+  [
+   "Brining",
+   "Turkey fully submerged and kept in the fridge or a cooler with ice (40°F or colder).",
+   "https://www.fsis.usda.gov/HelloFresh"
+  ],
+  [
+   "Smoker",
+   "Keep the smoker at 225–300°F or hotter while cooking (our 325–350°F finish is hotter, which is fine).",
+   "https://www.fsis.usda.gov/es/node/3555"
+  ],
+  [
+   "Stuffing",
+   "Prep wet and dry parts ahead and chill them separately; mix just before baking; bake to 165°F. Cook raw meats first.",
+   "https://www.fsis.usda.gov/es/node/3758"
+  ],
+  [
+   "Hot holding",
+   "Hot food stays at 140°F or hotter.",
+   "https://www.fsis.usda.gov/es/node/3288"
+  ],
+  [
+   "Two-hour rule",
+   "Nothing perishable sits out more than 2 hours. Leftovers in shallow containers in the fridge within 2 hours.",
+   "https://www.fsis.usda.gov/HelloFresh"
+  ],
+  [
+   "Reheating",
+   "Leftovers to 165°F; sauces and gravies to a rolling boil.",
+   "https://www.fsis.usda.gov/es/node/3288"
+  ]
+ ],
+ "ovenTracks": {
+  "thu": [
+   [
+    "Off",
+    20,
+    "#EDE3D3"
+   ],
+   [
+    "350°F · 1:50 preheat · stuffing 2:05, GBC 2:30",
+    38,
+    "#F4C9B8"
+   ],
+   [
+    "425°F · mac 3:12–3:35",
+    22,
+    "#E8987E"
+   ],
+   [
+    "Off, cooling · GBC 3:40–3:50",
+    12,
+    "#F4C9B8"
+   ],
+   [
+    "Warm · reheat spot",
+    8,
+    "#EDE3D3"
+   ]
+  ],
+  "wed": [
+   [
+    "250°F · bread 8:00–9:00",
+    22,
+    "#F7DCCF"
+   ],
+   [
+    "Off",
+    25,
+    "#EDE3D3"
+   ],
+   [
+    "350°F · cake 1:00–2:15",
+    28,
+    "#F4C9B8"
+   ],
+   [
+    "Off",
+    25,
+    "#EDE3D3"
+   ]
+  ],
+  "tue": [
+   [
+    "Oven not used",
+    100,
+    "#EDE3D3"
+   ]
+  ]
+ },
+ "smokerTrack": {
+  "thu": [
+   [
+    "Off",
+    8,
+    "#EDE3D3"
+   ],
+   [
+    "250°F · 9:30 heat · turkey on 10:15",
+    6,
+    "#E5CFC0"
+   ],
+   [
+    "325–350°F from ≈12:30 · done window 2:00–2:45",
+    12,
+    "#D9B49B"
+   ],
+   [
+    "Lowest setting · hot hold for sides",
+    8,
+    "#EAD9CB"
+   ]
+  ]
+ }
+}

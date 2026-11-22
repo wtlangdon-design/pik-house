@@ -1,0 +1,257 @@
+# Pik kitchen: the shared kitchen timer pool and Pik's announcer.
+#
+# Twelve timers that voice ("Hey Pik, pasta timer for 10 minutes"), recipes and holiday cooking
+# mode all share (SPEC.md "Timers", Plan B). Each timer has a matching label helper that holds
+# "kind|label", e.g. "check|Pasta: 2 min short of al dente".
+#   kind = check (go look), done (stage finished), temp (turkey temperature reminder)
+# A finished timer stays labeled (ringing) until someone taps OK on a screen or says "stop the
+# pasta timer"; nobody-tapped labels clear themselves after 30 minutes.
+#
+# Rules: a new timer never replaces a running one; starting a timer with the same name restarts it;
+# when all 12 are busy the script says so instead.
+
+timer:
+  kitchen_1: { name: "Kitchen timer 1", restore: true }
+  kitchen_2: { name: "Kitchen timer 2", restore: true }
+  kitchen_3: { name: "Kitchen timer 3", restore: true }
+  kitchen_4: { name: "Kitchen timer 4", restore: true }
+  kitchen_5: { name: "Kitchen timer 5", restore: true }
+  kitchen_6: { name: "Kitchen timer 6", restore: true }
+  kitchen_7: { name: "Kitchen timer 7", restore: true }
+  kitchen_8: { name: "Kitchen timer 8", restore: true }
+  kitchen_9: { name: "Kitchen timer 9", restore: true }
+  kitchen_10: { name: "Kitchen timer 10", restore: true }
+  kitchen_11: { name: "Kitchen timer 11", restore: true }
+  kitchen_12: { name: "Kitchen timer 12", restore: true }
+
+input_text:
+  kitchen_timer_1: { name: "Kitchen timer 1 label", max: 255 }
+  kitchen_timer_2: { name: "Kitchen timer 2 label", max: 255 }
+  kitchen_timer_3: { name: "Kitchen timer 3 label", max: 255 }
+  kitchen_timer_4: { name: "Kitchen timer 4 label", max: 255 }
+  kitchen_timer_5: { name: "Kitchen timer 5 label", max: 255 }
+  kitchen_timer_6: { name: "Kitchen timer 6 label", max: 255 }
+  kitchen_timer_7: { name: "Kitchen timer 7 label", max: 255 }
+  kitchen_timer_8: { name: "Kitchen timer 8 label", max: 255 }
+  kitchen_timer_9: { name: "Kitchen timer 9 label", max: 255 }
+  kitchen_timer_10: { name: "Kitchen timer 10 label", max: 255 }
+  kitchen_timer_11: { name: "Kitchen timer 11 label", max: 255 }
+  kitchen_timer_12: { name: "Kitchen timer 12 label", max: 255 }
+
+input_boolean:
+  # On = finished timers stay quiet on the Echos (the screens still ring). Off by default.
+  kitchen_timer_quiet:
+    name: "Kitchen timers: don't announce on the Echos"
+    icon: mdi:bullhorn-outline
+
+script:
+  kitchen_timer:
+    alias: "Kitchen timer: start"
+    description: >-
+      Start a named kitchen timer, e.g. label "Pasta", minutes 10. Use this for every cooking timer.
+      Starting a timer with the same name restarts it; running timers are never replaced.
+    mode: queued
+    max: 20
+    fields:
+      label:
+        description: 'What the timer is for, e.g. "Pasta" or "Stuffing: uncover".'
+        required: true
+        selector: { text: null }
+      minutes:
+        description: Length in minutes (decimals allowed).
+        required: true
+        selector: { number: { min: 0.1, max: 1440, step: 0.1, mode: box } }
+      kind:
+        description: "check = go look (default), done = a stage is finished, temp = turkey temperature reminder."
+        default: check
+        selector: { select: { options: [check, done, temp] } }
+    sequence:
+      - variables:
+          k: "{{ kind if kind is defined and kind in ['check', 'done', 'temp'] else 'check' }}"
+          tag: "{{ (k ~ '|' ~ label)[:255] }}"
+          secs: "{{ ((minutes | float(0)) * 60) | round(0) | int }}"
+          dur: "{{ '%02d:%02d:%02d' % (secs // 3600, (secs % 3600) // 60, secs % 60) }}"
+          slot: >-
+            {% set ns = namespace(same=0, free=0) %}
+            {% for i in range(1, 13) %}
+              {% set lab = states('input_text.kitchen_timer_' ~ i) %}
+              {% set st = states('timer.kitchen_' ~ i) %}
+              {% if ns.same == 0 and lab == tag and st in ['active', 'paused'] %}{% set ns.same = i %}{% endif %}
+              {% if ns.free == 0 and st == 'idle' and lab in ['', 'unknown', 'unavailable'] %}{% set ns.free = i %}{% endif %}
+            {% endfor %}
+            {{ ns.same if ns.same else ns.free }}
+      - if: "{{ secs | int < 1 }}"
+        then:
+          - variables: { result: { ok: false, message: "That timer needs a length." } }
+          - stop: "No length"
+            response_variable: result
+      - if: "{{ slot | int == 0 }}"
+        then:
+          - variables: { result: { ok: false, message: "All 12 kitchen timers are busy. Stop one first." } }
+          - stop: "All busy"
+            response_variable: result
+      - action: input_text.set_value
+        target: { entity_id: "input_text.kitchen_timer_{{ slot }}" }
+        data: { value: "{{ tag }}" }
+      - action: timer.start
+        target: { entity_id: "timer.kitchen_{{ slot }}" }
+        data: { duration: "{{ dur }}" }
+      - variables:
+          result: { ok: true, slot: "{{ slot | int }}", message: "{{ label }}: {{ minutes }} minute timer started." }
+      - stop: "Started"
+        response_variable: result
+
+  kitchen_timer_stop:
+    alias: "Kitchen timer: stop or acknowledge"
+    description: >-
+      Stop a kitchen timer, or silence one that has finished. Give either its slot number or its name
+      (e.g. "pasta"); a name matches any running or finished timer containing it.
+    mode: queued
+    max: 20
+    fields:
+      slot:
+        description: Timer number 1–12 (the screens use this).
+        selector: { number: { min: 1, max: 12, mode: box } }
+      label:
+        description: Name or part of the name, e.g. "pasta".
+        selector: { text: null }
+    sequence:
+      - variables:
+          slots: >-
+            {% if slot is defined and slot %}{{ [slot | int] }}{% else %}
+            {% set q = (label | default('')) | lower %}
+            {% set ns = namespace(out=[]) %}
+            {% for i in range(1, 13) %}
+              {% set lab = states('input_text.kitchen_timer_' ~ i) %}
+              {% if q and lab not in ['', 'unknown', 'unavailable'] and q in (lab.split('|', 1) | last) | lower %}{% set ns.out = ns.out + [i] %}{% endif %}
+            {% endfor %}{{ ns.out }}{% endif %}
+      - repeat:
+          for_each: "{{ slots }}"
+          sequence:
+            - action: timer.cancel
+              target: { entity_id: "timer.kitchen_{{ repeat.item }}" }
+            - action: input_text.set_value
+              target: { entity_id: "input_text.kitchen_timer_{{ repeat.item }}" }
+              data: { value: "" }
+      - variables: { result: { stopped: "{{ slots | count }}" } }
+      - stop: "Stopped"
+        response_variable: result
+
+  kitchen_timer_add5:
+    alias: "Kitchen timer: add time"
+    description: Add minutes to a running kitchen timer (default 5).
+    mode: queued
+    fields:
+      slot: { description: Timer number 1–12, required: true, selector: { number: { min: 1, max: 12, mode: box } } }
+      minutes: { description: Minutes to add, default: 5, selector: { number: { min: 1, max: 120, mode: box } } }
+    sequence:
+      - variables:
+          t: "timer.kitchen_{{ slot | int }}"
+      - condition: "{{ is_state(t, 'active') }}"
+      # timer.change can't go past the original length, so restart it with (time left + extra).
+      - variables:
+          secs: "{{ ((as_timestamp(state_attr(t, 'finishes_at')) - as_timestamp(now())) + (minutes | default(5) | int) * 60) | round(0) | int }}"
+      - action: timer.start
+        target: { entity_id: "{{ t }}" }
+        data: { duration: "{{ '%02d:%02d:%02d' % (secs // 3600, (secs % 3600) // 60, secs % 60) }}" }
+
+  kitchen_timers_list:
+    alias: "Kitchen timers: what's running"
+    description: Lists every kitchen timer that is running or has finished and not been stopped, with minutes left.
+    mode: parallel
+    sequence:
+      - variables:
+          result: >-
+            {% set ns = namespace(out=[]) %}
+            {% for i in range(1, 13) %}
+              {% set lab = states('input_text.kitchen_timer_' ~ i) %}
+              {% set t = 'timer.kitchen_' ~ i %}
+              {% if lab not in ['', 'unknown', 'unavailable'] %}
+                {% set left = ((as_timestamp(state_attr(t, 'finishes_at')) - as_timestamp(now())) / 60) | round(1) if is_state(t, 'active') else 0 %}
+                {% set ns.out = ns.out + [{'slot': i, 'name': lab.split('|', 1) | last, 'state': 'finished, ringing' if is_state(t, 'idle') else states(t), 'minutes_left': left}] %}
+              {% endif %}
+            {% endfor %}
+            {{ {'timers': ns.out} }}
+      - stop: "Listed"
+        response_variable: result
+
+  pik_announce:
+    alias: "Pik: announce"
+    description: Says a short message on every Echo, and optionally pushes it to both phones.
+    mode: queued
+    max: 20
+    fields:
+      message: { description: What to say, required: true, selector: { text: null } }
+      phones: { description: Also push to both phones, default: false, selector: { boolean: null } }
+    sequence:
+      - variables:
+          echos: "{{ integration_entities('alexa_devices') | select('match', '^notify\\..*_announce$') | list }}"
+          # Phones with the Home Assistant app: notify.mobile_app_<device name>.
+          apps: >-
+            {{ integration_entities('mobile_app') | map('device_id') | reject('none') | unique
+               | map('device_attr', 'name') | reject('none') | map('slugify') | map('regex_replace', '^', 'mobile_app_') | list }}
+      - if: "{{ echos | count > 0 }}"
+        then:
+          - action: notify.send_message
+            target: { entity_id: "{{ echos }}" }
+            data: { message: "{{ message }}" }
+            continue_on_error: true
+      - if: "{{ phones | default(false) and apps | count > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ apps }}"
+              sequence:
+                - action: "notify.{{ repeat.item }}"
+                  data:
+                    title: "Pik"
+                    message: "{{ message }}"
+                    data: { push: { interruption-level: time-sensitive }, ttl: 0, priority: high }
+                  continue_on_error: true
+      # Lets the screens and tests see what was said.
+      - event: pik_announced
+        event_data: { message: "{{ message }}", echos: "{{ echos }}", phones: "{{ apps if phones | default(false) else [] }}" }
+
+automation:
+  - id: kitchen_timer_finished
+    alias: "Kitchen timer finished: announce it"
+    mode: queued
+    max: 20
+    triggers:
+      - trigger: event
+        event_type: timer.finished
+    conditions:
+      - "{{ trigger.event.data.entity_id is match('timer\\.kitchen_\\d+$') }}"
+    actions:
+      - variables:
+          n: "{{ trigger.event.data.entity_id.split('_') | last }}"
+          lab: "{{ states('input_text.kitchen_timer_' ~ n) }}"
+          k: "{{ lab.split('|', 1) | first if '|' in lab else 'check' }}"
+          name: "{{ lab.split('|', 1) | last }}"
+      - condition: "{{ name not in ['', 'unknown', 'unavailable'] }}"
+      - condition: "{{ not is_state('input_boolean.kitchen_timer_quiet', 'on') }}"
+      - action: script.pik_announce
+        data:
+          message: >-
+            {% if k == 'temp' %}Turkey temperature check. Log the breast, thigh and wing.
+            {% elif k == 'done' %}Timer done: {{ name }}.
+            {% else %}Check now: {{ name }}.{% endif %}
+
+  - id: kitchen_timer_clear_stale
+    alias: "Kitchen timers: clear finished ones nobody stopped"
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+    actions:
+      - repeat:
+          for_each: >-
+            {% set ns = namespace(out=[]) %}
+            {% for i in range(1, 13) %}
+              {% set t = 'timer.kitchen_' ~ i %}
+              {% if is_state(t, 'idle') and states('input_text.kitchen_timer_' ~ i) not in ['', 'unknown', 'unavailable']
+                    and (now() - states[t].last_changed).total_seconds() > 1800 %}{% set ns.out = ns.out + [i] %}{% endif %}
+            {% endfor %}{{ ns.out }}
+          sequence:
+            - action: input_text.set_value
+              target: { entity_id: "input_text.kitchen_timer_{{ repeat.item }}" }
+              data: { value: "" }
