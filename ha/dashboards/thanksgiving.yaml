@@ -1,0 +1,12 @@
+# The Thanksgiving dashboard: one full-screen view with holiday cooking mode.
+# Paste into: Settings → Dashboards → (Thanksgiving) → ⋮ Edit → ⋮ Raw configuration editor.
+title: Thanksgiving
+views:
+  - title: Kitchen
+    path: kitchen
+    panel: true
+    cards:
+      - type: custom:pik-holiday-card
+        plan: thanksgiving_2026
+        prefix: tg26
+        timers: 12

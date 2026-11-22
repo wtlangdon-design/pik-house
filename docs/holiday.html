@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Holiday cooking preview</title>
+<style>
+  /* Holiday cooking mode on its own, with no Home Assistant: progress stays in this browser. */
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  pik-holiday-card { display: block; height: 100vh; }
+</style>
+</head>
+<body>
+<pik-holiday-card></pik-holiday-card>
+<script type="module">
+  import "./pik-house-card.js";
+  const card = document.querySelector("pik-holiday-card");
+  const plan = new URLSearchParams(location.search).get("plan") || "thanksgiving_2026";
+  card.setConfig({ type: "custom:pik-holiday-card", plan, mock: true });
+</script>
+</body>
+</html>

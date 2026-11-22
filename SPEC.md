@@ -443,6 +443,20 @@ guess a sensor value.
 Never unlock, open, buy or pay for anything. Temperatures in °F.
 ```
 
+## Holiday cooking mode
+
+For big meals with a plan worked out days ahead (first: Thanksgiving 2026, Tuesday night to Thursday 4 PM, two cooks, one oven, a smoker and a five-burner stove). It's the tested Thanksgiving Kitchen page moved into the hub, built ahead of the other phases because Thanksgiving comes first. Setup steps: `ha/README.md`.
+
+- **One plan file per meal:** `holiday/<plan>.json` holds the recipes, the timed tasks (day, time, lane, cook, recipe, optional timer), the final-hour checklist, the shopping check, assumptions and food-safety notes. The card bundles it, and `holiday/gen-ha.mjs` turns it into a Home Assistant package, so the two can't drift apart.
+- **The card:** `custom:pik-holiday-card`, in the same bundle as the house feed, on its own full-screen dashboard. Tabs: Now, Timeline, Recipes (with cook mode), Turkey, Final hour, Shopping check, Notes & safety.
+- **Shared state, so every screen agrees:** each task and final-hour item is an `input_boolean` (on = ticked off); turkey probe readings are three `input_number`s whose history is the log; timers use the shared kitchen pool. Ticked tasks stay visible in "Do these now" (and on the Timeline) so a wrong tick can be undone.
+- **Alarms:** at each task's time every screen chimes, shows the task with its timer button, and keeps chiming every 30 s until **Got it**; an automation reads it out on every Echo (`script.pik_announce`; mutable from the Now tab) and can push to phones. Timers that finish do the same. All three probe readings at 165°F or more announce "the turkey is done" on the Echos and both phones. The turkey is never called done by a timer.
+- **Kitchen timer pool (SPEC "Timers", Plan B, now built):** `timer.kitchen_1…12` with `input_text.kitchen_timer_N` = "kind|label". `script.kitchen_timer` takes the first free slot; the same name restarts its timer; a finished timer keeps its label (ringing) until OK, Got it or "stop the pasta timer", and clears itself after 30 minutes; when all 12 are busy it says so and replaces nothing. "+5" restarts the timer with time left + 5 minutes, because `timer.change` can't go past a timer's original length.
+- **Pik:** `script.holiday_whats_next`, `holiday_task_done` (an id, or a few words; picks the unticked match nearest now), `holiday_log_turkey`, plus the four kitchen timer scripts, exposed to Assist.
+- **Moving from the page:** the standalone page's **Copy progress for the hub** makes a code that the card's Notes tab imports: ticks, running timers and turkey readings.
+- **Without the package** the card still runs, saving to that screen only, and says so.
+- **Tested** on Home Assistant 2026.2 with its real frontend, two screens side by side: ticks, timers, +5, ring and Got it sync both ways; history drives the turkey log; task announcements fire at the minute; voice scripts answer; the 13th timer is refused. The Alexa notify entities and the Companion app pushes are untested until the real devices are added.
+
 ## Build phases
 
 Build in this order. Each phase ends with Tyler checking it on the Chromebook, and the next phase starts only after he signs off. Phase 0 needs no hub, so it can start today.
@@ -451,9 +465,12 @@ Build in this order. Each phase ends with Tyler checking it on the Chromebook, a
 
 ```text
 pik-house/
-  card/src/            TypeScript + Lit source (pik-house-card.ts, views, pik-art.ts, mock-data.ts)
+  card/src/            TypeScript + Lit source (pik-house-card.ts, views, pik-art.ts, mock-data.ts, holiday/)
   card/dist/           pik-house-card.js (one bundled file, committed for HACS)
-  ha/packages/         feed.yaml, plants.yaml, energy.yaml, voice.yaml, reminders.yaml, email.yaml
+  ha/packages/         feed.yaml, plants.yaml, energy.yaml, voice.yaml, reminders.yaml, email.yaml,
+                       pik_kitchen.yaml (timers, announcer), pik_holiday_<plan>.yaml (generated)
+  ha/dashboards/       thanksgiving.yaml
+  holiday/             <plan>.json (one per big meal), gen-ha.mjs
   reference/           daylight-reference.html, pik/ (Pik SVGs)
   hacs.json, README.md, SPEC.md (this file)
 ```

@@ -6,7 +6,8 @@ Pik House Feed: a Home Assistant dashboard card for the kitchen Chromebook.
 - **reference/daylight-reference.html**: the working design prototype. Open it in any browser; it runs on fake data.
 - **reference/pik/**: Pik's original artwork, five states.
 - **card/**: the card itself, TypeScript + Lit. `card/dist/pik-house-card.js` is the one bundled file.
-- **docs/**: the GitHub Pages preview (built, don't edit by hand).
+- **docs/**: the GitHub Pages preview (built, don't edit by hand). `holiday.html` previews holiday cooking mode.
+- **holiday/** and **ha/**: holiday cooking mode (Thanksgiving 2026) and the Home Assistant files. Setup steps: `ha/README.md`.
 
 ## Preview (Phase 0, mock mode)
 
