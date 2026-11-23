@@ -309,7 +309,7 @@
    "gf": "Gluten-free",
    "yield": "16-lb bird (planned), dinner for 7 plus leftovers",
    "active": "1 hr 30 min over 3 days",
-   "passive": "≈10 hr brine, overnight drying, ≈3½–4½ hr smoke, 30–45 min rest",
+   "passive": "≈13 hr brine, overnight drying, ≈3½–4½ hr smoke, 30–45 min rest",
    "src": [
     "Jeff Phillips, smoking-meat.com",
     "https://www.smoking-meat.com/spatchcocked-turkey-with-herbed-butter"
@@ -413,7 +413,7 @@
     [
      "note",
      "Brine strength",
-     "Your first salt brine (last year was buttermilk), so this follows the recipe as written: 230 g per gallon, the usual reading of its \"1 cup coarse kosher\", for 10 hours. Weigh the salt on your kitchen scale. The drippings will be saltier than last year's, so taste before they go in the gravy."
+     "Your first salt brine (last year was buttermilk), so this uses the recipe's brine: 230 g per gallon, the usual reading of its \"1 cup coarse kosher\". It brines 13 hours (in at 8 PM Tuesday, out at 9 AM Wednesday) instead of the recipe's 10, so expect it a little saltier. Weigh the salt on your kitchen scale. The drippings will be saltier than last year's, so taste before they go in the gravy."
     ]
    ],
    "steps": [
@@ -444,17 +444,17 @@
     },
     {
      "d": "tue",
-     "t": "8:30 PM: turkey into the brining bag, brine over it until covered, seal, into the fridge or a cooler packed with ice (check it stays at or below 40°F).",
+     "t": "8:00 PM: turkey into the brining bag, brine over it until covered, seal, into the fridge or a cooler packed with ice (check it stays at or below 40°F).",
      "tm": [
       "Turkey: out of the brine",
-      600,
+      780,
       "done"
      ],
      "ing": []
     },
     {
      "d": "wed",
-     "t": "6:30 AM: lift the turkey out and discard the brine. Pat completely dry, including under the wings. Set skin-up on the rack over the sheet and refrigerate uncovered until Thursday morning.",
+     "t": "9:00 AM: lift the turkey out and discard the brine. Pat completely dry, including under the wings. Set skin-up on the rack over the sheet and refrigerate uncovered until Thursday morning.",
      "ing": []
     },
     {
@@ -796,7 +796,7 @@
     },
     {
      "d": "wed",
-     "t": "8:00 AM: if the cubes are still soft, dry them in a 250°F oven, stirring once, until crisp-dry. Cool; store in bags.",
+     "t": "9:00 AM: if the cubes are still soft, dry them in a 250°F oven, stirring once, until crisp-dry. Cool; store in bags.",
      "tm": [
       "Bread: dry yet?",
       30,
@@ -2362,6 +2362,22 @@
    "dish": []
   },
   {
+   "id": "tue_1900_brine",
+   "day": "tue",
+   "hm": "19:00",
+   "lane": "prep",
+   "rid": "turkey",
+   "text": "Mix brine (230 g salt + ¾ cup brown sugar per gallon) and get it to 40°F or colder by 8:00 (lots of ice).",
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     2
+    ]
+   ],
+   "dish": []
+  },
+  {
    "id": "tue_1915_turkey",
    "day": "tue",
    "hm": "19:15",
@@ -2378,31 +2394,15 @@
    "dish": []
   },
   {
-   "id": "tue_1945_turkey",
+   "id": "tue_2000_turkey",
    "day": "tue",
-   "hm": "19:45",
-   "lane": "prep",
-   "rid": "turkey",
-   "text": "Mix brine (230 g salt + ¾ cup brown sugar per gallon); chill it to 40°F or colder.",
-   "tm": null,
-   "steps": [
-    [
-     "turkey",
-     2
-    ]
-   ],
-   "dish": []
-  },
-  {
-   "id": "tue_2030_turkey",
-   "day": "tue",
-   "hm": "20:30",
+   "hm": "20:00",
    "lane": "fridge",
    "rid": "turkey",
    "text": "Turkey into the brine (fridge, or cooler with ice at 40°F or colder).",
    "tm": [
     "Turkey: out of the brine",
-    600,
+    780,
     "done"
    ],
    "steps": [
@@ -2464,9 +2464,9 @@
    "dish": []
   },
   {
-   "id": "wed_0630_turkey",
+   "id": "wed_0900_turkey",
    "day": "wed",
-   "hm": "06:30",
+   "hm": "09:00",
    "lane": "fridge",
    "rid": "turkey",
    "text": "Turkey out of brine, patted very dry, uncovered on a rack in the fridge until Thursday.",
@@ -2486,9 +2486,9 @@
    ]
   },
   {
-   "id": "wed_0800_stuffing",
+   "id": "wed_0900_stuffing",
    "day": "wed",
-   "hm": "08:00",
+   "hm": "09:00",
    "lane": "oven",
    "rid": "stuffing",
    "text": "Oven to 250°F; finish drying bread cubes if still soft. Cool; bag.",
@@ -4139,7 +4139,7 @@
   "Turkey arrives Monday or Tuesday, about 16 lb, fresh, with no added salt solution. Everything turkey-related is provisional until it's weighed and the label is checked.",
   "Two cooks: A runs the turkey, oven and gravy; B runs the potatoes, pasta, mac sauce, sprouts and cold dishes. Burners (5-burner stove): 1 potatoes · 2 pasta, then free as a spare · 3 mac sauce, then brown butter · 4 gravy · 5 sprouts skillet.",
   "Appetizers at 2:30 PM and dessert around 5:15 PM are proposed defaults.",
-  "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), 10 hours. Your first salt brine (last year was buttermilk), so this is the recipe as written.",
+  "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), 13 hours: in at 8 PM Tuesday, out at 9 AM Wednesday (the recipe says 10, so expect a slightly saltier bird and drippings). Your first salt brine (last year was buttermilk), so the strength is the recipe's.",
   "Hot hold: the pellet smoker set to 200°F once the turkey comes off, verified with a thermometer at 140°F or hotter. Foil alone doesn't count. You've confirmed it holds 200°F.",
   "Reno is about 4,500 ft up: water boils cooler and takes longer, so every boil has a tenderness check, not a fixed time. The cake gets no altitude changes.",
   "Fridge: one full shelf for the turkey Wednesday night, plus room for the green beans, cake, cranberry, eggs, lobster, vinaigrette and dressing. A cooler with ice can take drinks and produce.",
@@ -4410,8 +4410,8 @@
   "oven": [
    [
     "wed",
-    "08:00",
     "09:00",
+    "10:00",
     "250°F",
     "Bread cubes drying"
    ],
