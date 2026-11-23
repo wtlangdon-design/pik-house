@@ -470,13 +470,14 @@ export class PikHolidayCard extends LitElement {
       // Dishes actually put in / on show solid; otherwise the plan's line, faded.
       const on = this.onNow().filter((x) => x.p.st === name);
       const what = on.length ? `<b>${esc(on.map((x) => x.u.l).join(" · "))}</b>` : `<b class="${cur && /[a-z]/i.test(cur[4]) ? "pl8" : ""}">${esc(cur ? cur[4] : "Off")}</b>`;
-      return `<div class="sn ${name}${cur || on.length ? "" : " idle"}${on.length ? " on" : ""}">${emblem(name)}<div class="snb"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span>${what}${sn.nextWhat ? `<i>next: ${esc(sn.nextWhat)} · ${esc(sn.nextWhen)}</i>` : ""}</div></div>`;
+      return `<div class="sn ${name}${cur || on.length ? "" : " idle"}${on.length ? " on" : ""}">${emblem(name)}<div class="snb"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span>${what}${sn.nextWhat ? `<i>Next: ${esc(sn.nextWhen)}</i><i>${esc(sn.nextWhat)}</i>` : ""}</div></div>`;
     };
     // Burners show what's actually been put on (solid); what the plan expects but nobody has put on yet is faded.
     const now = Date.now();
     const burners = [1, 2, 3, 4, 5].map((n) => {
       const st = "b" + n, on = this.onNow().filter((x) => x.p.st === st), plan = this.plannedNow(st), nx = this.plannedNext(st);
-      const nextLines = nx ? `<i>next: ${esc(nx.u.l)} · ${esc(this.whenMs(this.runStart(nx.u)))}</i>` : "";
+      // One fact per line, never wrapped: when it's next, then what.
+      const nextLines = nx ? `<i><span class="nxl">Next: </span>${esc(this.whenMs(this.runStart(nx.u)))}</i><i>${esc(nx.u.l)}</i>` : "";
       if (on.length) {
         const waiting = plan && plan.u.r !== on[0].u.r ? plan : undefined;
         return `<div class="bn on${waiting ? " clash" : ""}">${emblem(st)}<div><b>${esc(on.map((x) => x.u.l).join(" + "))}</b>${waiting ? `<i class="w">${esc(waiting.u.l)} is waiting</i>` : `<i>on ${Math.max(1, Math.round((now - on[0].p.at) / 60000))} min</i>`}</div></div>`;
@@ -493,8 +494,11 @@ export class PikHolidayCard extends LitElement {
     const L = SPOTS.map((k) => this.store.latest(k));
     const tf = (t: number) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     if (!L.some((x) => x)) {
-      const nx = this.plan.tasks.find((t) => t.rid === "turkey" && !this.store.isDone(t.id));
-      return { cls: "off", sym: "—", head: "Turkey: not on yet", sub: nx ? clip(this.whenLabel(nx) + " · " + nx.text, 34) : "" };
+      // Just when it goes on, never a clipped sentence.
+      const run = this.runs.find((u) => u.st === "smoker" && u.r === "turkey" && u.l === "Turkey");
+      const on = run && this.plan.tasks.find((t) => t.id === run.from);
+      const sub = !on ? "" : this.store.isDone(on.id) ? "On the smoker · no reading yet" : `On the smoker ${this.whenMs(this.ms(on))}`;
+      return { cls: "off", sym: "—", head: "Turkey: not on yet", sub };
     }
     if (L.every((x) => x && x.f >= 165)) return { cls: "ok", sym: "✓", head: "Turkey: done", sub: "165°F in all three · rest it" };
     const have = L.map((x, i) => ({ x, i })).filter((o) => o.x);

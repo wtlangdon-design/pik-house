@@ -488,4 +488,10 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .rcard .nm{padding-right:34px}
 .dic svg{width:100%;height:100%;display:block}
 .rhd{display:flex;align-items:center;gap:14px}.rhd .dic{width:38px;height:38px;color:var(--amberInk);flex:none}
+/* Station tiles: one fact per line, never wrapped. */
+.sn i,.bn i,.sn b,.bn b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.bn > div,.sn .snb{min-width:0}
+@media (max-width:1500px){.stn{grid-template-columns:185px 215px 1fr}.bn .nxl{display:none}.bn{padding:7px 6px;gap:5px}.burners{gap:5px}}
+@media (max-width:1200px){.stn{grid-template-columns:160px 210px 1fr;padding:10px 14px}.sn{padding:9px 9px}.sn i{font-size:11.5px}.bn i{font-size:11.5px}.bn .ic{width:22px;height:22px;margin:0 2px 0 0}.stovebox{padding:8px 8px 8px 10px}}
+@media (max-width:1100px){.stn{grid-template-columns:150px 200px 1fr;gap:8px}.sn{gap:7px}.sn .ic{width:24px;height:24px}.bn i{font-size:10.5px}.bn b{font-size:12.5px}.burners{gap:4px}.bn{padding:6px 5px;gap:4px}.bn .ic{width:20px;height:20px}}
 `;
