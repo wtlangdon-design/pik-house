@@ -188,8 +188,7 @@ td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-
 .stovebox{border-radius:16px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--stove);padding:8px 10px 8px 12px;display:flex;flex-direction:column;gap:5px;min-width:0}
 .burners{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1}
 .bn{display:flex;gap:7px;align-items:flex-start;border-radius:11px;padding:5px 7px;background:#F6EEE2;min-width:0}
-.bn .n{width:20px;height:20px;border-radius:50%;background:var(--stove);color:#fff;font:700 11px 'DM Sans',sans-serif;display:grid;place-items:center;flex:none;margin-top:1px}
-.bn.free{background:transparent;border:1px dashed var(--line)}.bn.free .n{background:#D8C8B1}
+.bn.free{background:transparent;border:1px dashed var(--line)}
 .bn div{display:flex;flex-direction:column;min-width:0}
 .bn b{font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bn i{font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -327,18 +326,33 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 /* put on a burner / in the oven / on the smoker */
 .pl{position:relative;width:46px;height:42px;border-radius:14px;border:1.5px solid var(--stove);background:var(--card);color:#8A5A1C;cursor:pointer;display:grid;place-items:center;padding:0;flex:none}
 .pl svg{width:24px;height:24px}
-.pl .pn{position:absolute;top:-8px;left:50%;transform:translateX(-50%);min-width:18px;height:18px;border-radius:9px;background:var(--stove);color:#fff;font:700 11px/18px 'DM Sans',sans-serif;text-align:center;padding:0 4px;border:2px solid var(--card)}
 .pl.on{background:var(--btn);border-color:var(--btn);color:var(--btnInk)}.pl.on .pn{background:#C9822F}
 .pl.busy{border-color:var(--urg);color:var(--urg);background:#FFF1EC}.pl.busy .pn{background:#B9A48A}
 .pl .bang{position:absolute;bottom:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--urg);color:#fff;font:800 12px/18px 'DM Sans',sans-serif;text-align:center;border:2px solid var(--card)}
 .bn.plan{background:transparent;border:1px dashed var(--stove);opacity:.75}.bn.plan b{font-style:italic;font-weight:600}
-.bn.on{background:#F8E6CC}.bn.on .n{box-shadow:0 0 0 3px #F1C98F}
+.bn.on{background:#F8E6CC}
 .bn.clash{background:#FDE4DA;border:1px solid var(--urg)}.bn i.w{color:var(--urg);font-weight:700}
 .sn b.pl8{font-style:italic;opacity:.65}
 .bpick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
 .bpick button{position:relative;height:96px;border-radius:14px;border:1px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:14px 4px 6px}
 .bpick button:disabled{opacity:.55;cursor:default;background:var(--soft)}
-.bpick .pn{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:var(--stove);color:#fff;font:700 12px/22px 'DM Sans',sans-serif;text-align:center}
 .bpick b{font-size:14px}.bpick span{font-size:11.5px;color:var(--muted);text-align:center}
 .tpop.pick{width:min(560px,calc(100% - 40px))}
+/* one emblem everywhere: station icon + a notification-style number badge in the top-right corner */
+.ic{position:relative;display:inline-grid;place-items:center;width:28px;height:28px;flex:none;color:var(--stove)}
+.ic svg{width:100%;height:100%}
+.ic .pn{position:absolute;top:-6px;right:-8px;min-width:17px;height:17px;border-radius:9px;background:#E5484D;color:#fff;font:700 10.5px/17px 'DM Sans',sans-serif;text-align:center;padding:0 4px;border:2px solid var(--card);box-sizing:border-box}
+.pl .ic{width:26px;height:26px;color:inherit}
+.pl .ic .pn{top:-14px;right:-16px;min-width:20px;height:20px;line-height:16px;font-size:11.5px}
+.pl.busy .ic .pn{background:#B9A48A}
+.pl .bang{bottom:-7px;right:-7px}
+.bn{align-items:center}.bn .ic{width:26px;height:26px;margin:0 4px 0 1px}
+.bn.free .ic{color:#C9B79E}.bn.plan .ic{opacity:.7}.bn.on .ic{color:#8A5A1C}.bn.on .ic .pn,.bn.clash .ic .pn{background:#E5484D}
+.bn.free .ic .pn{background:#C9B79E}
+.sn{flex-direction:row;align-items:center;gap:10px}.sn .snb{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.sn .ic{width:30px;height:30px}.sn.smoker .ic{color:var(--smoker)}.sn.oven .ic{color:var(--oven)}.sn.idle .ic{color:#C9B79E}
+.bpick .ic{width:30px;height:30px;margin-bottom:4px}.bpick button:disabled .ic .pn{background:#B9A48A}
+.pl.oven{border-color:var(--oven);color:var(--oven)}.pl.smoker{border-color:var(--smoker);color:var(--smoker)}
+.pl.on.oven,.pl.on.smoker{background:var(--btn);border-color:var(--btn);color:var(--btnInk)}
+.tc.done{align-items:start}.tc.done .tick{margin-top:2px}
 `;

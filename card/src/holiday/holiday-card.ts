@@ -45,6 +45,8 @@ const ICON: Record<string, string> = {
   oven: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="6.5" y="10" width="11" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 6.8h.01M10.5 6.8h.01M14 6.8h3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
   smoker: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14a8.5 6 0 0 1 17 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M3 14h18M7 14v6M17 14v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 6.5c-1-1 1-2 0-3.5M14 6.5c-1-1 1-2 0-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
 };
+/** A station's emblem: its icon, and for a burner its number as a badge in the top-right corner. */
+const emblem = (st: string) => `<span class="ic">${ICON[st[0] === "b" ? "burner" : st]}${st[0] === "b" ? `<span class="pn">${st.slice(1)}</span>` : ""}</span>`;
 const stName = (st: string) => (st[0] === "b" ? "Burner " + st.slice(1) : st === "oven" ? "Oven" : "Smoker");
 const onWords = (st: string) => (st === "oven" ? "in the oven" : st === "smoker" ? "on the smoker" : "on burner " + st.slice(1));
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
@@ -368,7 +370,7 @@ export class PikHolidayCard extends LitElement {
     const state = pl ? "on" : busy ? "busy" : "free";
     const kind = st[0] === "b" ? "burner" : st;
     const title = pl ? `${u.l}: ${onWords(st)}. Tap to take it off.` : busy ? `${stName(st)} has the ${busy.u.l.toLowerCase()} on it. Tap to pick another burner.` : `Put the ${u.l.toLowerCase()} ${onWords(st)}`;
-    return `<button class="pl ${state}" data-place="${i}" title="${esc(title)}" aria-label="${esc(title)}">${ICON[kind]}${st[0] === "b" ? `<span class="pn">${st.slice(1)}</span>` : ""}${busy ? `<span class="bang">!</span>` : ""}</button>`;
+    return `<button class="pl ${state} ${kind}" data-place="${i}" title="${esc(title)}" aria-label="${esc(title)}">${emblem(st)}${busy ? `<span class="bang">!</span>` : ""}</button>`;
   }
   /** Runs whose emblem belongs on this part's card: the ones that start here, and ones already on that this part is within. */
   private runsFor(g: string, t: Task): number[] {
@@ -382,8 +384,8 @@ export class PikHolidayCard extends LitElement {
     return `<button class="scrim2" data-pickclose="1" aria-label="Close"></button><div class="tpop pick" role="dialog" aria-label="Pick a burner">
       <div class="tph"><div><h3 class="serif">Which burner?</h3><p>For the ${esc(u.l.toLowerCase())}. ${esc(stName(u.st))} isn't free.</p></div><button class="btn sm" data-pickclose="1">Cancel</button></div>
       <div class="bpick">${[1, 2, 3, 4, 5].map((n) => { const x = on.find((y) => y.p.st === "b" + n); return x
-        ? `<button disabled><span class="pn">${n}</span><b>${esc(x.u.l)}</b><span>on ${Math.max(1, Math.round((now - x.p.at) / 60000))} min</span></button>`
-        : `<button data-pick="${i}:b${n}"><span class="pn">${n}</span><b>Free</b><span>${n === Number(u.st.slice(1)) ? "" : "use this one"}</span></button>`; }).join("")}</div></div>`;
+        ? `<button disabled>${emblem("b" + n)}<b>${esc(x.u.l)}</b><span>on ${Math.max(1, Math.round((now - x.p.at) / 60000))} min</span></button>`
+        : `<button data-pick="${i}:b${n}">${emblem("b" + n)}<b>Free</b><span>${n === Number(u.st.slice(1)) ? "" : "use this one"}</span></button>`; }).join("")}</div></div>`;
   }
   private isToday(): boolean { return !this.L.day || this.L.day === this.currentDay(); }
 
@@ -437,7 +439,7 @@ export class PikHolidayCard extends LitElement {
       // Dishes actually put in / on show solid; otherwise the plan's line, faded.
       const on = this.onNow().filter((x) => x.p.st === name);
       const what = on.length ? `<b>${esc(on.map((x) => x.u.l).join(" · "))}</b>` : `<b class="${cur && /[a-z]/i.test(cur[4]) ? "pl8" : ""}">${esc(cur ? cur[4] : "Off")}</b>`;
-      return `<div class="sn ${name}${cur || on.length ? "" : " idle"}"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span>${what}${sn.nextWhat ? `<i>Next: ${esc(sn.nextWhat)}</i><i>${esc(sn.nextWhen)}</i>` : ""}</div>`;
+      return `<div class="sn ${name}${cur || on.length ? "" : " idle"}${on.length ? " on" : ""}">${emblem(name)}<div class="snb"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span>${what}${sn.nextWhat ? `<i>Next: ${esc(sn.nextWhat)}</i><i>${esc(sn.nextWhen)}</i>` : ""}</div></div>`;
     };
     // Burners show what's actually been put on (solid); what the plan expects but nobody has put on yet is faded.
     const now = Date.now();
@@ -446,12 +448,12 @@ export class PikHolidayCard extends LitElement {
       const nextLines = nx ? `<i>Next: ${esc(nx.u.l)}</i><i>${esc(this.whenMs(this.runStart(nx.u)))}</i>` : "";
       if (on.length) {
         const waiting = plan && plan.u.r !== on[0].u.r ? plan : undefined;
-        return `<div class="bn on${waiting ? " clash" : ""}"><span class="n">${n}</span><div><b>${esc(on.map((x) => x.u.l).join(" + "))}</b><i>on ${Math.max(1, Math.round((now - on[0].p.at) / 60000))} min</i>${waiting ? `<i class="w">${esc(waiting.u.l)} is waiting</i>` : nextLines}</div></div>`;
+        return `<div class="bn on${waiting ? " clash" : ""}">${emblem(st)}<div><b>${esc(on.map((x) => x.u.l).join(" + "))}</b><i>on ${Math.max(1, Math.round((now - on[0].p.at) / 60000))} min</i>${waiting ? `<i class="w">${esc(waiting.u.l)} is waiting</i>` : nextLines}</div></div>`;
       }
-      if (plan) return `<div class="bn plan"><span class="n">${n}</span><div><b>${esc(plan.u.l)}</b><i>planned · not on yet</i>${nextLines}</div></div>`;
-      return `<div class="bn free"><span class="n">${n}</span><div><b>Free</b>${nextLines}</div></div>`;
+      if (plan) return `<div class="bn plan">${emblem(st)}<div><b>${esc(plan.u.l)}</b><i>planned · not on yet</i>${nextLines}</div></div>`;
+      return `<div class="bn free">${emblem(st)}<div><b>Free</b>${nextLines}</div></div>`;
     }).join("");
-    return `<div class="stn">${big("smoker", "Smoker")}${big("oven", "Oven")}<div class="stovebox"><span class="eb">Stove</span><div class="burners">${burners}</div></div></div>`;
+    return `<div class="stn">${big("smoker", "Smoker")}${big("oven", "Oven")}<div class="stovebox"><span class="eb">Stove · 5 burners</span><div class="burners">${burners}</div></div></div>`;
   }
 
   // ---------------------------------------------------------------- turkey
