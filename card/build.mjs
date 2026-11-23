@@ -2,7 +2,7 @@
 // GitHub Pages preview in ../docs (index.html, the card, and the reference prototype).
 // Pages serves ../docs straight from the branch, so the built files are committed.
 import * as esbuild from "esbuild";
-import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
 const watch = process.argv.includes("--watch");
 const opts = {
@@ -16,6 +16,30 @@ const opts = {
   loader: { ".svg": "text" },
   logLevel: "info",
 };
+
+// The backup page: holiday cooking mode on its own, with the card inlined (no Home Assistant needed).
+function standalone() {
+  const js = readFileSync("dist/pik-house-card.js", "utf8").replace(/<\/script/gi, "<\\/script");
+  const page = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thanksgiving Kitchen · Pik House</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#F3ECE0}body{touch-action:manipulation;-webkit-tap-highlight-color:transparent}pik-holiday-card{display:block;height:100vh}</style>
+</head>
+<body>
+<pik-holiday-card></pik-holiday-card>
+<script type="module">
+${js}
+const card = document.querySelector("pik-holiday-card");
+card.setConfig({ type: "custom:pik-holiday-card", plan: "thanksgiving_2026", mock: true });
+</script>
+</body>
+</html>
+`;
+  writeFileSync("dist/holiday-standalone.html", page);
+}
 
 function site() {
   rmSync("../docs", { recursive: true, force: true });
@@ -32,5 +56,6 @@ if (watch) {
   await ctx.watch();
 } else {
   await esbuild.build(opts);
+  standalone();
   site();
 }

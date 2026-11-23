@@ -404,7 +404,7 @@
     },
     {
      "d": "thu",
-     "t": "Off the smoker onto the rack, tent loosely with foil, rest 30–45 minutes. Drippings to the gravy cook. Set the smoker to its lowest setting (200–225°F): it becomes the hot hold for the stuffing and GBC.",
+     "t": "Off the smoker onto the rack, tent loosely with foil, rest 30–45 minutes. Drippings to the gravy cook. Set the smoker to its lowest setting (200–225°F): it becomes the hot hold for the stuffing and green beans.",
      "tm": [
       "Turkey: rest check",
       30,
@@ -783,7 +783,7 @@
      "d": "thu",
      "t": "2:30 PM: into the 350°F oven, covered with foil.",
      "tm": [
-      "GBC: covered stage (check heat)",
+      "Green beans: covered stage (check heat)",
       30,
       "check"
      ]
@@ -796,7 +796,7 @@
      "d": "thu",
      "t": "3:40 PM: back in the oven, uncovered, until bubbling. The oven is cooling from 425°F and still hotter than 350°F, so look at 5 minutes.",
      "tm": [
-      "GBC: bubbling?",
+      "Green beans: bubbling?",
       5,
       "check"
      ]
@@ -1627,43 +1627,73 @@
    "day": "tue",
    "hm": "19:00",
    "lane": "prep",
-   "who": "A",
    "rid": "turkey",
    "text": "Turkey: confirm weight, fresh vs. thawed, and the label (no added solution). Remove giblets and hardware.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     0
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "tue_1915_turkey",
    "day": "tue",
    "hm": "19:15",
    "lane": "prep",
-   "who": "A",
    "rid": "turkey",
    "text": "Spatchcock the turkey.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     1
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "tue_1945_turkey",
    "day": "tue",
    "hm": "19:45",
    "lane": "prep",
-   "who": "A",
    "rid": "turkey",
    "text": "Mix brine (230 g salt + ¾ cup brown sugar per gallon); chill it to 40°F or colder.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     2
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "tue_2030_turkey",
    "day": "tue",
    "hm": "20:30",
    "lane": "fridge",
-   "who": "A",
    "rid": "turkey",
    "text": "Turkey into the brine (fridge, or cooler with ice at 40°F or colder).",
    "tm": [
     "Turkey: out of the brine",
     600,
     "done"
+   ],
+   "steps": [
+    [
+     "turkey",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "turkey",
+     "cold",
+     "Brining, fridge"
+    ]
    ]
   },
   {
@@ -1671,43 +1701,91 @@
    "day": "tue",
    "hm": "20:30",
    "lane": "prep",
-   "who": "B",
    "rid": "stuffing",
    "text": "Cube both loaves; spread on sheet pans to dry overnight.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "stuffing",
+     0
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "wait",
+     "Bread cubes drying"
+    ]
+   ]
   },
   {
    "id": "tue_2100_x",
    "day": "tue",
    "hm": "21:00",
    "lane": "fridge",
-   "who": "AB",
    "rid": null,
    "text": "Clear one full fridge shelf for Wednesday's turkey drying tray.",
-   "tm": null
+   "tm": null,
+   "steps": [],
+   "dish": []
+  },
+  {
+   "id": "tue_2100_x_1",
+   "day": "tue",
+   "hm": "21:00",
+   "lane": "fridge",
+   "rid": null,
+   "text": "Groceries: are the oranges (Wed 9:00) and powdered sugar (Wed 1:00) here? If not, the bottled OJ is the backup.",
+   "tm": null,
+   "steps": [],
+   "dish": []
   },
   {
    "id": "wed_0630_turkey",
    "day": "wed",
    "hm": "06:30",
    "lane": "fridge",
-   "who": "A",
    "rid": "turkey",
    "text": "Turkey out of brine, patted very dry, uncovered on a rack in the fridge until Thursday.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     4
+    ]
+   ],
+   "dish": [
+    [
+     "turkey",
+     "cold",
+     "Drying, fridge"
+    ]
+   ]
   },
   {
    "id": "wed_0800_stuffing",
    "day": "wed",
    "hm": "08:00",
    "lane": "oven",
-   "who": "A",
    "rid": "stuffing",
    "text": "Oven to 250°F; finish drying bread cubes if still soft. Cool; bag.",
    "tm": [
     "Bread: dry yet?",
     30,
     "check"
+   ],
+   "steps": [
+    [
+     "stuffing",
+     1
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "wait",
+     "Bread dried, bagged"
+    ]
    ]
   },
   {
@@ -1715,63 +1793,207 @@
    "day": "wed",
    "hm": "09:00",
    "lane": "stove",
-   "who": "B",
    "rid": "cran",
    "text": "Cranberry sauce; cool; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "cran",
+     0
+    ],
+    [
+     "cran",
+     1
+    ],
+    [
+     "cran",
+     2
+    ],
+    [
+     "cran",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "cran",
+     "cold",
+     "Fridge · out Thu 3:00"
+    ]
+   ]
   },
   {
    "id": "wed_0930_eggs",
    "day": "wed",
    "hm": "09:30",
    "lane": "stove",
-   "who": "B",
    "rid": "eggs",
    "text": "Hard-boil eggs (check one at 14 min), ice, peel; filling; fridge separately.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "eggs",
+     0
+    ],
+    [
+     "eggs",
+     1
+    ],
+    [
+     "eggs",
+     2
+    ],
+    [
+     "eggs",
+     3
+    ],
+    [
+     "eggs",
+     4
+    ]
+   ],
+   "dish": [
+    [
+     "eggs",
+     "cold",
+     "Whites and filling, fridge"
+    ]
+   ]
   },
   {
    "id": "wed_1030_mac",
    "day": "wed",
    "hm": "10:30",
    "lane": "stove",
-   "who": "A",
    "rid": "mac",
    "text": "Lobster tails, ice, chop, fridge. Shred and grate cheeses.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "mac",
+     0
+    ],
+    [
+     "mac",
+     1
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "cold",
+     "Lobster and cheeses, fridge"
+    ]
+   ]
   },
   {
    "id": "wed_1100_stuffing",
    "day": "wed",
    "hm": "11:00",
    "lane": "stove",
-   "who": "A",
    "rid": "stuffing",
    "text": "Stuffing wet mix (butter, onion, celery, hearts, liver cooked through); cool in a shallow container; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "stuffing",
+     2
+    ],
+    [
+     "stuffing",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "cold",
+     "Wet mix, fridge"
+    ]
+   ]
   },
   {
    "id": "wed_1200_gbc",
    "day": "wed",
    "hm": "12:00",
    "lane": "stove",
-   "who": "B",
    "rid": "gbc",
    "text": "Green bean casserole: boil water, blanch, sauce, assemble; cool 30 min; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "gbc",
+     0
+    ],
+    [
+     "gbc",
+     1
+    ],
+    [
+     "gbc",
+     2
+    ],
+    [
+     "gbc",
+     3
+    ],
+    [
+     "gbc",
+     4
+    ],
+    [
+     "gbc",
+     5
+    ]
+   ],
+   "dish": [
+    [
+     "gbc",
+     "cold",
+     "Assembled, fridge · in Thu 2:30"
+    ]
+   ]
   },
   {
    "id": "wed_1300_cake",
    "day": "wed",
    "hm": "13:00",
    "lane": "oven",
-   "who": "A",
    "rid": "cake",
    "text": "Oven to 350°F; gooey butter cake in at 1:20; check at 2:00; cool; fridge.",
    "tm": [
     "Cake: first doneness check",
     40,
     "check"
+   ],
+   "steps": [
+    [
+     "cake",
+     0
+    ],
+    [
+     "cake",
+     1
+    ],
+    [
+     "cake",
+     2
+    ],
+    [
+     "cake",
+     3
+    ],
+    [
+     "cake",
+     4
+    ]
+   ],
+   "dish": [
+    [
+     "cake",
+     "cold",
+     "Baked, fridge · out Thu 4:45"
+    ]
    ]
   },
   {
@@ -1779,127 +2001,243 @@
    "day": "wed",
    "hm": "14:30",
    "lane": "prep",
-   "who": "B",
    "rid": "turkey",
    "text": "Salt-free rub; one-stick garlic-herb butter; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     5
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "wed_1530_salad",
    "day": "wed",
    "hm": "15:30",
    "lane": "prep",
-   "who": "B",
    "rid": "salad",
    "text": "Sherry vinaigrette; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "salad",
+     0
+    ],
+    [
+     "salad",
+     1
+    ]
+   ],
+   "dish": [
+    [
+     "salad",
+     "cold",
+     "Vinaigrette, fridge"
+    ]
+   ]
   },
   {
    "id": "wed_1530_sprouts",
    "day": "wed",
    "hm": "15:30",
    "lane": "stove",
-   "who": "A",
    "rid": "sprouts",
    "text": "Sprouts dressing base (no herbs); toast rice crisps with cayenne; cool; airtight.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "sprouts",
+     0
+    ],
+    [
+     "sprouts",
+     1
+    ]
+   ],
+   "dish": [
+    [
+     "sprouts",
+     "cold",
+     "Dressing and crisps ready"
+    ]
+   ]
   },
   {
    "id": "wed_1545_mac",
    "day": "wed",
    "hm": "15:45",
    "lane": "stove",
-   "who": "A",
    "rid": "mac",
    "text": "GF panko topping; cool; airtight.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "mac",
+     2
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "cold",
+     "Topping made"
+    ]
+   ]
   },
   {
    "id": "wed_1630_x",
    "day": "wed",
    "hm": "16:30",
    "lane": "smoker",
-   "who": "A",
    "rid": null,
    "text": "Pellets: full hopper plus a spare bag for Thursday's smoke and 200°F hot hold.",
-   "tm": null
+   "tm": null,
+   "steps": [],
+   "dish": []
   },
   {
    "id": "wed_1730_x",
    "day": "wed",
    "hm": "17:30",
    "lane": "fridge",
-   "who": "AB",
    "rid": null,
    "text": "Fridge plan for Thursday; label each dish with its pull time. Check deliveries against the shopping list.",
-   "tm": null
+   "tm": null,
+   "steps": [],
+   "dish": []
   },
   {
    "id": "thu_0830_dip",
    "day": "thu",
    "hm": "08:30",
    "lane": "fridge",
-   "who": "B",
    "rid": "dip",
    "text": "Cream cheese (dip) and herb butter out to soften.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "dip",
+     0
+    ],
+    [
+     "turkey",
+     6
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_0900_eggs",
    "day": "thu",
    "hm": "09:00",
    "lane": "stove",
-   "who": "B",
    "rid": "eggs",
    "text": "Crisp the prosciutto; drain; airtight at room temperature.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "eggs",
+     5
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_0915_dip",
    "day": "thu",
    "hm": "09:15",
    "lane": "prep",
-   "who": "B",
    "rid": "dip",
    "text": "Make the roe dip (¾ of the roe folded in); cover; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "dip",
+     1
+    ],
+    [
+     "dip",
+     2
+    ],
+    [
+     "dip",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "dip",
+     "cold",
+     "Made, fridge · out 2:30"
+    ]
+   ]
   },
   {
    "id": "thu_0930_turkey",
    "day": "thu",
    "hm": "09:30",
    "lane": "smoker",
-   "who": "A",
    "rid": "turkey",
    "text": "Fill hopper; smoker to 250°F.",
    "tm": [
     "Smoker at 250°F?",
     20,
     "check"
-   ]
+   ],
+   "steps": [
+    [
+     "turkey",
+     7
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_0940_turkey",
    "day": "thu",
    "hm": "09:40",
    "lane": "prep",
-   "who": "A",
    "rid": "turkey",
    "text": "Herb butter under the skin; rub lightly outside.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     8
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1015_turkey",
    "day": "thu",
    "hm": "10:15",
    "lane": "smoker",
-   "who": "A",
    "rid": "turkey",
    "text": "Turkey on, skin up, drip pan below, probe in the thigh.",
    "tm": [
     "Turkey: first temperature check",
     60,
     "temp"
+   ],
+   "steps": [
+    [
+     "turkey",
+     9
+    ],
+    [
+     "turkey",
+     10
+    ]
+   ],
+   "dish": [
+    [
+     "turkey",
+     "hot",
+     "On the smoker"
+    ]
    ]
   },
   {
@@ -1907,27 +2245,49 @@
    "day": "thu",
    "hm": "11:15",
    "lane": "smoker",
-   "who": "A",
    "rid": "turkey",
    "text": "Log temperature; check pellets.",
    "tm": [
     "Turkey: temperature check",
     60,
     "temp"
-   ]
+   ],
+   "steps": [
+    [
+     "turkey",
+     10
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1200_sprouts",
    "day": "thu",
    "hm": "12:00",
    "lane": "stove",
-   "who": "B",
    "rid": "sprouts",
    "text": "Sprouts: boil until just tender (our method), dry well, fridge.",
    "tm": [
     "Sprouts: just tender? (check 4–6 min)",
     4,
     "check"
+   ],
+   "steps": [
+    [
+     "sprouts",
+     2
+    ],
+    [
+     "sprouts",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "sprouts",
+     "cold",
+     "Boiled, fridge · char 3:40"
+    ]
    ]
   },
   {
@@ -1935,119 +2295,204 @@
    "day": "thu",
    "hm": "12:00",
    "lane": "fridge",
-   "who": "B",
    "rid": "salad",
    "text": "Wash and dry greens; roll in towels; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "salad",
+     2
+    ]
+   ],
+   "dish": [
+    [
+     "salad",
+     "cold",
+     "Greens washed, fridge"
+    ]
+   ]
   },
   {
    "id": "thu_1215_turkey",
    "day": "thu",
    "hm": "12:15",
    "lane": "smoker",
-   "who": "A",
    "rid": "turkey",
    "text": "Log temperature. If the thigh is about 130°F, raise the smoker to 325–350°F now.",
    "tm": [
     "Turkey: temperature check",
     30,
     "temp"
-   ]
+   ],
+   "steps": [
+    [
+     "turkey",
+     11
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1245_turkey",
    "day": "thu",
    "hm": "12:45",
    "lane": "smoker",
-   "who": "A",
    "rid": "turkey",
    "text": "Smoker at 325–350°F (crisp skin). Check every 20–30 min from now.",
    "tm": [
     "Turkey: temperature check",
     25,
     "temp"
-   ]
+   ],
+   "steps": [
+    [
+     "turkey",
+     11
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1315_mash",
    "day": "thu",
    "hm": "13:15",
    "lane": "prep",
-   "who": "B",
    "rid": "mash",
    "text": "Cut potatoes; cold water; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "mash",
+     0
+    ]
+   ],
+   "dish": [
+    [
+     "mash",
+     "cold",
+     "Cut, in water, fridge"
+    ]
+   ]
   },
   {
    "id": "thu_1330_stuffing",
    "day": "thu",
    "hm": "13:30",
    "lane": "stove",
-   "who": "A",
    "rid": "stuffing",
    "text": "Warm the stuffing wet mix until the butter melts.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "stuffing",
+     4
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1345_eggs",
    "day": "thu",
    "hm": "13:45",
    "lane": "prep",
-   "who": "B",
    "rid": "eggs",
    "text": "Pipe deviled eggs; cover; fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "eggs",
+     6
+    ]
+   ],
+   "dish": [
+    [
+     "eggs",
+     "cold",
+     "Piped, fridge · out 2:30"
+    ]
+   ]
   },
   {
    "id": "thu_1345_stuffing",
    "day": "thu",
    "hm": "13:45",
    "lane": "prep",
-   "who": "A",
    "rid": "stuffing",
    "text": "Mix stuffing (bread + wet mix + broth added gradually); taste; into buttered casserole; foil on.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "stuffing",
+     5
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "act",
+     "Mixed, in the dish"
+    ]
+   ]
   },
   {
    "id": "thu_1350_x",
    "day": "thu",
    "hm": "13:50",
    "lane": "oven",
-   "who": "A",
    "rid": null,
    "text": "Oven to 350°F.",
    "tm": [
     "Oven at 350°F?",
     15,
     "check"
-   ]
+   ],
+   "steps": [],
+   "dish": []
   },
   {
    "id": "thu_1400_turkey",
    "day": "thu",
    "hm": "14:00",
    "lane": "smoker",
-   "who": "A",
    "rid": "turkey",
    "text": "Turkey done window opens (2:00–2:45). Done only at 165°F in breast, thigh and wing.",
    "tm": [
     "Turkey: temperature check",
     20,
     "temp"
-   ]
+   ],
+   "steps": [
+    [
+     "turkey",
+     12
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1405_stuffing",
    "day": "thu",
    "hm": "14:05",
    "lane": "oven",
-   "who": "A",
    "rid": "stuffing",
    "text": "Stuffing in, covered.",
    "tm": [
     "Stuffing: uncover",
     35,
     "done"
+   ],
+   "steps": [
+    [
+     "stuffing",
+     6
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "hot",
+     "Oven, covered"
+    ]
    ]
   },
   {
@@ -2055,13 +2500,25 @@
    "day": "thu",
    "hm": "14:30",
    "lane": "oven",
-   "who": "A",
    "rid": "gbc",
    "text": "Green bean casserole in from the fridge, covered.",
    "tm": [
-    "GBC: covered stage (check heat)",
+    "Green beans: covered stage (check heat)",
     30,
     "check"
+   ],
+   "steps": [
+    [
+     "gbc",
+     6
+    ]
+   ],
+   "dish": [
+    [
+     "gbc",
+     "hot",
+     "Oven, covered"
+    ]
    ]
   },
   {
@@ -2069,23 +2526,56 @@
    "day": "thu",
    "hm": "14:30",
    "lane": "prep",
-   "who": "B",
    "rid": "eggs",
    "text": "Appetizers out: eggs garnished, dip topped, chips. Back in the fridge by 4:30.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "eggs",
+     7
+    ],
+    [
+     "dip",
+     4
+    ]
+   ],
+   "dish": [
+    [
+     "eggs",
+     "cold",
+     "Out · fridge by 4:30"
+    ],
+    [
+     "dip",
+     "cold",
+     "Out · fridge by 4:30"
+    ]
+   ]
   },
   {
    "id": "thu_1440_stuffing",
    "day": "thu",
    "hm": "14:40",
    "lane": "oven",
-   "who": "A",
    "rid": "stuffing",
    "text": "Uncover stuffing; bake to 165°F in the center.",
    "tm": [
     "Stuffing: check center 165°F",
     20,
     "check"
+   ],
+   "steps": [
+    [
+     "stuffing",
+     7
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "hot",
+     "Oven · to 165°F"
+    ]
    ]
   },
   {
@@ -2093,13 +2583,29 @@
    "day": "thu",
    "hm": "14:40",
    "lane": "stove",
-   "who": "B",
    "rid": "mash",
    "text": "Burner 1: potato water on. Burner 2: pasta water on.",
    "tm": [
     "Water boiling?",
     20,
     "check"
+   ],
+   "steps": [
+    [
+     "mash",
+     1
+    ],
+    [
+     "mac",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "mash",
+     "act",
+     "Water on, burner 1"
+    ]
    ]
   },
   {
@@ -2107,23 +2613,55 @@
    "day": "thu",
    "hm": "14:45",
    "lane": "smoker",
-   "who": "A",
    "rid": "turkey",
    "text": "Turkey off once it's 165°F everywhere: tent, rest. Smoker to its lowest setting for the hot hold (aim 200–225°F); open the lid a few minutes so it drops faster.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     13
+    ]
+   ],
+   "dish": [
+    [
+     "turkey",
+     "hot",
+     "Resting, tented"
+    ]
+   ]
   },
   {
    "id": "thu_1445_mac",
    "day": "thu",
    "hm": "14:45",
    "lane": "stove",
-   "who": "B",
    "rid": "mac",
    "text": "Burner 3: mac sauce.",
    "tm": [
     "Sauce: reduced by a third?",
     10,
     "check"
+   ],
+   "steps": [
+    [
+     "mac",
+     4
+    ],
+    [
+     "mac",
+     5
+    ],
+    [
+     "mac",
+     6
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "act",
+     "Sauce, burner 3"
+    ]
    ]
   },
   {
@@ -2131,13 +2669,41 @@
    "day": "thu",
    "hm": "14:50",
    "lane": "stove",
-   "who": "A",
    "rid": "gravy",
    "text": "Burner 4: gravy from drippings + broth (taste drippings first); hold on lowest.",
    "tm": [
     "Gravy: thickened?",
     5,
     "check"
+   ],
+   "steps": [
+    [
+     "gravy",
+     0
+    ],
+    [
+     "gravy",
+     1
+    ],
+    [
+     "gravy",
+     2
+    ],
+    [
+     "gravy",
+     3
+    ],
+    [
+     "gravy",
+     4
+    ]
+   ],
+   "dish": [
+    [
+     "gravy",
+     "hot",
+     "Burner 4, lowest"
+    ]
    ]
   },
   {
@@ -2145,13 +2711,34 @@
    "day": "thu",
    "hm": "15:00",
    "lane": "oven",
-   "who": "A",
    "rid": null,
-   "text": "Stuffing (165°F) and GBC out, covered, into the 200°F smoker hold. Oven up to 425°F.",
+   "text": "Stuffing (165°F) and green beans out, covered, into the 200°F smoker hold. Oven up to 425°F.",
    "tm": [
     "Oven at 425°F?",
     12,
     "check"
+   ],
+   "steps": [
+    [
+     "stuffing",
+     8
+    ],
+    [
+     "gbc",
+     7
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "hot",
+     "Smoker hold"
+    ],
+    [
+     "gbc",
+     "hot",
+     "Smoker hold"
+    ]
    ]
   },
   {
@@ -2159,13 +2746,25 @@
    "day": "thu",
    "hm": "15:00",
    "lane": "stove",
-   "who": "B",
    "rid": "mash",
    "text": "Burner 1: potatoes in.",
    "tm": [
     "Potatoes: knife-tender?",
     15,
     "check"
+   ],
+   "steps": [
+    [
+     "mash",
+     2
+    ]
+   ],
+   "dish": [
+    [
+     "mash",
+     "hot",
+     "Simmering, burner 1"
+    ]
    ]
   },
   {
@@ -2173,47 +2772,98 @@
    "day": "thu",
    "hm": "15:00",
    "lane": "stove",
-   "who": "B",
    "rid": "mac",
    "text": "Burner 2: elbows in, 2 min short of al dente.",
    "tm": [
     "Pasta: 2 min short of al dente",
     7,
     "check"
-   ]
+   ],
+   "steps": [
+    [
+     "mac",
+     7
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1500_x_1",
    "day": "thu",
    "hm": "15:00",
    "lane": "fridge",
-   "who": "B",
    "rid": null,
    "text": "Cranberry sauce and vinaigrette out of the fridge.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "cran",
+     4
+    ],
+    [
+     "salad",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "cran",
+     "cold",
+     "Out on the counter"
+    ],
+    [
+     "salad",
+     "cold",
+     "Vinaigrette out"
+    ]
+   ]
   },
   {
    "id": "thu_1508_mac",
    "day": "thu",
    "hm": "15:08",
    "lane": "prep",
-   "who": "B",
    "rid": "mac",
    "text": "Assemble the mac and cheese.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "mac",
+     8
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "act",
+     "Assembled"
+    ]
+   ]
   },
   {
    "id": "thu_1512_mac",
    "day": "thu",
    "hm": "15:12",
    "lane": "oven",
-   "who": "A",
    "rid": "mac",
    "text": "Mac in at 425°F.",
    "tm": [
     "Mac: bubbling and golden?",
     20,
     "check"
+   ],
+   "steps": [
+    [
+     "mac",
+     9
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "hot",
+     "Oven, 425°F"
+    ]
    ]
   },
   {
@@ -2221,53 +2871,110 @@
    "day": "thu",
    "hm": "15:15",
    "lane": "stove",
-   "who": "B",
    "rid": "mash",
    "text": "Burner 3: brown butter. Drain potatoes (save water); mash; hold covered on burner 1, lowest.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "mash",
+     3
+    ],
+    [
+     "mash",
+     4
+    ],
+    [
+     "mash",
+     5
+    ]
+   ],
+   "dish": [
+    [
+     "mash",
+     "hot",
+     "Mashed · burner 1, lowest"
+    ]
+   ]
   },
   {
    "id": "thu_1520_turkey",
    "day": "thu",
    "hm": "15:20",
    "lane": "prep",
-   "who": "A",
    "rid": "turkey",
    "text": "Carve; platter; foil; into the 200°F smoker hold.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "turkey",
+     14
+    ]
+   ],
+   "dish": [
+    [
+     "turkey",
+     "hot",
+     "Carved · smoker hold"
+    ]
+   ]
   },
   {
    "id": "thu_1530_x",
    "day": "thu",
    "hm": "15:30",
    "lane": "smoker",
-   "who": "A",
    "rid": null,
-   "text": "Hot-hold check: stuffing and GBC read 140°F or hotter.",
-   "tm": null
+   "text": "Hot-hold check: stuffing and green beans read 140°F or hotter.",
+   "tm": null,
+   "steps": [],
+   "dish": []
   },
   {
    "id": "thu_1535_mac",
    "day": "thu",
    "hm": "15:35",
    "lane": "oven",
-   "who": "A",
    "rid": "mac",
    "text": "Mac out; panko + chives on; tent loosely with foil. Oven off, door cracked so it falls toward 350°F.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "mac",
+     10
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "hot",
+     "Counter, tented"
+    ]
+   ]
   },
   {
    "id": "thu_1540_gbc",
    "day": "thu",
    "hm": "15:40",
    "lane": "oven",
-   "who": "A",
    "rid": "gbc",
-   "text": "GBC back in uncovered. The oven is still hotter than 350°F, so look at 5 minutes.",
+   "text": "Green beans back in uncovered. The oven is still hotter than 350°F, so look at 5 minutes.",
    "tm": [
-    "GBC: bubbling?",
+    "Green beans: bubbling?",
     5,
     "check"
+   ],
+   "steps": [
+    [
+     "gbc",
+     8
+    ]
+   ],
+   "dish": [
+    [
+     "gbc",
+     "hot",
+     "Oven, uncovered"
+    ]
    ]
   },
   {
@@ -2275,13 +2982,33 @@
    "day": "thu",
    "hm": "15:40",
    "lane": "stove",
-   "who": "B",
    "rid": "sprouts",
    "text": "Burner 5: char sprouts, batch 1 then 2 (herbs into the dressing first).",
    "tm": [
     "Sprouts batch 1: charred?",
     5,
     "check"
+   ],
+   "steps": [
+    [
+     "sprouts",
+     4
+    ],
+    [
+     "sprouts",
+     5
+    ],
+    [
+     "sprouts",
+     6
+    ]
+   ],
+   "dish": [
+    [
+     "sprouts",
+     "hot",
+     "Charred, burner 5"
+    ]
    ]
   },
   {
@@ -2289,184 +3016,173 @@
    "day": "thu",
    "hm": "15:45",
    "lane": "prep",
-   "who": "A",
    "rid": "salad",
    "text": "Slice endive; plain lettuce for Mom first.",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "salad",
+     4
+    ]
+   ],
+   "dish": [
+    [
+     "salad",
+     "act",
+     "Endive sliced · Mom's plated"
+    ]
+   ]
   },
   {
    "id": "thu_1550_x",
    "day": "thu",
    "hm": "15:50",
    "lane": "prep",
-   "who": "AB",
    "rid": null,
-   "text": "Finish: toss salad; dress sprouts lightly (rice on the side); onions on GBC; gravy to the boat; zest on cranberry.",
-   "tm": null
+   "text": "Finish: toss salad; dress sprouts lightly (rice on the side); onions on green beans; gravy to the boat; zest on cranberry.",
+   "tm": null,
+   "steps": [
+    [
+     "salad",
+     5
+    ],
+    [
+     "sprouts",
+     7
+    ],
+    [
+     "gbc",
+     9
+    ],
+    [
+     "gravy",
+     4
+    ]
+   ],
+   "dish": [
+    [
+     "gbc",
+     "hot",
+     "Onions on · ready"
+    ],
+    [
+     "salad",
+     "act",
+     "Tossed and plated"
+    ],
+    [
+     "gravy",
+     "hot",
+     "In the boat"
+    ],
+    [
+     "sprouts",
+     "hot",
+     "Dressed · ready"
+    ],
+    [
+     "cran",
+     "cold",
+     "In the bowl, zest on"
+    ]
+   ]
   },
   {
    "id": "thu_1555_x",
    "day": "thu",
    "hm": "15:55",
    "lane": "prep",
-   "who": "AB",
    "rid": null,
    "text": "Spot-check every hot dish: 140°F or hotter. Anything cooler goes back in the still-warm oven for 5 minutes. Then to the table.",
-   "tm": null
+   "tm": null,
+   "steps": [],
+   "dish": []
   },
   {
    "id": "thu_1600_x",
    "day": "thu",
    "hm": "16:00",
    "lane": "prep",
-   "who": "AB",
    "rid": null,
    "text": "Dinner.",
-   "tm": null
+   "tm": null,
+   "steps": [],
+   "dish": []
+  },
+  {
+   "id": "thu_1630_x",
+   "day": "thu",
+   "hm": "16:30",
+   "lane": "fridge",
+   "rid": null,
+   "text": "Two-hour rule: deviled eggs and roe dip back in the fridge.",
+   "tm": null,
+   "steps": [],
+   "dish": [
+    [
+     "eggs",
+     "cold",
+     "Back in the fridge"
+    ],
+    [
+     "dip",
+     "cold",
+     "Back in the fridge"
+    ]
+   ]
   },
   {
    "id": "thu_1645_cake",
    "day": "thu",
    "hm": "16:45",
    "lane": "fridge",
-   "who": "AB",
    "rid": "cake",
    "text": "Cake out of the fridge (dessert about 5:15, proposed).",
-   "tm": null
+   "tm": null,
+   "steps": [
+    [
+     "cake",
+     5
+    ]
+   ],
+   "dish": [
+    [
+     "cake",
+     "cold",
+     "Out for dessert"
+    ]
+   ]
   },
   {
    "id": "thu_1800_x",
    "day": "thu",
    "hm": "18:00",
    "lane": "fridge",
-   "who": "AB",
    "rid": null,
    "text": "Two-hour rule: everything back in the fridge. Turkey off the bone into shallow containers.",
-   "tm": null
-  }
- ],
- "finalHour": [
-  {
-   "id": "fh01",
-   "hm": "15:00",
-   "who": "A",
-   "text": "Stuffing reads 165°F in the center → out, covered, into the 200°F smoker hold with the covered GBC."
-  },
-  {
-   "id": "fh02",
-   "hm": "15:00",
-   "who": "A",
-   "text": "Oven up to 425°F."
-  },
-  {
-   "id": "fh03",
-   "hm": "15:00",
-   "who": "B",
-   "text": "Burner 1 potatoes in · burner 2 pasta in. Cranberry sauce and vinaigrette out."
-  },
-  {
-   "id": "fh04",
-   "hm": "15:05",
-   "who": "A",
-   "text": "Gravy (burner 4): thickened and seasoned; hold on lowest."
-  },
-  {
-   "id": "fh05",
-   "hm": "15:08",
-   "who": "B",
-   "text": "Mac assembled."
-  },
-  {
-   "id": "fh06",
-   "hm": "15:12",
-   "who": "A",
-   "text": "Mac in at 425°F (check at 3:32)."
-  },
-  {
-   "id": "fh07",
-   "hm": "15:15",
-   "who": "B",
-   "text": "Burner 3 brown butter; drain potatoes (save 1½ cups water); mash; cover on burner 1, lowest."
-  },
-  {
-   "id": "fh08",
-   "hm": "15:20",
-   "who": "A",
-   "text": "Carve; platter; foil; into the 200°F smoker hold."
-  },
-  {
-   "id": "fh09",
-   "hm": "15:30",
-   "who": "A",
-   "text": "Hot-hold check: stuffing and GBC at 140°F or hotter."
-  },
-  {
-   "id": "fh10",
-   "hm": "15:35",
-   "who": "A",
-   "text": "Mac out; parsley into panko; panko + chives on; tent loosely with foil. Oven off, door cracked so it falls toward 350°F."
-  },
-  {
-   "id": "fh11",
-   "hm": "15:40",
-   "who": "A",
-   "text": "GBC in uncovered. Oven is still hot, so look at 5 min; out when bubbling."
-  },
-  {
-   "id": "fh12",
-   "hm": "15:40",
-   "who": "B",
-   "text": "Herbs into the sprouts dressing. Burner 5: char sprouts, two batches."
-  },
-  {
-   "id": "fh13",
-   "hm": "15:45",
-   "who": "A",
-   "text": "Slice endive. Plain lettuce for Mom first."
-  },
-  {
-   "id": "fh14",
-   "hm": "15:50",
-   "who": "B",
-   "text": "Toss salad a little dressing at a time; dress sprouts lightly; crispy rice in its own dish."
-  },
-  {
-   "id": "fh15",
-   "hm": "15:50",
-   "who": "A",
-   "text": "GBC out; remaining crispy onions on top. Gravy to the boat. Zest on cranberry."
-  },
-  {
-   "id": "fh16",
-   "hm": "15:55",
-   "who": "AB",
-   "text": "Thermometer check on every hot dish (140°F+): turkey, stuffing, mac, GBC, potatoes, gravy. Anything cooler: 5 min in the warm oven. Splash of hot water in the potatoes if stiff."
-  },
-  {
-   "id": "fh17",
-   "hm": "16:00",
-   "who": "AB",
-   "text": "Serve. Appetizers back in the fridge by 4:30."
+   "tm": null,
+   "steps": [],
+   "dish": []
   }
  ],
  "shop": [
   [
    "Butter",
-   "55 tbsp + pan greasing: turkey 8, stuffing 16, cake 16, mash 6, mac 4, gravy 3, GBC 2",
+   "55 tbsp + pan greasing: turkey 8, stuffing 16, cake 16, mash 6, mac 4, gravy 3, green beans 2",
    "64 tbsp ordered",
    "ok",
    "Matches your earlier total exactly."
   ],
   [
    "Heavy cream",
-   "4½ cups + 1 tbsp: mac 3 c, GBC 1½ c, dip 1 tbsp",
+   "4½ cups + 1 tbsp: mac 3 c, green beans 1½ c, dip 1 tbsp",
    "6 cups ordered",
    "ok",
    ""
   ],
   [
    "Chicken broth",
-   "≈9–11 cups allowance: stuffing 4–6 (added gradually), GBC 2, gravy 2–3",
+   "≈9–11 cups allowance: stuffing 4–6 (added gradually), green beans 2, gravy 2–3",
    "12 cups ordered",
    "ok",
    "Keep a cup back in case drippings are scarce."
@@ -2501,7 +3217,7 @@
   ],
   [
    "Soy sauce",
-   "1 tsp dark (GBC)",
+   "1 tsp dark (Green beans)",
    "On hand (dark)",
    "ok",
    "Halved from the recipe's 2 tsp regular."
@@ -2536,7 +3252,7 @@
   ],
   [
    "Dill, scallion, lemons",
-   "Dip: 2 tbsp dill + sprigs, 1 scallion; lemon for dip + GBC",
+   "Dip: 2 tbsp dill + sprigs, 1 scallion; lemon for dip + green beans",
    "Not in your notes",
    "chk",
    ""
@@ -2634,7 +3350,7 @@
   ],
   [
    "Gluten-free flour",
-   "¼ cup + 3 tbsp: GBC ¼ c, gravy 3 tbsp",
+   "¼ cup + 3 tbsp: Green beans ¼ c, gravy 3 tbsp",
    "Not in your notes",
    "chk",
    ""
@@ -2648,7 +3364,7 @@
   ],
   [
    "Neutral oil",
-   "2 tbsp GBC + 2 tbsp sprouts",
+   "2 tbsp green beans + 2 tbsp sprouts",
    "Not in your notes",
    "chk",
    "Olive oil is on hand."
@@ -2703,7 +3419,7 @@
   "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), 10 hours. Your first salt brine (last year was buttermilk), so this is the recipe as written.",
   "Hot hold: the pellet smoker set to 200°F once the turkey comes off, verified with a thermometer at 140°F or hotter. Foil alone doesn't count. You've confirmed it holds 200°F.",
   "Reno is about 4,500 ft up: water boils cooler and takes longer, so every boil has a tenderness check, not a fixed time. The cake gets no altitude changes.",
-  "Fridge: one full shelf for the turkey Wednesday night, plus room for the GBC, cake, cranberry, eggs, lobster, vinaigrette and dressing. A cooler with ice can take drinks and produce.",
+  "Fridge: one full shelf for the turkey Wednesday night, plus room for the green beans, cake, cranberry, eggs, lobster, vinaigrette and dressing. A cooler with ice can take drinks and produce.",
   "Mom: only the potato bowl and her plain lettuce are agreed. No other dish is labeled for her."
  ],
  "optional": [
@@ -2726,7 +3442,7 @@
   ],
   [
    "Smoker trouble (pellets, wind, flame-out)",
-   "Turkey to the oven at 350°F on its sheet pan; stuffing and GBC to the cooler hot box; mac bakes after."
+   "Turkey to the oven at 350°F on its sheet pan; stuffing and green beans to the cooler hot box; mac bakes after."
   ],
   [
    "Stuffing isn't 165°F by 3:00",
@@ -2782,7 +3498,7 @@
     "#EDE3D3"
    ],
    [
-    "350°F · 1:50 preheat · stuffing 2:05, GBC 2:30",
+    "350°F · 1:50 preheat · stuffing 2:05, green beans 2:30",
     38,
     "#F4C9B8"
    ],
@@ -2792,7 +3508,7 @@
     "#E8987E"
    ],
    [
-    "Off, cooling · GBC 3:40–3:50",
+    "Off, cooling · green beans 3:40–3:50",
     12,
     "#F4C9B8"
    ],
@@ -2853,6 +3569,355 @@
     "Lowest setting · hot hold for sides",
     8,
     "#EAD9CB"
+   ]
+  ]
+ },
+ "dishes": [
+  {
+   "id": "eggs",
+   "name": "Deviled eggs",
+   "hot": false
+  },
+  {
+   "id": "dip",
+   "name": "Salmon roe dip",
+   "hot": false
+  },
+  {
+   "id": "turkey",
+   "name": "Turkey",
+   "hot": true
+  },
+  {
+   "id": "gravy",
+   "name": "Gravy",
+   "hot": true
+  },
+  {
+   "id": "stuffing",
+   "name": "Stuffing",
+   "hot": true
+  },
+  {
+   "id": "gbc",
+   "name": "Green bean casserole",
+   "hot": true
+  },
+  {
+   "id": "sprouts",
+   "name": "Brussels sprouts",
+   "hot": true
+  },
+  {
+   "id": "mash",
+   "name": "Mashed potatoes",
+   "hot": true
+  },
+  {
+   "id": "mac",
+   "name": "Lobster mac",
+   "hot": true
+  },
+  {
+   "id": "cran",
+   "name": "Cranberry sauce",
+   "hot": false
+  },
+  {
+   "id": "salad",
+   "name": "Salad",
+   "hot": false
+  },
+  {
+   "id": "cake",
+   "name": "Gooey butter cake",
+   "hot": false
+  }
+ ],
+ "hotCheck": {
+  "day": "thu",
+  "from": "15:30",
+  "to": "16:15"
+ },
+ "stations": {
+  "smoker": [
+   [
+    "wed",
+    "16:30",
+    "16:45",
+    "",
+    "Pellet check"
+   ],
+   [
+    "thu",
+    "09:30",
+    "10:15",
+    "250°F",
+    "Heating"
+   ],
+   [
+    "thu",
+    "10:15",
+    "12:30",
+    "250°F",
+    "Turkey"
+   ],
+   [
+    "thu",
+    "12:30",
+    "14:45",
+    "325–350°F",
+    "Turkey (done window 2:00–2:45)"
+   ],
+   [
+    "thu",
+    "14:45",
+    "15:00",
+    "dropping",
+    "Turkey resting · lid open"
+   ],
+   [
+    "thu",
+    "15:00",
+    "16:15",
+    "200–225°F",
+    "Hot hold"
+   ]
+  ],
+  "oven": [
+   [
+    "wed",
+    "08:00",
+    "09:00",
+    "250°F",
+    "Bread cubes drying"
+   ],
+   [
+    "wed",
+    "13:00",
+    "13:20",
+    "350°F",
+    "Preheating for the cake"
+   ],
+   [
+    "wed",
+    "13:20",
+    "14:15",
+    "350°F",
+    "Gooey butter cake"
+   ],
+   [
+    "thu",
+    "13:50",
+    "14:05",
+    "350°F",
+    "Preheating"
+   ],
+   [
+    "thu",
+    "14:05",
+    "14:30",
+    "350°F",
+    "Stuffing"
+   ],
+   [
+    "thu",
+    "14:30",
+    "15:00",
+    "350°F",
+    "Stuffing · green beans"
+   ],
+   [
+    "thu",
+    "15:00",
+    "15:12",
+    "→ 425°F",
+    "Heating for the mac"
+   ],
+   [
+    "thu",
+    "15:12",
+    "15:35",
+    "425°F",
+    "Lobster mac"
+   ],
+   [
+    "thu",
+    "15:35",
+    "15:40",
+    "off",
+    "Cooling"
+   ],
+   [
+    "thu",
+    "15:40",
+    "15:50",
+    "≈390°F ↓",
+    "Green beans, uncovered"
+   ],
+   [
+    "thu",
+    "15:50",
+    "16:15",
+    "warm",
+    "Reheat spot"
+   ]
+  ],
+  "b1": [
+   [
+    "wed",
+    "09:00",
+    "09:30",
+    "",
+    "Cranberry sauce"
+   ],
+   [
+    "wed",
+    "09:30",
+    "10:00",
+    "",
+    "Eggs"
+   ],
+   [
+    "wed",
+    "10:30",
+    "10:45",
+    "",
+    "Lobster tails"
+   ],
+   [
+    "wed",
+    "11:00",
+    "11:30",
+    "",
+    "Stuffing wet mix"
+   ],
+   [
+    "wed",
+    "12:00",
+    "12:40",
+    "",
+    "Green bean water"
+   ],
+   [
+    "thu",
+    "09:00",
+    "09:15",
+    "",
+    "Prosciutto"
+   ],
+   [
+    "thu",
+    "12:00",
+    "12:20",
+    "",
+    "Sprouts boiling"
+   ],
+   [
+    "thu",
+    "13:30",
+    "13:45",
+    "",
+    "Stuffing wet mix"
+   ],
+   [
+    "thu",
+    "14:40",
+    "15:00",
+    "",
+    "Potato water"
+   ],
+   [
+    "thu",
+    "15:00",
+    "15:15",
+    "",
+    "Potatoes"
+   ],
+   [
+    "thu",
+    "15:15",
+    "16:00",
+    "lowest",
+    "Mashed potatoes"
+   ]
+  ],
+  "b2": [
+   [
+    "wed",
+    "12:15",
+    "12:45",
+    "",
+    "Mushroom sauce"
+   ],
+   [
+    "wed",
+    "15:30",
+    "15:45",
+    "",
+    "Rice crisps"
+   ],
+   [
+    "wed",
+    "15:45",
+    "16:00",
+    "",
+    "Panko topping"
+   ],
+   [
+    "thu",
+    "14:40",
+    "15:00",
+    "",
+    "Pasta water"
+   ],
+   [
+    "thu",
+    "15:00",
+    "15:08",
+    "",
+    "Elbows"
+   ]
+  ],
+  "b3": [
+   [
+    "thu",
+    "14:45",
+    "15:08",
+    "",
+    "Mac sauce"
+   ],
+   [
+    "thu",
+    "15:15",
+    "15:20",
+    "",
+    "Brown butter"
+   ]
+  ],
+  "b4": [
+   [
+    "thu",
+    "14:50",
+    "15:05",
+    "",
+    "Gravy"
+   ],
+   [
+    "thu",
+    "15:05",
+    "16:00",
+    "lowest",
+    "Gravy"
+   ]
+  ],
+  "b5": [
+   [
+    "thu",
+    "15:40",
+    "15:52",
+    "high",
+    "Sprouts skillet"
    ]
   ]
  }
