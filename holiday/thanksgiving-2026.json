@@ -611,8 +611,8 @@
    "tag": "Delish, adapted",
    "gf": "Gluten-free",
    "yield": "About 3 cups",
-   "active": "20 min",
-   "passive": "—",
+   "active": "20 min Wednesday, 10 min Thursday",
+   "passive": "Overnight in the fridge",
    "src": [
     "Delish",
     "https://www.delish.com/holiday-recipes/thanksgiving/a24520700/gluten-free-gravy-recipe/"
@@ -641,7 +641,7 @@
     [
      "2 cups",
      "low-sodium chicken or turkey broth",
-     "no drippings? use 3 cups broth total"
+     "into the base Wednesday. Keep 1 more cup for Thursday, in case the drippings are short or it needs loosening"
     ],
     [
      "1 tsp each",
@@ -653,8 +653,8 @@
      "salt and pepper"
     ]
    ],
-   "done": "Thick enough to coat a spoon after about 10 minutes of simmering. Keep it hot (140°F or hotter) on the lowest burner until serving.",
-   "ahead": "Made Thursday while the turkey rests, so no reheating needed. Measure the broth into the jug Wednesday.",
+   "done": "Wednesday: thick enough to coat a spoon (thicker than gravy; the drippings thin it Thursday). Thursday: brought to a full boil, then kept hot (140°F or hotter) on the lowest burner until serving.",
+   "ahead": "Base made Wednesday at 4:00 PM (roux, broth, herbs), cooled and refrigerated. Thursday at 2:50 PM: rewarm it, whisk in the tasted drippings, and bring it to a full boil.",
    "store": "Leftovers: fridge within 2 hours, 3–4 days; reheat to a rolling boil.",
    "flags": [
     [
@@ -665,21 +665,11 @@
    ],
    "steps": [
     {
-     "d": "thu",
-     "t": "2:45 PM: pour the drippings into the fat separator. Taste them.",
-     "min": 5,
-     "ing": [
-      [
-       2
-      ]
-     ]
-    },
-    {
-     "d": "thu",
-     "t": "2:50 PM (burner 4): melt the butter over medium, whisk in the gluten-free flour, and cook 1 minute.",
+     "d": "wed",
+     "t": "4:00 PM (burner 4): melt the butter over medium, whisk in the gluten-free flour, and cook 1 minute.",
      "min": 3,
      "tm": [
-      "Gravy: roux 1 minute",
+      "Gravy base: roux 1 minute",
       1,
       "check"
      ],
@@ -693,43 +683,83 @@
      ]
     },
     {
-     "d": "thu",
-     "t": "Gradually whisk in the drippings and broth. Bring to a boil, then simmer, stirring, until it thickens.",
+     "d": "wed",
+     "t": "Gradually whisk in the 2 cups of broth. Bring to a boil, then simmer, stirring, until it's thick enough to coat a spoon. It should be thicker than gravy: Thursday's drippings thin it.",
      "min": 5,
      "tm": [
-      "Gravy: thickened?",
+      "Gravy base: thickened?",
       5,
       "check"
      ],
      "ing": [
-      [
-       2
-      ],
       [
        3
       ]
      ]
     },
     {
-     "d": "thu",
-     "t": "Add thyme and sage; simmer about 10 more minutes. Adjust with broth and season to taste.",
+     "d": "wed",
+     "t": "Stir in the thyme and sage; simmer 5 more minutes. No salt yet: the drippings are salty from the brine.",
      "min": 2,
      "tm": [
-      "Gravy: taste and adjust",
-      10,
+      "Gravy base: herbs simmered",
+      5,
       "check"
      ],
      "ing": [
       [
        4
+      ]
+     ]
+    },
+    {
+     "d": "wed",
+     "t": "Pour into a shallow container; cool up to 30 minutes, then cover and refrigerate. Label it \"Gravy base · Thu 2:50\".",
+     "min": 5,
+     "ing": []
+    },
+    {
+     "d": "thu",
+     "t": "2:45 PM: pour the drippings into the fat separator. Taste them.",
+     "min": 5,
+     "ing": [
+      [
+       2
+      ]
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "2:50 PM (burner 4): gravy base into the saucepan over medium; whisk as it melts and loosens. Whisk in the drippings, less if they're very salty (short on drippings? make it up with broth).",
+     "min": 5,
+     "ing": [
+      [
+       2
       ],
       [
-       5
-      ],
+       3,
+       "1 cup",
+       "broth, only if the drippings are short"
+      ]
+     ]
+    },
+    {
+     "d": "thu",
+     "t": "Bring it to a full boil, stirring, then simmer 3–5 minutes. Loosen with broth if it's thick; season to taste.",
+     "min": 5,
+     "tm": [
+      "Gravy: boiled and tasted?",
+      5,
+      "check"
+     ],
+     "ing": [
       [
        3,
        "as needed",
        "broth, to loosen"
+      ],
+      [
+       5
       ]
      ]
     },
@@ -2876,6 +2906,44 @@
    ]
   },
   {
+   "id": "wed_1600_gravy",
+   "day": "wed",
+   "hm": "16:00",
+   "lane": "stove",
+   "rid": "gravy",
+   "text": "Burner 4: gravy base (roux, broth, herbs; no drippings, no salt); cool; fridge.",
+   "tm": [
+    "Gravy base: thickened?",
+    5,
+    "check"
+   ],
+   "steps": [
+    [
+     "gravy",
+     0
+    ],
+    [
+     "gravy",
+     1
+    ],
+    [
+     "gravy",
+     2
+    ],
+    [
+     "gravy",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "gravy",
+     "cold",
+     "Base made, fridge · in Thu 2:50"
+    ]
+   ]
+  },
+  {
    "id": "wed_1630_turkey",
    "day": "wed",
    "hm": "16:30",
@@ -3549,32 +3617,28 @@
    "hm": "14:50",
    "lane": "stove",
    "rid": "gravy",
-   "text": "Burner 4: gravy from drippings + broth (taste drippings first); hold on lowest.",
+   "text": "Burner 4: rewarm the gravy base, whisk in the drippings (taste first), full boil; hold on lowest.",
    "tm": [
-    "Gravy: thickened?",
+    "Gravy: boiled and tasted?",
     5,
     "check"
    ],
    "steps": [
     [
      "gravy",
-     0
-    ],
-    [
-     "gravy",
-     1
-    ],
-    [
-     "gravy",
-     2
-    ],
-    [
-     "gravy",
-     3
-    ],
-    [
-     "gravy",
      4
+    ],
+    [
+     "gravy",
+     5
+    ],
+    [
+     "gravy",
+     6
+    ],
+    [
+     "gravy",
+     7
     ]
    ],
    "dish": [
@@ -3587,7 +3651,7 @@
    "tips": [
     [
      "Not much drippings?",
-     "Make the gravy with 3 cups broth; that's why broth is held back."
+     "Whisk 1 cup broth into the base instead; that's why a cup of broth is held back."
     ]
    ]
   },
@@ -4056,7 +4120,7 @@
    "steps": [
     [
      "gravy",
-     5
+     8
     ]
    ],
    "dish": [
@@ -4433,7 +4497,7 @@
   "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), 13 hours: in at 8 PM Tuesday, out at 9 AM Wednesday (the recipe says 10, so expect a slightly saltier bird and drippings). Your first salt brine (last year was buttermilk), so the strength is the recipe's.",
   "Hot hold: the pellet smoker set to 200°F once the turkey comes off, verified with a thermometer at 140°F or hotter. Foil alone doesn't count. You've confirmed it holds 200°F.",
   "Reno is about 4,500 ft up: water boils cooler and takes longer, so every boil has a tenderness check, not a fixed time. The cake gets no altitude changes.",
-  "Fridge: one full shelf for the turkey Wednesday night, plus room for the green beans, cake, cranberry, eggs, lobster, vinaigrette and dressing. A cooler with ice can take drinks and produce.",
+  "Fridge: one full shelf for the turkey Wednesday night, plus room for the green beans, cake, cranberry, eggs, lobster, vinaigrette, dressing and gravy base. A cooler with ice can take drinks and produce.",
   "Mom: only the potato bowl and her plain lettuce are agreed. No other dish is labeled for her."
  ],
  "optional": [
@@ -4464,7 +4528,7 @@
   ],
   [
    "Too little drippings",
-   "Make the gravy with 3 cups broth; that's why broth is held back."
+   "Whisk 1 cup broth into the gravy base instead; that's why a cup of broth is held back."
   ]
  ],
  "safe": [
@@ -4822,15 +4886,22 @@
   ],
   "b4": [
    [
+    "wed",
+    "16:00",
+    "16:20",
+    "",
+    "Gravy base"
+   ],
+   [
     "thu",
     "14:50",
-    "15:05",
+    "15:00",
     "",
     "Gravy"
    ],
    [
     "thu",
-    "15:05",
+    "15:00",
     "16:00",
     "lowest",
     "Gravy"
@@ -4990,6 +5061,14 @@
    "from": "wed_1255_cake",
    "to": "wed_1255_cake",
    "until": "14:15"
+  },
+  {
+   "st": "b4",
+   "r": "gravy",
+   "l": "Gravy base",
+   "from": "wed_1600_gravy",
+   "to": "wed_1600_gravy",
+   "until": "16:20"
   },
   {
    "st": "oven",
