@@ -502,7 +502,7 @@ export class PikHolidayCard extends LitElement {
     if (L.every((x) => x && x.f >= 165)) return { cls: "ok", sym: "✓", head: "Turkey: done", sub: "165°F in all three · rest it" };
     const have = L.map((x, i) => ({ x, i })).filter((o) => o.x);
     const low = have.reduce((a, b) => (b.x!.f < a.x!.f ? b : a));
-    return { cls: low.x!.f >= 150 ? "warn" : "hot", sym: low.x!.f + "°", head: "Turkey: lowest " + low.x!.f + "°F", sub: SPOTNAME[SPOTS[low.i]] + " · " + tf(low.x!.t) + (have.length < 3 ? " · log all 3" : "") };
+    return { cls: low.x!.f >= 150 ? "warn" : "hot", sym: low.x!.f + "°", head: "Turkey: lowest " + low.x!.f + "°F", sub: SPOTNAME[SPOTS[low.i]] + " · " + (this.store.inkbird(SPOTS[low.i]) ? "Inkbird, live" : tf(low.x!.t) + (have.length < 3 ? " · log all 3" : "")) };
   }
 
   // ---------------------------------------------------------------- the dish board
@@ -764,8 +764,8 @@ export class PikHolidayCard extends LitElement {
     const p = this.turkeyPad!;
     const tf = (t: number) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     return `<button class="scrim2" data-padclose="1" aria-label="Close"></button><div class="tpop" role="dialog" aria-label="Turkey temperature">
-      <div class="tph"><div><h3 class="serif">Turkey temperature</h3><p>It's done when the breast, thigh and wing all read 165°F.</p></div><button class="btn sm" data-padclose="1">Done</button></div>
-      <div class="spots">${SPOTS.map((k, i) => { const x = this.store.latest(k); return `<button class="${i === p.spot ? "on" : ""}${x && x.f >= 165 ? " ok" : ""}" data-spot="${i}"><span class="sp">${SPOTNAME[k]}</span><b>${x ? x.f + "°" : "—"}</b><span>${x ? tf(x.t) : "no reading yet"}</span></button>`; }).join("")}</div>
+      <div class="tph"><div><h3 class="serif">Turkey temperature</h3><p>It's done when the breast, thigh and wing all read 165°F.${SPOTS.some((k) => this.store.inkbird(k)) ? " The Inkbird logs these by itself; type one only to correct it." : ""}</p></div><button class="btn sm" data-padclose="1">Done</button></div>
+      <div class="spots">${SPOTS.map((k, i) => { const x = this.store.latest(k); return `<button class="${i === p.spot ? "on" : ""}${x && x.f >= 165 ? " ok" : ""}" data-spot="${i}"><span class="sp">${SPOTNAME[k]}</span><b>${x ? x.f + "°" : "—"}</b><span>${this.store.inkbird(k) ? "Inkbird · live" : x ? tf(x.t) : "no reading yet"}</span></button>`; }).join("")}</div>
       <div class="entry">${p.entry ? esc(p.entry) + "°F" : `<span class="muted">Type the ${SPOTNAME[SPOTS[p.spot]].toLowerCase()} reading</span>`}</div>
       <div class="pad">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"].map((k) => `<button class="${k === "✓" ? "go" : ""}" data-key="${k}" aria-label="${k === "✓" ? "Save" : k === "⌫" ? "Delete" : k}">${k === "✓" ? "Save" : k}</button>`).join("")}</div>
       <p class="tpn">Save moves on to the next spot. Or just tell the Echo: “the breast is 162.”</p></div>`;

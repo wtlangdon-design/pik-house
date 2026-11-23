@@ -116,6 +116,55 @@ L(`        data:`);
 L(`          message: "The turkey is done: 165 degrees in the breast, thigh and wing. Off the smoker, tent it, and rest it 30 to 45 minutes."`);
 L(`          phones: true`);
 L();
+// The Inkbird (ha/packages/pik_smoke.yaml), if it's installed: any probe whose "in" says turkey breast,
+// thigh or wing logs itself into the turkey readings, and on the smoke day the probes get set up by themselves.
+const SMOKE = [1, 2, 3, 4];
+// The first time the turkey's smoker gets used (a run on the smoker with the turkey's recipe): Thursday's heat-up.
+const smokeRun = (plan.runs || []).filter((u) => u.st === "smoker" && u.r === "turkey").map((u) => plan.tasks.find((t) => t.id === u.from)).filter(Boolean)
+  .sort((x, y) => (plan.days[x.day] + x.hm < plan.days[y.day] + y.hm ? -1 : 1))[0];
+const smokeDay = smokeRun || null;
+L(`  - id: ${P}_inkbird_turkey`);
+L(`    alias: ${J(title + ": Inkbird readings go in the turkey log")}`);
+L(`    mode: queued`);
+L(`    max: 20`);
+L(`    triggers:`);
+L(`      - trigger: state`);
+L(`        entity_id: ${J(SMOKE.map((i) => `sensor.smoke_probe_${i}`))}`);
+L(`    conditions:`);
+L(`      - "{{ trigger.to_state is not none and trigger.to_state.state | is_number }}"`);
+L(`    actions:`);
+L(`      - variables:`);
+L(`          what: "{{ (trigger.to_state.attributes.food | default('', true)) | lower }}"`);
+L(`          spot: "{{ ['breast', 'thigh', 'wing'] | select('in', what) | first | default('') }}"`);
+L(`      - condition: "{{ spot != '' and 'turkey' in what }}"`);
+L(`      - action: input_number.set_value`);
+L(`        target: { entity_id: "input_number.${P}_turkey_{{ spot }}" }`);
+L(`        data: { value: "{{ [[trigger.to_state.state | float(0), 250] | min, 0] | max }}" }`);
+L();
+if (smokeDay) {
+  L(`  - id: ${P}_inkbird_setup`);
+  L(`    alias: ${J(title + ": set up the Inkbird for the turkey")}`);
+  L(`    description: "When the smoker starts: probe 1 breast, 2 thigh, 3 wing, 4 the smoker's air. Skipped if the probes already say turkey."`);
+  L(`    mode: single`);
+  L(`    triggers:`);
+  L(`      - trigger: time`);
+  L(`        at: "${smokeDay.hm}:00"`);
+  L(`      - trigger: state`);
+  L(`        entity_id: input_boolean.${P}_${smokeDay.id}`);
+  L(`        to: "on"`);
+  L(`    conditions:`);
+  L(`      - "{{ now().strftime('%Y-%m-%d') == '${plan.days[smokeDay.day]}' }}"`);
+  L(`      - "{{ states.script.smoke_probe is defined }}"`);
+  L(`      - ${J(`{{ ${J(SMOKE.map((i) => `input_text.smoke_probe_${i}_food`))} | map('states') | map('lower') | select('search', 'turkey') | list | count == 0 }}`)}`);
+  L(`    actions:`);
+  [["Turkey breast", 1], ["Turkey thigh", 2], ["Turkey wing", 3]].forEach(([f, n]) => {
+    L(`      - action: script.smoke_probe`);
+    L(`        data: { probe: ${n}, food: ${J(f)}, target: 0, kind: food }`);
+  });
+  L(`      - action: script.smoke_probe`);
+  L(`        data: { probe: 4, food: "Smoker", target: 0, kind: smoker }`);
+  L();
+}
 
 L(`script:`);
 L(`  holiday_whats_next:`);

@@ -232,7 +232,10 @@ automation:
       - action: script.pik_announce
         data:
           message: >-
-            {% if k == 'temp' %}Turkey temperature check. Log the breast, thigh and wing.
+            {% if k == 'temp' %}{% set ns = namespace(r=[]) %}
+            {% for i in range(1, 5) %}{% set f = (state_attr('sensor.smoke_probe_' ~ i, 'food') | default('', true)) | lower %}
+            {% if 'turkey' in f and has_value('sensor.smoke_probe_' ~ i) %}{% set ns.r = ns.r + [(f | replace('turkey ', '')) ~ ' ' ~ states('sensor.smoke_probe_' ~ i)] %}{% endif %}{% endfor %}
+            {% if ns.r %}Turkey check from the Inkbird: {{ ns.r | join(', ') }}.{% else %}Turkey temperature check. Log the breast, thigh and wing.{% endif %}
             {% elif k == 'done' %}Timer done: {{ name }}.
             {% else %}Check now: {{ name }}.{% endif %}
 

@@ -6,6 +6,8 @@ Everything here goes onto the Home Assistant Green. Nothing in this folder runs 
 |---|---|
 | `packages/pik_kitchen.yaml` | The shared kitchen timer pool (12 timers), the timer scripts Pik uses, and `script.pik_announce`, which speaks on every Echo and can push to both phones. |
 | `packages/pik_holiday_thanksgiving_2026.yaml` | Holiday cooking mode for Thanksgiving. **Generated** from `holiday/thanksgiving-2026.json` by `node holiday/gen-ha.mjs thanksgiving-2026 tg26`; don't edit it by hand. `node holiday/check-plan.mjs` cross-checks the plan (it also runs on every card build). |
+| `packages/pik_smoke.yaml` | Smoking with the Inkbird: finds its four probes by itself, watches them every minute, and has Pik speak up (almost there, done, the stall, the smoker dropping, a probe lost). **Generated** by `node ha/gen-smoke.mjs`. |
+| `dashboards/smoking.yaml` | The Smoking dashboard: the four probes on one page. |
 | `dashboards/thanksgiving.yaml` | The Thanksgiving dashboard: one page for the Chromebook (`/kitchen`) and one for the Echo Show 15 (`/echo`). |
 | `../card/dist/pik-house-card.js` | The card file. It contains both the house feed and the holiday card. |
 
@@ -164,3 +166,82 @@ If the hub isn't ready by 7:00, start on the backup page and move your progress 
   and both phones.
 - If the internet goes down, everything above keeps working except the Echo announcements
   and Pik's voice (both need Amazon's and Anthropic's servers).
+
+## Smoking with the Inkbird (about 15 minutes, once)
+
+This works for every cook on the smoker, not just Thanksgiving. You need the Inkbird IBT-4XS
+and the TP-Link UB500 Bluetooth stick.
+
+**1. Plug the stick into the hub.** Put the TP-Link stick in either USB port on the back of the
+Home Assistant Green. Then go to Settings → Devices & services. **Bluetooth** should appear under
+"Discovered" within a minute. Tap **Add**, then **Submit**. If it doesn't appear, restart the hub
+(Settings → three dots → **Restart Home Assistant**) and look again.
+
+**2. Turn on the Inkbird.** Charge it, plug in at least one probe, and hold the power button until
+the screen lights up. Within a minute, Settings → Devices & services shows an **INKBIRD** device
+(it may be called "iBBQ") under "Discovered". Tap **Add**, then **Submit**. You don't need the
+Inkbird phone app.
+
+**3. Put the new files on the hub.** Download these from GitHub, the same way as Thanksgiving
+step 3, and upload them in File editor:
+
+- `ha/packages/pik_smoke.yaml` into the `packages` folder (new).
+- `ha/packages/pik_kitchen.yaml` and `ha/packages/pik_holiday_thanksgiving_2026.yaml` into the
+  `packages` folder. Say yes to replacing the old ones (both changed so the turkey reads itself).
+- `card/dist/pik-house-card.js` into the `www` folder, replacing the old one.
+
+Then Settings → Dashboards → three dots → **Resources** → tap the `pik-house-card.js` line and
+change the end from `?v=1` to `?v=2` (any new number makes the screens load the new version). Then
+**Restart Home Assistant**.
+
+**4. Make the Smoking dashboard.** Settings → Dashboards → **Add dashboard** → **New dashboard
+from scratch**. Title: `Smoking`. Icon: `mdi:grill`. Open it → pencil → three dots → **Raw
+configuration editor** → paste all of `ha/dashboards/smoking.yaml` → **Save**.
+
+**5. Let Pik use it.** Settings → Voice assistants → **Expose** → **Expose entities**. Tick these four:
+
+- Smoking: set a probe · Smoking: how's it going · Smoking: got it · Smoking: end the cook
+
+Then add this paragraph to Pik's instructions (Settings → Devices & services → Anthropic →
+**Configure**):
+
+> Smoking: the Inkbird's four probes report to the hub by themselves. Use smoke_probe when someone
+> says what a probe is in ("probe 1 is the brisket", "probe 4 is the smoker at 250", "take the pork
+> to 200", "clear probe 3"); it knows the usual pull temperatures, so only ask if it says it needs
+> one. Use smoke_status for "how's the brisket", "what's the smoker at" and "how long on the pork";
+> say the temperature first, then the rough time to go, and say it's a guess because big cuts stall.
+> Use smoke_got_it when someone says they pulled it or "got it", and smoke_end for "we're done
+> smoking". Keep answers short.
+
+**6. Try it (2 minutes).** Put probe 1 in a mug of hot tap water. Within two minutes the Smoking
+page shows the temperature and the cook starts by itself, and the Echo asks what each probe is in.
+Say "Pik, probe 1 is the brisket." The tile changes to Brisket, pull at 203°. Then say "Pik, we're
+done smoking."
+
+### Every cook
+
+- Turn the Inkbird on and plug the probes in. The hub notices within a minute or two.
+- Tell Pik what each probe is in, or tap a tile on the Smoking page and pick (Brisket, Pork
+  shoulder, Ribs, Turkey, Chicken, Salmon, Pork loin, Prime rib, Smoker, or type something else).
+  For a probe hanging in the smoker's air, pick **Smoker** and set its temperature.
+- Pik speaks up on the Echos (and your phones for "done" and problems) when a probe is 10° away,
+  when it hits its temperature (then twice more, 10 minutes apart, until you say "got it"), when a
+  big cut has sat in the stall for half an hour, when the smoker drops fast or is 25° off its
+  setting for 10 minutes, and when a probe or the whole Inkbird stops reading.
+- The 🔊 button on the Smoking page mutes Pik for this; the screen still shows everything.
+- Turn the Inkbird off when you're done. The cook ends by itself 30 minutes later, or say
+  "we're done smoking." The next cook starts fresh.
+
+**Range.** The Inkbird's display box talks to the stick on the hub. If the Smoking page often
+says "Not reading" while the Inkbird is on, put the display box on the side of the smoker nearest
+the house (it must stay off hot metal; Inkbird says the plastic can't take more than 176°F).
+
+### Thanksgiving with the Inkbird
+
+At 9:30 AM Thursday, when the smoker starts, the hub sets the probes up by itself:
+**probe 1 = breast, 2 = thigh, 3 = wing, 4 = the smoker's air** (clip it to the grate, not
+touching the turkey). Plug the probes into those numbered ports. From then on their readings go
+straight into the turkey log: the turkey screen says "Inkbird · live", the hourly turkey check on
+the Echo reads the three temperatures out, and "the turkey is done" fires on its own at 165° in all
+three. You can still type or say a reading to correct one.
+

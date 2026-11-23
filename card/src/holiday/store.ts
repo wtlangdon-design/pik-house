@@ -26,6 +26,8 @@ export interface Store {
   setDone(id: string, v: boolean): void;
   setMany(ids: string[], v: boolean): void;
   latest(loc: string): Reading | null;
+  /** The Inkbird (pik_smoke.yaml) has a probe in this spot and it's reading right now. */
+  inkbird(loc: string): boolean;
   readings(): Reading[];
   logTemps(vals: Record<string, number>): void;
   removeReading?(i: number): void;
@@ -68,6 +70,7 @@ export class LocalStore implements Store {
   setDone(id: string, v: boolean): void { this.s.done[id] = v; this.save(); }
   setMany(ids: string[], v: boolean): void { ids.forEach((i) => (this.s.done[i] = v)); this.save(); }
   latest(loc: string): Reading | null { const r = this.s.temps.filter((x) => x.loc === loc); return r.length ? r[r.length - 1] : null; }
+  inkbird(_loc: string): boolean { return false; }
   readings(): Reading[] { return this.s.temps.slice(); }
   logTemps(vals: Record<string, number>): void { Object.keys(vals).forEach((loc) => this.s.temps.push({ t: Date.now(), loc, f: vals[loc] })); this.save(); }
   removeReading(i: number): void { this.s.temps.splice(i, 1); this.save(); }
@@ -145,6 +148,14 @@ export class HaStore implements Store {
     for (let i = 0; i < ents.length; i += 40) this.hass.callService("input_boolean", v ? "turn_on" : "turn_off", {}, { entity_id: ents.slice(i, i + 40) });
   }
 
+  inkbird(loc: string): boolean {
+    for (let i = 1; i <= 4; i++) {
+      const e = this.st("sensor.smoke_probe_" + i);
+      const food = String((e && e.attributes && e.attributes.food) || "").toLowerCase();
+      if (e && /^-?\d/.test(e.state) && food.includes("turkey") && food.includes(loc)) return true;
+    }
+    return false;
+  }
   latest(loc: string): Reading | null {
     const e = this.st("input_number." + this.prefix + "_turkey_" + loc);
     if (!e) return null;
