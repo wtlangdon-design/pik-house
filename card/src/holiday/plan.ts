@@ -20,6 +20,8 @@ export interface Task {
   /** the recipe steps this task covers, in order: [recipe id, step index] */
   steps: Array<[string, number]>;
   dish: DishEffect[];
+  /** what to do if this part goes sideways: [the question, the answer] */
+  tips?: Array<[string, string]>;
 }
 export interface Dish { id: string; name: string; hot: boolean }
 /** Something that goes on a burner (b1–b5), in the oven or on the smoker: put on at the "from" part,

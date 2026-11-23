@@ -15,8 +15,10 @@ const t12 = (hm) => { let [h, m] = hm.split(":").map(Number); const ap = h >= 12
 const clip = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 const title = plan.title;
 
-const tasks = plan.tasks.map((t) => ({ i: t.id, at: `${plan.days[t.day]} ${t.hm}`, d: SHORT[t.day] || t.day, h: t12(t.hm), x: t.text }));
 const dishName = Object.fromEntries(plan.dishes.map((d) => [d.id, d.name]));
+// s: a few words for group alarms ("Four things at 3:00: stuffing, green beans, …"): the dish, or the job's first clause.
+const short = (t) => (t.rid ? (dishName[t.rid] || t.rid) : t.text.split(/[;:.(]/)[0]).trim().toLowerCase().replace(/^burner \d /, "");
+const tasks = plan.tasks.map((t) => ({ i: t.id, at: `${plan.days[t.day]} ${t.hm}`, d: SHORT[t.day] || t.day, h: t12(t.hm), x: t.text, s: short(t) }));
 // Each recipe's run from start to finish (the same order the kitchen screens walk), for Pik's "next step".
 // Jobs that aren't part of a recipe form a "kitchen" run. One entry per recipe step, or one per part without steps.
 const DAYS = Object.keys(plan.days);
@@ -95,7 +97,9 @@ L(`      - condition: "{{ not is_state('input_boolean.${P}_quiet', 'on') }}"`);
 L(`      - action: script.pik_announce`);
 L(`        data:`);
 L(`          message: >-`);
-L(`            {{ due[0].h }}. {% for t in due %}{{ t.x | replace(' → ', ', then ') | replace('→', ', then') | replace('°F', ' degrees') | replace('·', ',') }}{{ ' ' if not loop.last }}{% endfor %}`);
+L(`            {% if due | count == 1 %}{{ due[0].h }}. {{ due[0].x | replace(' → ', ', then ') | replace('→', ', then') | replace('°F', ' degrees') | replace('·', ',') }}`);
+L(`            {% else %}{% set names = due | map(attribute='s') | unique | list %}{% set n = ['zero','one','two','three','four','five','six','seven','eight','nine'][due | count] if due | count < 10 else due | count %}`);
+L(`            {{ n | capitalize }} things at {{ due[0].h }}: {{ names[:-1] | join(', ') ~ (' and ' if names | count > 1 else '') ~ names[-1] }}. Check the screen.{% endif %}`);
 L(`          phones: "{{ is_state('input_boolean.${P}_push', 'on') }}"`);
 L();
 L(`  - id: ${P}_turkey_done`);
