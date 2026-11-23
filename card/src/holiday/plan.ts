@@ -22,6 +22,9 @@ export interface Task {
   dish: DishEffect[];
 }
 export interface Dish { id: string; name: string; hot: boolean }
+/** Something that goes on a burner (b1–b5), in the oven or on the smoker: put on at the "from" part,
+ *  off by itself once the "to" part is ticked off. until = when the plan expects it off. */
+export interface Run { st: string; r: string; l: string; from: string; to: string; until: string }
 /** [day, start, end, temperature or note, what's on it] */
 export type Segment = [Day, string, string, string, string];
 export interface Plan {
@@ -30,6 +33,7 @@ export interface Plan {
   recipes: Recipe[]; tasks: Task[]; dishes: Dish[];
   hotCheck: { day: Day; from: string; to: string };
   stations: Record<string, Segment[]>;
+  runs: Run[];
   shop: Array<[string, string, string, string, string]>;
   assume: string[]; optional: string[]; ifs: Array<[string, string]>; safe: Array<[string, string, string]>;
 }

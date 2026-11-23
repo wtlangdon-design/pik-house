@@ -20,8 +20,8 @@
 import { LitElement, html, nothing } from "lit";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { holidayStyles } from "./holiday-styles";
-import { PLANS, type Plan, type Recipe, type Task, type TimerKind, type TimerSpec } from "./plan";
-import { HaStore, LocalStore, SPOTS, type Hass, type KTimer, type Store } from "./store";
+import { PLANS, type Plan, type Recipe, type Run, type Task, type TimerKind, type TimerSpec } from "./plan";
+import { HaStore, LocalStore, SPOTS, type Hass, type KTimer, type Place, type Store } from "./store";
 
 export interface HolidayConfig { type: string; plan?: string; prefix?: string; timers?: number; mock?: boolean; layout?: string }
 
@@ -39,6 +39,14 @@ const esc = (s: unknown) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;"
 function fmt12(hm: string): string { let [h, m] = hm.split(":").map(Number); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; return h + ":" + String(m).padStart(2, "0") + (ap === "PM" ? "" : " AM"); }
 function fmtDur(ms: number): string { const s = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : String(m)) + ":" + String(x).padStart(2, "0"); }
 function hmNow(): string { const d = new Date(); const h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ":" + String(m).padStart(2, "0") + " " + (h >= 12 ? "PM" : "AM"); }
+// Small station emblems for the "put on" buttons (the burner number sits on the top edge).
+const ICON: Record<string, string> = {
+  burner: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4.5v3M12 18.5v3M3.5 13h3M17.5 13h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  oven: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="6.5" y="10" width="11" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 6.8h.01M10.5 6.8h.01M14 6.8h3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+  smoker: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14a8.5 6 0 0 1 17 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M3 14h18M7 14v6M17 14v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 6.5c-1-1 1-2 0-3.5M14 6.5c-1-1 1-2 0-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+};
+const stName = (st: string) => (st[0] === "b" ? "Burner " + st.slice(1) : st === "oven" ? "Oven" : "Smoker");
+const onWords = (st: string) => (st === "oven" ? "in the oven" : st === "smoker" ? "on the smoker" : "on burner " + st.slice(1));
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 
 export class PikHolidayCard extends LitElement {
@@ -55,6 +63,7 @@ export class PikHolidayCard extends LitElement {
   private ringStart = 0;
   private sheet: { seg: Seg; recipe: string | null; day: string | null } | null = null;
   private turkeyPad: { spot: number; entry: string } | null = null;
+  private picker: { i: number } | null = null;
   private lastSig = "";
   private soundOff = true;
   private toast = "";
@@ -326,6 +335,56 @@ export class PikHolidayCard extends LitElement {
     return this.stepsOf(e.t).some((x) => x.s.tm) ? null : e.t.tm;
   }
   private timerByLabel(label: string): KTimer | undefined { return this.store.timers().find((x) => x.label === label); }
+
+  // ---------------------------------------------------------------- what's on the stove, in the oven, on the smoker
+
+  private get runs(): Run[] { return this.plan.runs || []; }
+  private taskById(id: string): Task | undefined { return this.plan.tasks.find((t) => t.id === id); }
+  /** A placement counts until the part that ends its run is ticked off; then the burner frees itself. */
+  private alive = (p: Place): boolean => { const u = this.runs[p.i]; return !!u && !this.store.isDone(u.to); };
+  private onNow(): Array<{ p: Place; u: Run }> { return this.store.places().filter(this.alive).map((p) => ({ p, u: this.runs[p.i] })); }
+  private placed(i: number): Place | undefined { return this.store.places().find((p) => p.i === i && this.alive(p)); }
+  private runStart(u: Run): number { const t = this.taskById(u.from); return t ? this.ms(t) : 0; }
+  private runEnd(u: Run): number { const t = this.taskById(u.from); return t ? this.at(t.day, u.until).getTime() : 0; }
+  /** The plan's run for a station right now that nobody has put on yet (shown faded on the tile). */
+  private plannedNow(st: string) {
+    const now = Date.now();
+    return this.runs.map((u, i) => ({ u, i })).find(({ u, i }) => u.st === st && !this.placed(i) && !this.store.isDone(u.from) && !this.store.isDone(u.to) && this.runStart(u) <= now && now < this.runEnd(u));
+  }
+  private plannedNext(st: string) {
+    const now = Date.now();
+    return this.runs.map((u, i) => ({ u, i })).filter(({ u, i }) => u.st === st && !this.placed(i) && !this.store.isDone(u.from) && this.runStart(u) > now).sort((a, b) => this.runStart(a.u) - this.runStart(b.u))[0];
+  }
+  private whenMs(ms: number): string {
+    const d = new Date(ms), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    const day = Object.keys(this.plan.days).find((k) => this.plan.days[k] === d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+    return (day && day !== this.todayKey() ? SHORTDAY[day] + " " : "") + fmt12(hm) + (hm >= "12:00" ? " PM" : "");
+  }
+  /** The emblem button on a card: tap to put the dish on its burner / in the oven / on the smoker, tap again to take it off. */
+  private placeBtn(i: number): string {
+    const u = this.runs[i], pl = this.placed(i);
+    const st = pl ? pl.st : u.st;
+    const busy = !pl && st[0] === "b" ? this.onNow().find((x) => x.p.st === st) : undefined;
+    const state = pl ? "on" : busy ? "busy" : "free";
+    const kind = st[0] === "b" ? "burner" : st;
+    const title = pl ? `${u.l}: ${onWords(st)}. Tap to take it off.` : busy ? `${stName(st)} has the ${busy.u.l.toLowerCase()} on it. Tap to pick another burner.` : `Put the ${u.l.toLowerCase()} ${onWords(st)}`;
+    return `<button class="pl ${state}" data-place="${i}" title="${esc(title)}" aria-label="${esc(title)}">${ICON[kind]}${st[0] === "b" ? `<span class="pn">${st.slice(1)}</span>` : ""}${busy ? `<span class="bang">!</span>` : ""}</button>`;
+  }
+  /** Runs whose emblem belongs on this part's card: the ones that start here, and ones already on that this part is within. */
+  private runsFor(g: string, t: Task): number[] {
+    const at = this.ms(t);
+    return this.runs.map((u, i) => ({ u, i })).filter(({ u, i }) => u.r === g && !this.store.isDone(u.to) && (u.from === t.id || (!!this.placed(i) && this.runStart(u) <= at && at <= this.ms(this.taskById(u.to) || t)))).map((x) => x.i);
+  }
+  private pickerHtml(): string {
+    const i = this.picker!.i, u = this.runs[i];
+    const on = this.onNow();
+    const now = Date.now();
+    return `<button class="scrim2" data-pickclose="1" aria-label="Close"></button><div class="tpop pick" role="dialog" aria-label="Pick a burner">
+      <div class="tph"><div><h3 class="serif">Which burner?</h3><p>For the ${esc(u.l.toLowerCase())}. ${esc(stName(u.st))} isn't free.</p></div><button class="btn sm" data-pickclose="1">Cancel</button></div>
+      <div class="bpick">${[1, 2, 3, 4, 5].map((n) => { const x = on.find((y) => y.p.st === "b" + n); return x
+        ? `<button disabled><span class="pn">${n}</span><b>${esc(x.u.l)}</b><span>on ${Math.max(1, Math.round((now - x.p.at) / 60000))} min</span></button>`
+        : `<button data-pick="${i}:b${n}"><span class="pn">${n}</span><b>Free</b><span>${n === Number(u.st.slice(1)) ? "" : "use this one"}</span></button>`; }).join("")}</div></div>`;
+  }
   private isToday(): boolean { return !this.L.day || this.L.day === this.currentDay(); }
 
   /** The recipe cards for the left column. */
@@ -375,11 +434,22 @@ export class PikHolidayCard extends LitElement {
         const r = SPOTS.map((k) => this.store.latest(k));
         if (r.some((x) => x) && !r.every((x) => x && x.f >= 165) && cur[2] > "14:45") cur = [cur[0], cur[1], cur[2], "325–350°F", "Turkey · not 165°F yet"];
       }
-      return `<div class="sn ${name}${cur ? "" : " idle"}"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span><b>${esc(cur ? cur[4] : "Off")}</b>${sn.nextWhat ? `<i>Next: ${esc(sn.nextWhat)}</i><i>${esc(sn.nextWhen)}</i>` : ""}</div>`;
+      // Dishes actually put in / on show solid; otherwise the plan's line, faded.
+      const on = this.onNow().filter((x) => x.p.st === name);
+      const what = on.length ? `<b>${esc(on.map((x) => x.u.l).join(" · "))}</b>` : `<b class="${cur && /[a-z]/i.test(cur[4]) ? "pl8" : ""}">${esc(cur ? cur[4] : "Off")}</b>`;
+      return `<div class="sn ${name}${cur || on.length ? "" : " idle"}"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span>${what}${sn.nextWhat ? `<i>Next: ${esc(sn.nextWhat)}</i><i>${esc(sn.nextWhen)}</i>` : ""}</div>`;
     };
+    // Burners show what's actually been put on (solid); what the plan expects but nobody has put on yet is faded.
+    const now = Date.now();
     const burners = [1, 2, 3, 4, 5].map((n) => {
-      const { cur, nextWhat, nextWhen } = this.segNow("b" + n);
-      return `<div class="bn${cur ? "" : " free"}"><span class="n">${n}</span><div><b>${esc(cur ? cur[4] + (cur[3] ? ", " + cur[3] : "") : "Free")}</b>${nextWhat ? `<i>Next: ${esc(nextWhat)}</i><i>${esc(nextWhen)}</i>` : ""}</div></div>`;
+      const st = "b" + n, on = this.onNow().filter((x) => x.p.st === st), plan = this.plannedNow(st), nx = this.plannedNext(st);
+      const nextLines = nx ? `<i>Next: ${esc(nx.u.l)}</i><i>${esc(this.whenMs(this.runStart(nx.u)))}</i>` : "";
+      if (on.length) {
+        const waiting = plan && plan.u.r !== on[0].u.r ? plan : undefined;
+        return `<div class="bn on${waiting ? " clash" : ""}"><span class="n">${n}</span><div><b>${esc(on.map((x) => x.u.l).join(" + "))}</b><i>on ${Math.max(1, Math.round((now - on[0].p.at) / 60000))} min</i>${waiting ? `<i class="w">${esc(waiting.u.l)} is waiting</i>` : nextLines}</div></div>`;
+      }
+      if (plan) return `<div class="bn plan"><span class="n">${n}</span><div><b>${esc(plan.u.l)}</b><i>planned · not on yet</i>${nextLines}</div></div>`;
+      return `<div class="bn free"><span class="n">${n}</span><div><b>Free</b>${nextLines}</div></div>`;
     }).join("");
     return `<div class="stn">${big("smoker", "Smoker")}${big("oven", "Oven")}<div class="stovebox"><span class="eb">Stove</span><div class="burners">${burners}</div></div></div>`;
   }
@@ -477,7 +547,7 @@ export class PikHolidayCard extends LitElement {
     return `<div class="tc rc3${due && !ahead ? " due" : ""}${ahead ? " ahead" : ""}${k && k.rang ? " ringing" : ""}">
       <div class="tt">${this.when(e.t)}${badge}</div>
       <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}${arrows}</div><div class="x">${esc(e.t.text)}</div></div>
-      <div class="acts">${ahead ? `<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.timerBtnHtml(tm)}<button class="tick" data-done="${e.t.id}" data-g="${g}" aria-label="Tick off this part"></button>`}</div>
+      <div class="acts">${ahead ? `<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="tick" data-done="${e.t.id}" data-g="${g}" aria-label="Tick off this part"></button>`}</div>
       ${e.s ? `<div class="stp"><div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div></div>` : ""}
     </div>`;
   }
@@ -625,10 +695,19 @@ export class PikHolidayCard extends LitElement {
   // ---------------------------------------------------------------- events
 
   private onClick = (e: Event): void => {
-    const el = (e.target as HTMLElement).closest("[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack]") as HTMLElement | null;
+    const el = (e.target as HTMLElement).closest("[data-place],[data-pick],[data-pickclose],[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack]") as HTMLElement | null;
     if (!el) return;
     const ds = el.dataset;
     if (ds.ack) { this.ackAlerts(); return; }
+    if (ds.place) {
+      const i = Number(ds.place), u = this.runs[i], pl = this.placed(i);
+      if (pl) { this.store.setPlace(i, null, this.alive); this.flash(u.l + ": off " + (pl.st[0] === "b" ? "burner " + pl.st.slice(1) : "the " + pl.st) + "."); }
+      else if (u.st[0] === "b" && this.onNow().some((x) => x.p.st === u.st)) this.picker = { i };
+      else { this.store.setPlace(i, u.st, this.alive); this.flash(u.l + ": " + onWords(u.st) + "."); }
+      this.requestUpdate(); return;
+    }
+    if (ds.pick) { const [i, st] = ds.pick.split(":"); this.store.setPlace(Number(i), st, this.alive); this.flash(this.runs[Number(i)].l + ": " + onWords(st) + "."); this.picker = null; this.requestUpdate(); return; }
+    if (ds.pickclose) { this.picker = null; this.requestUpdate(); return; }
     if (ds.day !== undefined) { this.L.day = ds.day || null; this.saveL(); this.requestUpdate(); return; }
     if (ds.done) {
       // Ticking (or undoing) a part puts that recipe's card back on the part it's now on.
@@ -684,13 +763,14 @@ export class PikHolidayCard extends LitElement {
     const ta = (this.renderRoot as ShadowRoot).querySelector<HTMLTextAreaElement>("#imp");
     const code = ta ? ta.value.trim() : "";
     if (!code) { this.flash("Paste the progress code first."); return; }
-    let data: { v: number; done: string[]; steps?: Record<string, number>; hot?: string[]; temps: Array<{ loc: string; f: number; t: number }>; timers: Array<{ label: string; kind: TimerKind; end: number }> };
+    let data: { v: number; done: string[]; steps?: Record<string, number>; hot?: string[]; places?: Place[]; temps: Array<{ loc: string; f: number; t: number }>; timers: Array<{ label: string; kind: TimerKind; end: number }> };
     try { data = JSON.parse(decodeURIComponent(escape(atob(code.replace(/\s+/g, ""))))); } catch (e) { this.flash("That code didn't read. Copy it again from the page."); return; }
     const known = new Set(this.plan.tasks.map((t) => t.id));
     const ids = (data.done || []).filter((i) => known.has(i));
     this.store.setMany(ids, true);
     Object.keys(data.steps || {}).forEach((k) => { if (this.seqs().has(k)) this.store.setStep(k, data.steps![k]); });
     (data.hot || []).forEach((d) => this.store.setHot(d, true));
+    (data.places || []).forEach((p) => { if (this.runs[p.i] && this.alive(p)) this.store.setPlace(p.i, p.st, this.alive); });
     const latest: Record<string, number> = {};
     (data.temps || []).forEach((r) => { latest[r.loc] = r.f; });
     if (Object.keys(latest).length) this.store.logTemps(latest);
@@ -732,6 +812,7 @@ ${unsafeHTML(this.stationsHtml())}
 ${unsafeHTML(this.ribbonHtml())}
 ${this.sheet ? unsafeHTML(this.sheetHtml()) : nothing}
 ${this.turkeyPad ? unsafeHTML(this.padHtml()) : nothing}
+${this.picker ? unsafeHTML(this.pickerHtml()) : nothing}
 <div class="sound ${this.soundOff ? "show" : ""}">🔇 Sound is off. Tap anywhere on the screen once so alarms can ring.</div>
 ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
 </div>`;

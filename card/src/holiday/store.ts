@@ -7,13 +7,17 @@
 //   input_boolean.<prefix>_quiet          on = Echo announcements muted (off by default, so they start on)
 //   input_boolean.<prefix>_hot_<dish>     the dish read 140°F or hotter at the final check
 //   input_text.<prefix>_steps             where each recipe-in-progress is: "task:step,task:step"
-//   input_text.<prefix>_focus             the task whose steps were last used (Pik's "next step" follows it)
+//   input_text.<prefix>_focus             the recipe whose steps were last used (Pik's "next step" follows it)
+//   input_text.<prefix>_places            what's been put on a burner, in the oven or on the smoker:
+//                                         "run>station@unix seconds,…" (run = index into the plan's runs)
 //   timer.kitchen_<n> + input_text.kitchen_timer_<n>   the shared kitchen timer pool ("kind|label")
 //   script.kitchen_timer / kitchen_timer_stop / kitchen_timer_add5   start, stop/acknowledge, +5 min
 // LocalStore (mock / preview): the same data in this browser's localStorage.
 import type { TimerKind } from "./plan";
 
 export interface Reading { t: number; loc: string; f: number }
+/** Something put on a station: run index in the plan, where it actually went, when (ms). */
+export interface Place { i: number; st: string; at: number }
 export interface KTimer { key: string; label: string; kind: TimerKind; end: number; total: number; rang: boolean }
 
 export interface Store {
@@ -35,6 +39,9 @@ export interface Store {
   setStep(task: string, i: number): void;
   isHot(dish: string): boolean;
   setHot(dish: string, v: boolean): void;
+  places(): Place[];
+  /** Put run i on a station (null = take it off). keep: which other placements are still worth saving. */
+  setPlace(i: number, st: string | null, keep: (p: Place) => boolean): void;
   resetAll(ids: string[]): void;
   /** A signature of everything that affects the screen, so the card only redraws on real changes. */
   sig(): string;
@@ -42,11 +49,11 @@ export interface Store {
 
 // ---------------------------------------------------------------- local
 
-interface LocalState { done: Record<string, boolean>; temps: Reading[]; timers: KTimer[]; alarms: boolean; steps: Record<string, number>; hot: Record<string, boolean>; focus: string }
+interface LocalState { done: Record<string, boolean>; temps: Reading[]; timers: KTimer[]; alarms: boolean; steps: Record<string, number>; hot: Record<string, boolean>; focus: string; places: Place[] }
 
 export class LocalStore implements Store {
   readonly live = false;
-  private s: LocalState = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "" };
+  private s: LocalState = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "", places: [] };
   constructor(private key: string) {
     try { const raw = localStorage.getItem(key); if (raw) this.s = Object.assign(this.s, JSON.parse(raw)); } catch (e) { /* private mode */ }
   }
@@ -76,14 +83,20 @@ export class LocalStore implements Store {
   setStep(task: string, i: number): void { this.s.steps[task] = i; this.s.focus = task; this.save(); }
   isHot(dish: string): boolean { return !!this.s.hot[dish]; }
   setHot(dish: string, v: boolean): void { this.s.hot[dish] = v; this.save(); }
+  places(): Place[] { return (this.s.places || []).slice(); }
+  setPlace(i: number, st: string | null, keep: (p: Place) => boolean): void {
+    this.s.places = (this.s.places || []).filter((p) => p.i !== i && keep(p));
+    if (st) this.s.places.push({ i, st, at: Date.now() });
+    this.save();
+  }
   /** Everything needed to move to the hub: the same code the hub's import reads. */
   exportCode(): string {
-    const data = { v: 2, done: Object.keys(this.s.done).filter((k) => this.s.done[k]), steps: this.s.steps, hot: Object.keys(this.s.hot).filter((k) => this.s.hot[k]),
+    const data = { v: 2, done: Object.keys(this.s.done).filter((k) => this.s.done[k]), steps: this.s.steps, hot: Object.keys(this.s.hot).filter((k) => this.s.hot[k]), places: this.s.places || [],
       temps: this.s.temps.map((x) => ({ loc: x.loc, f: x.f, t: x.t })), timers: this.s.timers.filter((t) => t.end > Date.now()).map((t) => ({ label: t.label, kind: t.kind, end: t.end })) };
     return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
-  resetAll(): void { this.s = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "" }; this.save(); }
-  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms, this.s.steps, this.s.hot]); }
+  resetAll(): void { this.s = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "", places: [] }; this.save(); }
+  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms, this.s.steps, this.s.hot, this.s.places]); }
 }
 
 // ---------------------------------------------------------------- Home Assistant
@@ -205,8 +218,21 @@ export class HaStore implements Store {
   }
   isHot(dish: string): boolean { const e = this.st("input_boolean." + this.prefix + "_hot_" + dish); return !!e && e.state === "on"; }
   setHot(dish: string, v: boolean): void { this.hass.callService("input_boolean", v ? "turn_on" : "turn_off", {}, { entity_id: "input_boolean." + this.prefix + "_hot_" + dish }); }
+  places(): Place[] {
+    const e = this.st("input_text." + this.prefix + "_places");
+    return String(e ? e.state : "").split(",").map((x) => x.match(/^(\d+)>(b[1-5]|oven|smoker)@(\d+)$/)).filter((m): m is RegExpMatchArray => !!m)
+      .map((m) => ({ i: Number(m[1]), st: m[2], at: Number(m[3]) * 1000 }));
+  }
+  setPlace(i: number, st: string | null, keep: (p: Place) => boolean): void {
+    const list = this.places().filter((p) => p.i !== i && keep(p));
+    if (st) list.push({ i, st, at: Date.now() });
+    let txt = list.map((p) => p.i + ">" + p.st + "@" + Math.round(p.at / 1000)).join(",");
+    while (txt.length > 250) txt = txt.slice(txt.indexOf(",") + 1);
+    this.hass.callService("input_text", "set_value", { value: txt }, { entity_id: "input_text." + this.prefix + "_places" });
+  }
   resetAll(ids: string[]): void {
     this.setMany(ids, false);
+    this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_places" });
     this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_steps" });
     SPOTS.forEach((l) => this.hass.callService("input_number", "set_value", { value: 0 }, { entity_id: "input_number." + this.prefix + "_turkey_" + l }));
     this.timers().forEach((t) => this.stopTimer(t.key));
