@@ -376,7 +376,6 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .nowh .dayseg button{height:32px;padding:0 13px;border-radius:16px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:12.5px;cursor:pointer}
 .nowh .dayseg button.on{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
 .tc.cmp{align-items:center;padding-top:8px;padding-bottom:8px;cursor:pointer}
-.tc.cmp .tt small.now{margin-top:3px}
 .tc.cmp .cl{display:flex;align-items:baseline;gap:10px;min-width:0}
 .tc.cmp .cl b{font-size:17px;white-space:nowrap}
 .tc.cmp .cl span{font-size:15px;color:#4A3D31;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
@@ -386,4 +385,10 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .tipq{align-self:flex-start;border:1px solid #EBCB98;background:#FFF6E8;color:#8A5A1C;border-radius:14px;padding:5px 12px;font-weight:600;font-size:13px;cursor:pointer}
 .tipq.on{background:#FBE7C6}
 .tipa{margin:0;font-size:14.5px;line-height:1.45;background:#FFF6E8;border-left:3px solid #E3B474;border-radius:0 10px 10px 0;padding:8px 12px}
+/* time cell: the time, then its badge underneath, both flush left with room to breathe */
+.tc .tt{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding-top:2px;line-height:1.15}
+.tc .tt small{margin-top:0}
+.tc .tt small.now{display:inline-flex;align-items:center;justify-content:center;height:20px;padding:0 9px;margin:0;border-radius:6px;font-size:10.5px;letter-spacing:.1em;line-height:1}
+.tc.cmp{padding-top:12px;padding-bottom:12px;min-height:64px}
+.tc.cmp .tt{gap:6px}
 `;
