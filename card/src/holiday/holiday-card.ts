@@ -600,15 +600,16 @@ export class PikHolidayCard extends LitElement {
     return `<div class="tips">${t.tips.map(([q, a], j) => `<button class="tipq${open ? " on" : ""}" data-tip="${t.id}">⚠ ${esc(q)}${open ? "" : " ▸"}</button>${open ? `<p class="tipa">${esc(a)}</p>` : ""}`).join("")}</div>`;
   }
   /** Focus mode (three or more things due): a one-line card with its buttons; tap it to open the step. */
-  private compactHtml(g: string, cur: Task): string {
+  private compactHtml(g: string, cur: Task, due: boolean): string {
     const seq = this.seqs().get(g)!, e = seq[this.cardIdx(g, cur)];
     const live = e.t === cur || this.isDue(e.t), t = live ? e.t : cur;
     const tm = this.timerOf(live ? e : seq[seq.findIndex((x) => x.t === cur)]);
     const k = tm ? this.timerByLabel(tm[0]) : undefined;
     const started = this.ms(t) <= Date.now();
     const rec = !!this.recipe(g);
-    return `<div class="tc cmp due${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
-      <div class="tt">${this.when(t)}${started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`}</div>
+    const badge = !this.isToday() || !due ? "" : started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`;
+    return `<div class="tc cmp${due ? " due" : ""}${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
+      <div class="tt">${this.when(t)}${badge}</div>
       <div class="cl">${rec ? `<b>${esc(this.gname(g))}</b>` : ""}<span>${esc(t.text)}</span>${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
       <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button></div></div>`;
   }
@@ -629,21 +630,18 @@ export class PikHolidayCard extends LitElement {
     const list = this.plan.tasks.filter((t) => t.day === d && !!t.rid);
     const title = !this.isToday() ? this.plan.dayNames[d] : this.inFinalHour() ? "The final hour" : due.length ? "Do these now" : next.length ? "Coming up" : "All done for " + this.plan.dayNames[d].toLowerCase();
     const listCards = !due.length && !done.length;
-    // Rush hour: with three or more things due, every card is one line and only the one you open shows its step.
-    const focus = this.isToday() && due.length >= 3;
-    // Which card is open is shared (every screen, and Pik: "open the turkey card"); "-" = all folded.
-    const f = this.store.focus();
-    const openG = focus ? (f === "-" ? null : due.some((x) => x.g === f) ? f : due[0].g) : null;
+    // Every card is one line until you open it (tap, or Pik: "open the turkey card"). Which one is open is shared.
+    const openG = this.store.focus();
     const dayBtns = this.echo ? "" : `<span class="dayseg">${Object.keys(this.plan.days).map((k) => `<button class="${k === d ? "on" : ""}" data-day="${k === this.currentDay() ? "" : k}">${SHORTDAY[k]}</button>`).join("")}</span>`;
     const shown = listCards ? next.slice(0, this.isToday() ? 6 : 20) : next.filter((x) => !done.some((y) => y.g === x.g)).slice(0, 3);
     return `<div class="lc">
-      <div class="nowh"><h2 class="serif">${title}</h2>${!this.isToday() ? `<span class="prev">Previewing · <button class="sb" data-day="">Back to now</button></span>` : `<span class="prev">${focus ? due.length + " at once · tap a line to open its step" : list.filter((t) => !this.store.isDone(t.id)).length + " of " + list.length + " left today"}</span>`}${dayBtns}</div>
+      <div class="nowh"><h2 class="serif">${title}</h2>${!this.isToday() ? `<span class="prev">Previewing · <button class="sb" data-day="">Back to now</button></span>` : `<span class="prev">${due.length > 1 ? due.length + " now · tap a dish to open it" : list.filter((t) => !this.store.isDone(t.id)).length + " of " + list.length + " left today"}</span>`}${dayBtns}</div>
       ${this.missingPackage ? `<div class="flag"><b>Not shared yet</b><span>The holiday package isn't installed in Home Assistant, so progress is saved on this screen only.</span></div>` : ""}
       <div class="tlist">
         ${behind.length ? `<details class="earl"${this.keep.earl ? " open" : ""}><summary>${behind.length} earlier ${behind.length === 1 ? "part isn't" : "parts aren't"} ticked off ▸</summary>${behind.map((t) => this.behindHtml(t)).join("")}</details>` : ""}
-        ${focus ? due.map((x) => (x.g === openG ? this.cardHtml(x.g, x.cur, true, true) : this.compactHtml(x.g, x.cur))).join("") : due.map((x) => this.cardHtml(x.g, x.cur, true)).join("")}
+        ${due.map((x) => (x.g === openG ? this.cardHtml(x.g, x.cur, true, true) : this.compactHtml(x.g, x.cur, true))).join("")}
         ${done.map((x) => this.doneHtml(x.g, x.t, x.next)).join("")}
-        ${listCards ? shown.map((x) => this.cardHtml(x.g, x.cur, false)).join("") : ""}
+        ${listCards ? shown.map((x) => (x.g === openG ? this.cardHtml(x.g, x.cur, false, true) : this.compactHtml(x.g, x.cur, false))).join("") : ""}
       </div>
       ${!listCards && shown.length ? `<div class="nextbox"><span class="eb">Next</span>${shown.map((x) => `<div class="nx"><span class="tt">${esc(this.when(x.cur))}</span><span>${this.gname(x.g) ? `<b>${esc(this.gname(x.g))}</b> · ` : ""}${esc(x.cur.text)}</span></div>`).join("")}</div>` : ""}
     </div>`;
@@ -767,7 +765,7 @@ export class PikHolidayCard extends LitElement {
     const ds = el.dataset;
     if (ds.ack) { this.ackAlerts(); return; }
     if (ds.tip) { this.L.tips = Object.assign({}, this.L.tips, { [ds.tip]: !(this.L.tips || {})[ds.tip] }); this.saveL(); this.requestUpdate(); return; }
-    if (ds.open) { this.store.setFocus(ds.open); this.requestUpdate(); return; }
+    if (ds.open) { this.store.setFocus(this.store.focus() === ds.open ? "-" : ds.open); this.requestUpdate(); return; }
     if (ds.collapse) { this.store.setFocus("-"); this.requestUpdate(); return; }
     if (ds.place) {
       const i = Number(ds.place), u = this.runs[i], pl = this.placed(i);
@@ -783,7 +781,7 @@ export class PikHolidayCard extends LitElement {
       // Ticking (or undoing) a part puts that recipe's card back on the part it's now on.
       const t = this.plan.tasks.find((x) => x.id === ds.done);
       this.store.setDone(ds.done, !this.store.isDone(ds.done));
-      if (t && this.store.getStep(this.gid(t)) > 0) this.store.setStep(this.gid(t), 0);
+      if (t && this.store.getStep(this.gid(t)) > 0) { const f = this.store.focus(); this.store.setStep(this.gid(t), 0); this.store.setFocus(f); }
       this.requestUpdate(); return;
     }
     if (ds.timer) {
