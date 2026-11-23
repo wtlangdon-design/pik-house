@@ -5085,6 +5085,30 @@
    "from": "thu_1520_turkey",
    "to": "thu_1600_x",
    "until": "16:15"
+  },
+  {
+   "st": "smoker",
+   "r": "turkey",
+   "l": "Heating up",
+   "from": "thu_0930_turkey",
+   "to": "thu_1015_turkey",
+   "until": "10:15"
+  },
+  {
+   "st": "oven",
+   "r": "stuffing",
+   "l": "Heating up",
+   "from": "thu_1350_stuffing",
+   "to": "thu_1405_stuffing",
+   "until": "14:05"
+  },
+  {
+   "st": "oven",
+   "r": "mac",
+   "l": "Heating to 425°F",
+   "from": "thu_1500_oven425",
+   "to": "thu_1512_mac",
+   "until": "15:12"
   }
  ]
 }

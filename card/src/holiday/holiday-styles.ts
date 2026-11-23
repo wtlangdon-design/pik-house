@@ -364,4 +364,9 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .pl.busy{border-style:solid}
 .pl .bang{display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
 .pl .ic .pn,.pl.on .ic .pn{background:#E5484D}.pl.busy .ic .pn{background:#B9A48A}
+.pl.pre{opacity:.45;cursor:default}
+.stp.car{display:grid;grid-template-columns:40px 1fr 40px;gap:12px;align-items:center}
+.stp.car .ar{width:40px;height:56px;border-radius:14px;border:1px solid var(--line);background:var(--card);font:500 26px/1 'DM Sans',sans-serif;cursor:pointer;color:var(--ink);padding:0}
+.stp.car .ar:disabled{opacity:.25;cursor:default}
+.stp.car p.muted{color:var(--muted);font-size:14px}
 `;

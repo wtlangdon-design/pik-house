@@ -363,8 +363,14 @@ export class PikHolidayCard extends LitElement {
     return (day && day !== this.todayKey() ? SHORTDAY[day] + " " : "") + fmt12(hm) + (hm >= "12:00" ? " PM" : "");
   }
   /** The emblem button on a card: tap to put the dish on its burner / in the oven / on the smoker, tap again to take it off. */
-  private placeBtn(i: number): string {
+  private placeBtn(i: number, preview = false): string {
     const u = this.runs[i], pl = this.placed(i);
+    if (preview && !pl) {
+      // Looking ahead: show where it will go, not tappable until that step comes up.
+      const t = this.taskById(u.from);
+      const tip = `The ${u.l.toLowerCase()} goes ${onWords(u.st)} at ${t ? this.when(t) : "its time"}.`;
+      return `<button class="pl pre ${u.st[0] === "b" ? "burner" : u.st}" disabled title="${esc(tip)}" aria-label="${esc(tip)}">${emblem(u.st)}</button>`;
+    }
     const st = pl ? pl.st : u.st;
     const busy = !pl && st[0] === "b" ? this.onNow().find((x) => x.p.st === st) : undefined;
     const state = pl ? "on" : busy ? "busy" : "free";
@@ -545,12 +551,14 @@ export class PikHolidayCard extends LitElement {
         <div class="acts">${this.timerBtnHtml(tm)}<button class="tick" data-done="${e.t.id}" aria-label="Tick off"></button></div></div>`;
     }
     const pips = n > 1 ? `<span class="pips">${seq.map((x, j) => `<i class="${j === idx ? "on" : j < start ? "past" : x.t === e.t ? "part" : ""}"></i>`).join("")}</span>` : "";
-    const arrows = n > 1 ? `<span class="arr"><button class="ar" data-step="${g}:${idx - 1}"${idx <= start ? " disabled" : ""} aria-label="Previous step">‹</button><button class="ar" data-step="${g}:${idx + 1}"${idx >= n - 1 ? " disabled" : ""} aria-label="Next step">›</button></span>` : "";
+    // ‹ › sit on either side of the step itself, like flipping through pages.
+    const prev = `<button class="ar" data-step="${g}:${idx - 1}"${idx <= start ? " disabled" : ""} aria-label="Previous step">‹</button>`;
+    const next = `<button class="ar" data-step="${g}:${idx + 1}"${idx >= n - 1 ? " disabled" : ""} aria-label="Next step">›</button>`;
     return `<div class="tc rc3${due && !ahead ? " due" : ""}${ahead ? " ahead" : ""}${k && k.rang ? " ringing" : ""}">
       <div class="tt">${this.when(e.t)}${badge}</div>
-      <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}${arrows}</div><div class="x">${esc(e.t.text)}</div></div>
-      <div class="acts">${ahead ? `<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="tick" data-done="${e.t.id}" data-g="${g}" aria-label="Tick off this part"></button>`}</div>
-      ${e.s ? `<div class="stp"><div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div></div>` : ""}
+      <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}</div><div class="x">${esc(e.t.text)}</div></div>
+      <div class="acts">${ahead ? `${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="tick" data-done="${e.t.id}" data-g="${g}" aria-label="Tick off this part"></button>`}</div>
+      ${e.s || n > 1 ? `<div class="stp${n > 1 ? " car" : ""}">${n > 1 ? prev : ""}${e.s ? `<div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div>` : `<div class="sb2"><p class="muted">Nothing more to this step than the line above.</p></div>`}${n > 1 ? next : ""}</div>` : ""}
     </div>`;
   }
   /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
