@@ -463,4 +463,12 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .sn i,.bn i{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tc .nm .clp{margin-left:auto;height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--line);background:#fff;color:var(--muted);font:600 12.5px 'DM Sans',sans-serif;cursor:pointer}
 .dbtn,.donetag{display:inline-flex;align-items:center;gap:7px}.pie{width:18px;height:18px;flex:none}
+/* time column: day on its own line, time never splits; Fold sits with the card's buttons */
+.tc{grid-template-columns:96px 1fr auto}
+.tc .tt{gap:4px}
+.tc .tt .dy{font:700 11.5px 'DM Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tc .tt .hm{white-space:nowrap}
+.tc .tt small{margin-top:3px}
+.tc .acts .clp{width:34px;height:34px;border-radius:17px;border:1px solid var(--line);background:#fff;color:var(--muted);font:600 14px/1 'DM Sans',sans-serif;cursor:pointer;flex:none;margin:0 2px 0 0;padding:0}
+.tc.cmp .cl em{font-size:15px;width:34px;text-align:center}
 `;
