@@ -39,6 +39,9 @@ export interface Store {
   setStep(task: string, i: number): void;
   isHot(dish: string): boolean;
   setHot(dish: string, v: boolean): void;
+  /** The recipe card that's open during a rush (shared, so Pik can open one): a recipe id, or "-" for none. */
+  focus(): string;
+  setFocus(g: string): void;
   places(): Place[];
   /** Put run i on a station (null = take it off). keep: which other placements are still worth saving. */
   setPlace(i: number, st: string | null, keep: (p: Place) => boolean): void;
@@ -83,6 +86,8 @@ export class LocalStore implements Store {
   setStep(task: string, i: number): void { this.s.steps[task] = i; this.s.focus = task; this.save(); }
   isHot(dish: string): boolean { return !!this.s.hot[dish]; }
   setHot(dish: string, v: boolean): void { this.s.hot[dish] = v; this.save(); }
+  focus(): string { return this.s.focus || ""; }
+  setFocus(g: string): void { this.s.focus = g; this.save(); }
   places(): Place[] { return (this.s.places || []).slice(); }
   setPlace(i: number, st: string | null, keep: (p: Place) => boolean): void {
     this.s.places = (this.s.places || []).filter((p) => p.i !== i && keep(p));
@@ -96,7 +101,7 @@ export class LocalStore implements Store {
     return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
   resetAll(): void { this.s = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "", places: [] }; this.save(); }
-  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms, this.s.steps, this.s.hot, this.s.places]); }
+  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms, this.s.steps, this.s.hot, this.s.places, this.s.focus]); }
 }
 
 // ---------------------------------------------------------------- Home Assistant
@@ -218,6 +223,8 @@ export class HaStore implements Store {
   }
   isHot(dish: string): boolean { const e = this.st("input_boolean." + this.prefix + "_hot_" + dish); return !!e && e.state === "on"; }
   setHot(dish: string, v: boolean): void { this.hass.callService("input_boolean", v ? "turn_on" : "turn_off", {}, { entity_id: "input_boolean." + this.prefix + "_hot_" + dish }); }
+  focus(): string { const e = this.st("input_text." + this.prefix + "_focus"); return e ? String(e.state) : ""; }
+  setFocus(g: string): void { this.hass.callService("input_text", "set_value", { value: g }, { entity_id: "input_text." + this.prefix + "_focus" }); }
   places(): Place[] {
     const e = this.st("input_text." + this.prefix + "_places");
     return String(e ? e.state : "").split(",").map((x) => x.match(/^(\d+)>(b[1-5]|oven|smoker)@(\d+)$/)).filter((m): m is RegExpMatchArray => !!m)
