@@ -616,7 +616,7 @@ export class PikHolidayCard extends LitElement {
   private tipsHtml(t: Task): string {
     if (!t.tips || !t.tips.length) return "";
     const open = (this.L.tips || {})[t.id];
-    return `<div class="tips">${t.tips.map(([q, a], j) => `<button class="tipq${open ? " on" : ""}" data-tip="${t.id}">⚠ ${esc(q)}${open ? "" : " ▸"}</button>${open ? `<p class="tipa">${esc(a)}</p>` : ""}`).join("")}</div>`;
+    return `<div class="tips">${t.tips.map(([q, a], j) => `<button class="tipq${open ? " on" : ""}" data-tip="${t.id}"><span class="bp">Backup plan</span>${esc(q)}${open ? " ▴" : " ▸"}</button>${open ? `<p class="tipa">${esc(a)}</p>` : ""}`).join("")}</div>`;
   }
   /** Focus mode (three or more things due): a one-line card with its buttons; tap it to open the step. */
   private compactHtml(g: string, cur: Task, due: boolean): string {
@@ -633,7 +633,7 @@ export class PikHolidayCard extends LitElement {
     const n = seq.length;
     return `<div class="tc cmp${due ? " due" : ""}${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
       <div class="tt">${this.timeCell(t)}${badge}</div>
-      <div class="cl"><b>${esc(this.gname(g))}</b><span>${esc(live && e.s ? this.stepText(e.s.t) : t.text)}</span>${n > 1 ? `<i class="stn2">${idx + 1}/${n}</i>` : ""}${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
+      <div class="cl"><div class="r1"><b>${esc(this.gname(g))}</b>${n > 1 ? `<span class="sp">Step ${idx + 1} of ${n}</span>` : ""}</div><div class="r2">${esc(live && e.s ? this.stepText(e.s.t) : t.text)}</div><em>▾</em></div>
       <div class="acts">${onNow.map((i) => this.placeBtn(i)).join("")}${k ? this.timerBtnHtml(tm) : ""}${this.undoHtml(g)}${lastOfPart ? `<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button>` : ""}</div></div>`;
   }
   /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
