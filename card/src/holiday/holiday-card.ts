@@ -70,7 +70,6 @@ export class PikHolidayCard extends LitElement {
   private askReset = false;
   private seenAck = -1;
   private lastSig = "";
-  private soundOff = true;
   private toast = "";
   private _toastT?: number;
   private _sec?: number;
@@ -132,14 +131,18 @@ export class PikHolidayCard extends LitElement {
     super.connectedCallback();
     loadFonts();
     this._sec = window.setInterval(() => this.tick(), 1000);
-    this.addEventListener("pointerdown", this.onPointer, true);
+    // Sound starts on: try right away (works when the page was opened with a tap, as in Home Assistant);
+    // otherwise the first tap or key press anywhere on the page switches it on. No button to press.
+    document.addEventListener("pointerdown", this.onPointer, true);
+    document.addEventListener("keydown", this.onPointer, true);
     document.addEventListener("visibilitychange", this.onVis);
-    window.setTimeout(() => this.soundBanner(), 800);
+    window.setTimeout(() => this.unlockAudio(), 0);
   }
   disconnectedCallback(): void {
     super.disconnectedCallback();
     clearInterval(this._sec);
-    this.removeEventListener("pointerdown", this.onPointer, true);
+    document.removeEventListener("pointerdown", this.onPointer, true);
+    document.removeEventListener("keydown", this.onPointer, true);
     document.removeEventListener("visibilitychange", this.onVis);
     if (this.wake) { this.wake.release().catch(() => undefined); this.wake = null; }
   }
@@ -172,13 +175,9 @@ export class PikHolidayCard extends LitElement {
       this.actx = this.actx || new A();
       if (this.actx.state !== "running") this.actx.resume();
     } catch (e) { /* no audio */ }
-    window.setTimeout(() => this.soundBanner(), 300);
-  }
-  private soundBanner(): void {
-    const off = !this.actx || this.actx.state !== "running";
-    if (off !== this.soundOff) { this.soundOff = off; this.requestUpdate(); }
   }
   private chime(kind: string): void {
+    if (!this.store.alarmsOn()) return; // the speaker button mutes the page's chimes as well as the Echos
     const w = window as unknown as { __chimes?: Array<{ kind: string; at: number }> };
     (w.__chimes = w.__chimes || []).push({ kind, at: Date.now() });
     try {
@@ -908,9 +907,8 @@ export class PikHolidayCard extends LitElement {
   <div class="clock" id="clock"></div>
   ${a ? html`<div class="ringbar" role="alert"><b>${a.when}</b><span>${a.text}</span>${this.Q.length > 1 ? html`<small>+${this.Q.length - 1} more</small>` : nothing}<button data-ack="1">Got it</button></div>`
       : html`<div class="ttl"><b>${this.todayKey() ? this.plan.dayNames[d] + " · " + this.plan.title : this.plan.title + " prep starts " + this.plan.dayNames[Object.keys(this.plan.days)[0]]}</b><span>${sub}</span></div>`}
-  ${this.soundOff ? html`<button class="sndb" title="Browsers keep sound off until the screen is tapped once">🔇 Tap for sound</button>` : nothing}
   <button class="tkb" data-turkey="1"><span class="dot ${ts.cls}">${ts.sym}</span><span class="t"><b>${ts.head}</b><span>${ts.sub}</span></span></button>
-  <button class="ico ${this.store.alarmsOn() ? "" : "off"}" data-alarms="1" title=${this.store.alarmsOn() ? "Echos read tasks out loud. Tap to mute." : "Echos are muted. Tap to turn back on."}>${this.store.alarmsOn() ? "🔊" : "🔇"}</button>
+  <button class="ico ${this.store.alarmsOn() ? "" : "off"}" data-alarms="1" title=${this.store.alarmsOn() ? "Sound is on: the screen chimes and the Echos read tasks out. Tap to mute." : "Sound is off. Tap to turn it back on."}>${this.store.alarmsOn() ? "🔊" : "🔇"}</button>
   <button class="ibtn" data-plan="1">Plan &amp; recipes</button>
   <div class="cdn"><span class="eb">${left > 0 ? "Dinner in" : "Dinner"}</span><div class="big">${count}</div></div>
 </div></header>
