@@ -391,4 +391,74 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .tc .tt small.now{display:inline-flex;align-items:center;justify-content:center;height:20px;padding:0 9px;margin:0;border-radius:6px;font-size:10.5px;letter-spacing:.1em;line-height:1}
 .tc.cmp{padding-top:12px;padding-bottom:12px;min-height:64px}
 .tc.cmp .tt{gap:6px}
+/* ===== design pass: calmer surfaces, one meaning per color, bigger step text ===== */
+/* colors: amber = now / in progress, red = a problem, green = done. Nothing else carries meaning. */
+.op{--amber:#C9822F;--amberInk:#7A4E17;--amberBg:#FBEBD3;--amberBg2:#FFF4E4;--shadow:0 1px 2px rgba(60,40,20,.06),0 3px 10px rgba(60,40,20,.05)}
+/* cards: no outlines, soft shading; "now" cards are warm with an amber edge */
+.tc{border:0;box-shadow:var(--shadow);border-radius:18px}
+.tc.due{background:var(--amberBg2);border:0;box-shadow:inset 4px 0 0 var(--amber),var(--shadow)}
+.tc.ahead{border:0;box-shadow:var(--shadow)}
+.tc.done{box-shadow:none;background:rgba(255,255,255,.45)}
+.tc.ringing{border:0;box-shadow:inset 0 0 0 2px var(--urg),var(--shadow)}
+.stp{border-top:0;padding-top:4px}
+.rcard2{border:0;box-shadow:var(--shadow)}
+/* step text: the thing you read from the stove */
+.tc.due .stp p,.tc.ahead .stp p{font-size:20px;line-height:1.45}
+.tc.due .stp .si{font-size:15px}
+.tc .nm{font-size:20px}
+/* Now badge: amber, not black */
+.tc .tt small.now{background:var(--amber);color:#fff}
+/* Done button: as big as the timer button, green only because it means done */
+.dbtn{height:42px;padding:0 16px;border-radius:21px;border:1.5px solid var(--done);background:#fff;color:var(--done);font:700 14px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;flex:none}
+.dbtn:active{background:var(--done);color:#fff}
+.donetag{color:var(--done);font:700 13px 'DM Sans',sans-serif;white-space:nowrap}
+.ubtn{height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--line);background:#fff;color:var(--muted);font:600 12.5px 'DM Sans',sans-serif;cursor:pointer}
+.tc.done .acts{gap:10px}
+/* timer button: amber when set, amber filled while running, red when time's up */
+.sb.set{border-color:var(--amber);color:var(--amberInk);background:#fff;height:42px;border-radius:21px;padding:0 15px;font-size:13.5px}
+.sb.run{background:var(--amberBg);color:var(--amberInk);border-color:var(--amber);height:42px;border-radius:21px}
+.sb.rang{height:42px;border-radius:21px}
+.tc .acts{gap:8px}
+/* the alarm bar is "now", so amber, not black */
+.ringbar{background:var(--amberInk)}
+/* header: Plan & recipes is a plain button; sound is a small button here, not a note over the cards */
+.ibtn{background:#fff;color:var(--ink);border-color:var(--line)}
+.sndb{height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--muted);font:600 13px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;flex:none}
+.sound{display:none!important}
+.nowh .dayseg button{border:0;background:rgba(255,255,255,.7)}
+.nowh .dayseg button.on{background:var(--amberBg);color:var(--amberInk)}
+/* stations: shaded tiles, no edges; two lines each, readable */
+.stn{border-bottom:0}
+.sn,.stovebox{border:0;box-shadow:var(--shadow)}
+.sn.idle{opacity:1}.sn.idle b{color:var(--muted)}
+.sn .ic,.sn.smoker .ic,.sn.oven .ic{color:var(--amberInk)}.sn.idle .ic{color:#CDBBA2}
+.tp{color:var(--amberInk)}
+.sn i,.bn i{font-size:12.5px;line-height:1.3}
+.bn{padding:7px 8px;border-radius:12px}
+.bn.free{border:0;background:rgba(246,238,226,.55)}
+.bn.free b{color:var(--muted);font-weight:600}
+.bn.plan{border:1.5px dashed var(--amber);background:transparent;opacity:1}.bn.plan b{color:var(--amberInk)}
+.bn.on{background:var(--amberBg)}
+.bn.clash{background:#FDE4DA;border:0;box-shadow:inset 0 0 0 1.5px var(--urg)}
+/* small status words: amber in progress, green done, nothing red unless it's a problem */
+.sd.act,.sd.hot{background:var(--amber)}.sd.cold{background:#A99883}.sd.wait{background:#E3D6C3}
+.dot.hot,.dot.warn{background:var(--amber)}
+.k.check,.k.done,.k.temp{background:var(--amber)}
+.dr span.w{color:var(--amberInk)}
+/* dish list outside the final hour: a quiet reference, not a second to-do list */
+.bdy:not(.fh) .dr b{font-weight:500;font-size:13px}
+.bdy:not(.fh) .dr span{font-size:12px}
+.bdy:not(.fh) .dr span.w{font-weight:600}
+.bdy:not(.fh) .dr{border-bottom-color:#F4ECE0}
+.dr.tky{background:var(--amberBg2);box-shadow:0 0 0 4px var(--amberBg2)}.dr.tky span{color:var(--amberInk)}
+/* emblems follow the same colors */
+.pl,.pl.oven,.pl.smoker{border-color:var(--amber);color:var(--amberInk)}
+.pl.on,.pl.on.oven,.pl.on.smoker{background:var(--amberBg);border-color:var(--amber);color:var(--amberInk);box-shadow:0 0 0 3px #F6E1C2}
+.pl.busy{border-color:var(--urg);color:var(--urg)}
+.tipq{border:0;background:var(--amberBg)}
+.tc.cmp .cl .tipdot{color:var(--amber)}
+.nextbox{border-top:0}
+.bdy.fh .dr span.w{font-size:12.5px;flex:none;line-height:1.3}
+/* the tile's second line may wrap onto a second row rather than be cut off */
+.sn i,.bn i{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 `;
