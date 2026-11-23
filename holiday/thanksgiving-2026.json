@@ -396,19 +396,14 @@
    "store": "Carve the rest off the bone, into shallow containers, in the fridge within 2 hours of serving. Eat within 3–4 days; reheat to 165°F.",
    "flags": [
     [
-     "warn",
-     "Provisional until confirmed",
-     "Lock these before brining: actual weight, fresh vs. thawed, added-solution label."
-    ],
-    [
      "note",
      "Rub and bag",
      "Homemade salt-free rub only: no commercial rub, no Kinder's seasoning packets. The Kinder's bag is a brining bag, not an oven bag. Butter stays at one stick even though the bird is bigger than the recipe's."
     ],
     [
      "conf",
-     "Confirm when it arrives",
-     "Weight and label. If the label says enhanced, basted, self-basting, kosher, or lists a salt solution, don't brine; tell me and we'll switch plans."
+     "Read the label first",
+     "If it says enhanced, basted, self-basting or kosher, or lists a salt solution, the turkey is already salted. Skip the brine: pat it dry and keep it uncovered on the rack in the fridge until Thursday."
     ],
     [
      "note",
@@ -419,7 +414,7 @@
    "steps": [
     {
      "d": "tue",
-     "t": "7:00 PM: unwrap, check the label, weigh it. Pull out the neck and giblets and any pop-up timer or leg clip. Keep the neck in the fridge (optional gravy flavor).",
+     "t": "7:00 PM: unwrap. Pull out the neck and giblets and any pop-up timer or leg clip; keep the neck in the fridge for the gravy. Make sure it's fully thawed (no ice inside). Read the label: if it says enhanced, basted, self-basting or kosher, or lists a salt solution, it's already salted: skip the brine (tick off the brine steps), pat it dry and keep it uncovered on the rack in the fridge until Thursday.",
      "ing": []
     },
     {
@@ -2351,7 +2346,7 @@
    "hm": "19:00",
    "lane": "prep",
    "rid": "turkey",
-   "text": "Turkey: confirm weight, fresh vs. thawed, and the label (no added solution). Remove giblets and hardware.",
+   "text": "Unwrap the turkey, giblets out, and read the label (already salted? skip the brine).",
    "tm": null,
    "steps": [
     [
@@ -2442,23 +2437,12 @@
    ]
   },
   {
-   "id": "tue_2100_x",
+   "id": "tue_2100_turkey",
    "day": "tue",
    "hm": "21:00",
    "lane": "fridge",
-   "rid": null,
-   "text": "Clear one full fridge shelf for Wednesday's turkey drying tray.",
-   "tm": null,
-   "steps": [],
-   "dish": []
-  },
-  {
-   "id": "tue_2100_x_1",
-   "day": "tue",
-   "hm": "21:00",
-   "lane": "fridge",
-   "rid": null,
-   "text": "Groceries: are the oranges (Wed 9:00) and powdered sugar (Wed 1:00) here? If not, the bottled OJ is the backup.",
+   "rid": "turkey",
+   "text": "Clear one full fridge shelf for the turkey's drying tray (from Wednesday 9:00).",
    "tm": null,
    "steps": [],
    "dish": []
@@ -2810,11 +2794,11 @@
    ]
   },
   {
-   "id": "wed_1630_x",
+   "id": "wed_1630_turkey",
    "day": "wed",
    "hm": "16:30",
    "lane": "smoker",
-   "rid": null,
+   "rid": "turkey",
    "text": "Pellets: full hopper plus a spare bag for Thursday's smoke and 200°F hot hold.",
    "tm": null,
    "steps": [],
@@ -2826,7 +2810,7 @@
    "hm": "17:30",
    "lane": "fridge",
    "rid": null,
-   "text": "Fridge plan for Thursday; label each dish with its pull time. Check deliveries against the shopping list.",
+   "text": "Fridge plan for Thursday; label each dish with its pull time.",
    "tm": null,
    "steps": [],
    "dish": []
@@ -2837,13 +2821,25 @@
    "hm": "09:00",
    "lane": "fridge",
    "rid": "dip",
-   "text": "Cream cheese (dip) and herb butter out to soften.",
+   "text": "Cream cheese out of the fridge to soften.",
    "tm": null,
    "steps": [
     [
      "dip",
      0
-    ],
+    ]
+   ],
+   "dish": []
+  },
+  {
+   "id": "thu_0900_turkey",
+   "day": "thu",
+   "hm": "09:00",
+   "lane": "fridge",
+   "rid": "turkey",
+   "text": "Herb butter out of the fridge to soften.",
+   "tm": null,
+   "steps": [
     [
      "turkey",
      6
@@ -3158,12 +3154,12 @@
    ]
   },
   {
-   "id": "thu_1350_x",
+   "id": "thu_1350_stuffing",
    "day": "thu",
    "hm": "13:50",
    "lane": "oven",
-   "rid": null,
-   "text": "Oven to 350°F.",
+   "rid": "stuffing",
+   "text": "Oven to 350°F for the stuffing and green beans.",
    "tm": [
     "Oven at 350°F?",
     15,
@@ -3250,16 +3246,12 @@
    "hm": "14:30",
    "lane": "prep",
    "rid": "eggs",
-   "text": "Appetizers out: eggs garnished, dip topped, chips. Back in the fridge by 4:30.",
+   "text": "Deviled eggs out: top with prosciutto and chives.",
    "tm": null,
    "steps": [
     [
      "eggs",
      7
-    ],
-    [
-     "dip",
-     4
     ]
    ],
    "dish": [
@@ -3267,7 +3259,24 @@
      "eggs",
      "cold",
      "Out · fridge by 4:30"
-    ],
+    ]
+   ]
+  },
+  {
+   "id": "thu_1430_dip",
+   "day": "thu",
+   "hm": "14:30",
+   "lane": "prep",
+   "rid": "dip",
+   "text": "Roe dip out: top it; chips alongside.",
+   "tm": null,
+   "steps": [
+    [
+     "dip",
+     4
+    ]
+   ],
+   "dish": [
     [
      "dip",
      "cold",
@@ -3307,7 +3316,7 @@
    "hm": "14:40",
    "lane": "stove",
    "rid": "mash",
-   "text": "Burner 1: potato water on. Burner 2: pasta water on.",
+   "text": "Burner 1: potato water on.",
    "tm": [
     "Water boiling?",
     20,
@@ -3317,10 +3326,6 @@
     [
      "mash",
      1
-    ],
-    [
-     "mac",
-     3
     ]
    ],
    "dish": [
@@ -3328,6 +3333,32 @@
      "mash",
      "act",
      "Water on, burner 1"
+    ]
+   ]
+  },
+  {
+   "id": "thu_1440_mac",
+   "day": "thu",
+   "hm": "14:40",
+   "lane": "stove",
+   "rid": "mac",
+   "text": "Burner 2: pasta water on.",
+   "tm": [
+    "Pasta water boiling?",
+    15,
+    "check"
+   ],
+   "steps": [
+    [
+     "mac",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "act",
+     "Water on, burner 2"
     ]
    ]
   },
@@ -3430,25 +3461,17 @@
    ]
   },
   {
-   "id": "thu_1500_x",
+   "id": "thu_1500_stuffing",
    "day": "thu",
    "hm": "15:00",
-   "lane": "oven",
-   "rid": null,
-   "text": "Stuffing (165°F) and green beans out, covered, into the 200°F smoker hold. Oven up to 425°F.",
-   "tm": [
-    "Oven at 425°F?",
-    12,
-    "check"
-   ],
+   "lane": "smoker",
+   "rid": "stuffing",
+   "text": "Stuffing (165°F) out, covered, into the 200°F smoker hold.",
+   "tm": null,
    "steps": [
     [
      "stuffing",
      8
-    ],
-    [
-     "gbc",
-     7
     ]
    ],
    "dish": [
@@ -3456,13 +3479,45 @@
      "stuffing",
      "hot",
      "Smoker hold"
-    ],
+    ]
+   ]
+  },
+  {
+   "id": "thu_1500_gbc",
+   "day": "thu",
+   "hm": "15:00",
+   "lane": "smoker",
+   "rid": "gbc",
+   "text": "Green beans out, covered, into the smoker hold.",
+   "tm": null,
+   "steps": [
+    [
+     "gbc",
+     7
+    ]
+   ],
+   "dish": [
     [
      "gbc",
      "hot",
      "Smoker hold"
     ]
    ]
+  },
+  {
+   "id": "thu_1500_oven425",
+   "day": "thu",
+   "hm": "15:00",
+   "lane": "oven",
+   "rid": "mac",
+   "text": "Oven up to 425°F for the mac.",
+   "tm": [
+    "Oven at 425°F?",
+    12,
+    "check"
+   ],
+   "steps": [],
+   "dish": []
   },
   {
    "id": "thu_1500_mash",
@@ -3511,21 +3566,17 @@
    "dish": []
   },
   {
-   "id": "thu_1500_x_1",
+   "id": "thu_1500_cran",
    "day": "thu",
    "hm": "15:00",
    "lane": "fridge",
-   "rid": null,
-   "text": "Cranberry sauce and vinaigrette out of the fridge.",
+   "rid": "cran",
+   "text": "Cranberry sauce out of the fridge.",
    "tm": null,
    "steps": [
     [
      "cran",
      4
-    ],
-    [
-     "salad",
-     3
     ]
    ],
    "dish": [
@@ -3533,7 +3584,24 @@
      "cran",
      "cold",
      "Out on the counter"
-    ],
+    ]
+   ]
+  },
+  {
+   "id": "thu_1500_salad",
+   "day": "thu",
+   "hm": "15:00",
+   "lane": "fridge",
+   "rid": "salad",
+   "text": "Vinaigrette out of the fridge.",
+   "tm": null,
+   "steps": [
+    [
+     "salad",
+     3
+    ]
+   ],
+   "dish": [
     [
      "salad",
      "cold",
@@ -3757,29 +3825,61 @@
    ]
   },
   {
-   "id": "thu_1550_x",
+   "id": "thu_1550_salad",
    "day": "thu",
    "hm": "15:50",
    "lane": "prep",
-   "rid": null,
-   "text": "Finish: toss salad; dress sprouts lightly (rice on the side); onions on green beans; gravy to the boat; zest on cranberry.",
+   "rid": "salad",
+   "text": "Toss the salad and plate it.",
    "tm": null,
    "steps": [
     [
      "salad",
      5
-    ],
+    ]
+   ],
+   "dish": [
+    [
+     "salad",
+     "act",
+     "Tossed and plated"
+    ]
+   ]
+  },
+  {
+   "id": "thu_1550_sprouts",
+   "day": "thu",
+   "hm": "15:50",
+   "lane": "prep",
+   "rid": "sprouts",
+   "text": "Dress the sprouts lightly (rice on the side).",
+   "tm": null,
+   "steps": [
     [
      "sprouts",
      7
-    ],
+    ]
+   ],
+   "dish": [
+    [
+     "sprouts",
+     "hot",
+     "Dressed · ready"
+    ]
+   ]
+  },
+  {
+   "id": "thu_1550_gbc",
+   "day": "thu",
+   "hm": "15:50",
+   "lane": "prep",
+   "rid": "gbc",
+   "text": "Crispy onions on the green beans.",
+   "tm": null,
+   "steps": [
     [
      "gbc",
      9
-    ],
-    [
-     "gravy",
-     4
     ]
    ],
    "dish": [
@@ -3787,22 +3887,41 @@
      "gbc",
      "hot",
      "Onions on · ready"
-    ],
+    ]
+   ]
+  },
+  {
+   "id": "thu_1550_gravy",
+   "day": "thu",
+   "hm": "15:50",
+   "lane": "prep",
+   "rid": "gravy",
+   "text": "Gravy into the boat.",
+   "tm": null,
+   "steps": [
     [
-     "salad",
-     "act",
-     "Tossed and plated"
-    ],
+     "gravy",
+     4
+    ]
+   ],
+   "dish": [
     [
      "gravy",
      "hot",
      "In the boat"
-    ],
-    [
-     "sprouts",
-     "hot",
-     "Dressed · ready"
-    ],
+    ]
+   ]
+  },
+  {
+   "id": "thu_1550_cran",
+   "day": "thu",
+   "hm": "15:50",
+   "lane": "prep",
+   "rid": "cran",
+   "text": "Cranberry sauce into the bowl; zest on top.",
+   "tm": null,
+   "steps": [],
+   "dish": [
     [
      "cran",
      "cold",
@@ -3833,12 +3952,12 @@
    "dish": []
   },
   {
-   "id": "thu_1630_x",
+   "id": "thu_1630_eggs",
    "day": "thu",
    "hm": "16:30",
    "lane": "fridge",
-   "rid": null,
-   "text": "Two-hour rule: deviled eggs and roe dip back in the fridge.",
+   "rid": "eggs",
+   "text": "Two-hour rule: deviled eggs back in the fridge.",
    "tm": null,
    "steps": [],
    "dish": [
@@ -3846,7 +3965,19 @@
      "eggs",
      "cold",
      "Back in the fridge"
-    ],
+    ]
+   ]
+  },
+  {
+   "id": "thu_1630_dip",
+   "day": "thu",
+   "hm": "16:30",
+   "lane": "fridge",
+   "rid": "dip",
+   "text": "Two-hour rule: roe dip back in the fridge.",
+   "tm": null,
+   "steps": [],
+   "dish": [
     [
      "dip",
      "cold",

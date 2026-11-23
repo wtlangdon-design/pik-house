@@ -33,7 +33,7 @@ for (const t of p.tasks) {
     if (!R || !R.steps[i]) bad(`${t.id}: step ${r}:${i} doesn't exist`);
     else if (R.steps[i].d !== t.day) bad(`${t.id}: step ${r}:${i} is a ${R.steps[i].d} step but the task is on ${t.day}`);
   }
-  if (t.rid && !(t.steps || []).length) bad(`${t.id}: has a recipe but no steps`);
+  if ((t.steps || []).some(([r]) => r !== t.rid)) bad(`${t.id}: every step must be from the task's own recipe (${t.rid}); split the task`);
   for (const e of t.dish || []) {
     if (!dishIds.has(e[0])) bad(`${t.id}: unknown dish ${e[0]}`);
     if (!["cold", "act", "hot", "wait"].includes(e[1])) bad(`${t.id}: unknown dish state ${e[1]}`);
