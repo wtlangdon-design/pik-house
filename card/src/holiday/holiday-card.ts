@@ -620,17 +620,21 @@ export class PikHolidayCard extends LitElement {
   }
   /** Focus mode (three or more things due): a one-line card with its buttons; tap it to open the step. */
   private compactHtml(g: string, cur: Task, due: boolean): string {
-    const seq = this.seqs().get(g)!, e = seq[this.cardIdx(g, cur)];
+    // Folded: the step it's on, and only what's worth seeing at a glance (a running timer, what's on a burner).
+    // Done shows here only once you've reached the last step of this part.
+    const seq = this.seqs().get(g)!, idx = this.cardIdx(g, cur), e = seq[idx];
     const live = e.t === cur || this.isDue(e.t), t = live ? e.t : cur;
     const tm = this.timerOf(live ? e : seq[seq.findIndex((x) => x.t === cur)]);
     const k = tm ? this.timerByLabel(tm[0]) : undefined;
     const started = this.ms(t) <= Date.now();
-    const rec = !!this.recipe(g);
+    const lastOfPart = live && (idx === seq.length - 1 || seq[idx + 1].t !== e.t);
     const badge = !this.isToday() || !due ? "" : started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`;
+    const onNow = this.runsFor(g, t).filter((i) => !!this.placed(i));
+    const n = seq.length;
     return `<div class="tc cmp${due ? " due" : ""}${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
       <div class="tt">${this.timeCell(t)}${badge}</div>
-      <div class="cl">${rec ? `<b>${esc(this.gname(g))}</b>` : ""}<span>${esc(live && e.s ? this.stepText(e.s.t) : t.text)}</span>${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
-      <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}${this.undoHtml(g)}<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button></div></div>`;
+      <div class="cl"><b>${esc(this.gname(g))}</b><span>${esc(live && e.s ? this.stepText(e.s.t) : t.text)}</span>${n > 1 ? `<i class="stn2">${idx + 1}/${n}</i>` : ""}${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
+      <div class="acts">${onNow.map((i) => this.placeBtn(i)).join("")}${k ? this.timerBtnHtml(tm) : ""}${this.undoHtml(g)}${lastOfPart ? `<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button>` : ""}</div></div>`;
   }
   /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
   private doneHtml(g: string, t: Task): string {

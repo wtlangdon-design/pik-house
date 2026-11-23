@@ -472,4 +472,6 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .tc .acts .clp{width:34px;height:34px;border-radius:17px;border:1px solid var(--line);background:#fff;color:var(--muted);font:600 14px/1 'DM Sans',sans-serif;cursor:pointer;flex:none;margin:0 2px 0 0;padding:0}
 .tc.cmp .cl em{font-size:15px;width:34px;text-align:center}
 .donehd{margin:10px 2px 2px;font:700 11.5px 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tc.cmp .cl .stn2{font:600 12px 'DM Sans',sans-serif;font-style:normal;color:var(--muted);white-space:nowrap}
+.tc.cmp{min-height:64px}
 `;
