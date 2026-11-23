@@ -224,7 +224,7 @@
    "steps": [
     {
      "d": "thu",
-     "t": "8:30 AM: take the cream cheese out to soften.",
+     "t": "9:00 AM: take the cream cheese out to soften.",
      "ing": [
       [
        0
@@ -233,7 +233,7 @@
     },
     {
      "d": "thu",
-     "t": "9:15 AM: beat the cream cheese until smooth.",
+     "t": "10:30 AM: beat the cream cheese until smooth.",
      "ing": [
       [
        0
@@ -494,7 +494,7 @@
     },
     {
      "d": "thu",
-     "t": "8:30 AM: take the herb butter out to soften.",
+     "t": "9:00 AM: take the herb butter out to soften.",
      "ing": [
       [
        5,
@@ -2832,9 +2832,9 @@
    "dish": []
   },
   {
-   "id": "thu_0830_dip",
+   "id": "thu_0900_dip",
    "day": "thu",
-   "hm": "08:30",
+   "hm": "09:00",
    "lane": "fridge",
    "rid": "dip",
    "text": "Cream cheese (dip) and herb butter out to soften.",
@@ -2866,36 +2866,6 @@
     ]
    ],
    "dish": []
-  },
-  {
-   "id": "thu_0915_dip",
-   "day": "thu",
-   "hm": "09:15",
-   "lane": "prep",
-   "rid": "dip",
-   "text": "Make the roe dip (¾ of the roe folded in); cover; fridge.",
-   "tm": null,
-   "steps": [
-    [
-     "dip",
-     1
-    ],
-    [
-     "dip",
-     2
-    ],
-    [
-     "dip",
-     3
-    ]
-   ],
-   "dish": [
-    [
-     "dip",
-     "cold",
-     "Made, fridge · out 2:30"
-    ]
-   ]
   },
   {
    "id": "thu_0930_turkey",
@@ -2960,6 +2930,36 @@
      "turkey",
      "hot",
      "On the smoker"
+    ]
+   ]
+  },
+  {
+   "id": "thu_1030_dip",
+   "day": "thu",
+   "hm": "10:30",
+   "lane": "prep",
+   "rid": "dip",
+   "text": "Make the roe dip (¾ of the roe folded in); cover; fridge.",
+   "tm": null,
+   "steps": [
+    [
+     "dip",
+     1
+    ],
+    [
+     "dip",
+     2
+    ],
+    [
+     "dip",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "dip",
+     "cold",
+     "Made, fridge · out 2:30"
     ]
    ]
   },
