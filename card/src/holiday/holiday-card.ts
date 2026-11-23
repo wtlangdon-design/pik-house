@@ -29,7 +29,7 @@ type Seg = "recipes" | "schedule";
 /** One place in a recipe's run: a part (task) and, if it has any, one of its recipe steps. */
 interface Entry { t: Task; r?: Recipe; i?: number; s?: Recipe["steps"][number] }
 interface Alert { kind: string; when: string; text: string; at: number }
-interface Local { day: string | null; open: string | null; fired: Record<string, number>; rung: Record<string, number>; allDishes: boolean; tips?: Record<string, boolean> }
+interface Local { day: string | null; open: string | null; fired: Record<string, number>; rung: Record<string, number>; allDishes: boolean; tips?: Record<string, boolean>; last?: Record<string, [string, number]> }
 
 const LANES: Record<string, string> = { smoker: "Smoker", oven: "Oven", stove: "Stove", prep: "Counter", fridge: "Fridge" };
 const SPOTNAME: Record<string, string> = { breast: "Breast", thigh: "Thigh", wing: "Wing" };
@@ -323,26 +323,35 @@ export class PikHolidayCard extends LitElement {
   /** The part of a recipe to do now: the first open part that has started. Ticking moves the card on.
    *  A part left unticked more than 30 minutes behind a newer one, or over an hour old, folds away so the card keeps up.
    *  Nothing started: the next part. On another day's preview: that day's first open part. */
-  private partOf(g: string, day?: string): { cur: Task; behind: Task[] } | null {
-    const open = this.parts(g).filter((t) => !this.store.isDone(t.id));
-    if (day) { const c = open.find((t) => t.day === day); return c ? { cur: c, behind: [] } : null; }
-    const now = Date.now(), order = Object.keys(this.plan.days), today = this.currentDay();
+  private partOf(g: string, day: string, live: boolean): { cur: Task; behind: Task[] } | null {
+    // Only the day on screen: a dish never runs on into tomorrow's steps.
+    const open = this.parts(g).filter((t) => t.day === day && !this.store.isDone(t.id));
+    if (!open.length) return null;
+    if (!live) return { cur: open[0], behind: [] };
+    const now = Date.now();
     const started = open.filter((t) => this.ms(t) <= now);
     if (started.length) {
       const latest = Math.max(...started.map((t) => this.ms(t)));
-      const keep = (t: Task) => this.ms(t) >= latest - 30 * 60000 && this.ms(t) >= now - 60 * 60000 && order.indexOf(t.day) >= order.indexOf(today);
+      const keep = (t: Task) => this.ms(t) >= latest - 30 * 60000 && this.ms(t) >= now - 60 * 60000;
       const cur = started.find(keep);
       if (cur) return { cur, behind: started.filter((t) => !keep(t)) };
       const nxt = open.find((t) => this.ms(t) > now);
       return { cur: nxt || started[started.length - 1], behind: nxt ? started : started.slice(0, -1) };
     }
-    return open.length ? { cur: open[0], behind: [] } : null;
+    return { cur: open[0], behind: [] };
+  }
+  /** The last place in a recipe's run that belongs to the day on screen (› stops there). */
+  private dayEnd(g: string): number {
+    const seq = this.seqs().get(g)!, d = this.viewDay();
+    let last = -1;
+    seq.forEach((e, i) => { if (e.t.day === d) last = i; });
+    return last < 0 ? seq.length - 1 : last;
   }
   /** Where a recipe's card is: never before the part it's on (‹ stops there), never past the end. */
   private cardIdx(g: string, cur: Task): number {
     const seq = this.seqs().get(g)!;
     const start = seq.findIndex((e) => e.t === cur);
-    return Math.max(start, Math.min(this.store.getStep(g), seq.length - 1));
+    return Math.max(start, Math.min(this.store.getStep(g), this.dayEnd(g)));
   }
   /** The timer that goes with one place in a recipe: the step's own, or the part's if none of its steps has one. */
   private timerOf(e: Entry): TimerSpec | null {
@@ -410,29 +419,27 @@ export class PikHolidayCard extends LitElement {
 
   /** The recipe cards for the left column. */
   private cards() {
-    const d = this.viewDay(), now = Date.now(), order = Object.keys(this.plan.days);
+    const d = this.viewDay(), now = Date.now(), order = Object.keys(this.plan.days), live = this.isToday();
     // Cards are for dishes only. Jobs outside a recipe ("Dinner", the 140°F checks, leftovers) still ring as alarms.
     const groups = [...this.seqs().keys()].filter((g) => !!this.recipe(g));
     const byTime = (a: { cur: Task }, b: { cur: Task }) => this.ms(a.cur) - this.ms(b.cur) || this.plan.tasks.indexOf(a.cur) - this.plan.tasks.indexOf(b.cur);
-    if (!this.isToday()) {
-      const list = groups.map((g) => ({ g, p: this.partOf(g, d) })).filter((x) => x.p).map((x) => ({ g: x.g, cur: x.p!.cur })).sort(byTime);
-      return { due: [] as Array<{ g: string; cur: Task }>, done: [] as Array<{ g: string; t: Task; next?: Task }>, next: list, behind: [] as Task[] };
-    }
-    const due: Array<{ g: string; cur: Task }> = [], next: Array<{ g: string; cur: Task }> = [], done: Array<{ g: string; t: Task; next?: Task }> = [];
+    const due: Array<{ g: string; cur: Task }> = [], next: Array<{ g: string; cur: Task }> = [], done: Array<{ g: string; t: Task }> = [];
     let behind: Task[] = [];
     groups.forEach((g) => {
-      const p = this.partOf(g);
-      if (p) behind = behind.concat(p.behind);
-      if (p && this.isDue(p.cur, now) && order.indexOf(p.cur.day) >= order.indexOf(d)) { due.push({ g, cur: p.cur }); return; }
-      // An old part nobody ticked (say, yesterday's) isn't "next": it folds into the earlier list.
-      const stale = p && this.ms(p.cur) < now ? p.cur : undefined;
-      if (stale && behind.indexOf(stale) < 0) behind = behind.concat([stale]);
-      // Just ticked off: keep it on screen a while (with undo) so ticking doesn't make things jump away.
-      const recent = this.parts(g).filter((t) => this.store.isDone(t.id) && this.ms(t) >= now - 15 * 60000 && this.ms(t) <= now + 10 * 60000).pop();
-      if (recent) done.push({ g, t: recent, next: p ? p.cur : undefined });
-      if (p && !stale) next.push({ g, cur: p.cur });
+      const dayParts = this.parts(g).filter((t) => t.day === d);
+      if (!dayParts.length) return;
+      const p = this.partOf(g, d, live);
+      // Everything for this dish today is done: it goes to the bottom and stops (tomorrow's steps wait for tomorrow).
+      if (!p) { done.push({ g, t: dayParts[dayParts.length - 1] }); return; }
+      behind = behind.concat(p.behind);
+      if (live && this.isDue(p.cur, now)) { due.push({ g, cur: p.cur }); return; }
+      // An old part nobody ticked, with nothing later today, folds into the earlier list instead.
+      if (live && this.ms(p.cur) < now) { if (behind.indexOf(p.cur) < 0) behind = behind.concat([p.cur]); return; }
+      next.push({ g, cur: p.cur });
     });
-    return { due: due.sort(byTime), done, next: next.sort(byTime), behind: behind.sort((a, b) => this.ms(a) - this.ms(b)) };
+    // Parts from earlier days nobody ticked off.
+    if (live) behind = behind.concat(this.plan.tasks.filter((t) => !!t.rid && order.indexOf(t.day) < order.indexOf(d) && !this.store.isDone(t.id)));
+    return { due: due.sort(byTime), done: done.sort((a, b) => this.ms(a.t) - this.ms(b.t)), next: next.sort(byTime), behind: behind.sort((a, b) => this.ms(a) - this.ms(b)) };
   }
   private inFinalHour(): boolean {
     const h = this.plan.hotCheck, now = Date.now();
@@ -557,6 +564,12 @@ export class PikHolidayCard extends LitElement {
     const ticks = n > 1 && n <= 12 ? Array.from({ length: n }, (_x, i) => { const a = (i / n) * 2 * Math.PI; return `<line x1="${c}" y1="${c}" x2="${(c + r * Math.sin(a)).toFixed(2)}" y2="${(c - r * Math.cos(a)).toFixed(2)}" stroke="currentColor" stroke-width=".8" opacity=".35"/>`; }).join("") : "";
     return `<svg class="pie" viewBox="0 0 18 18" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="currentColor" stroke-width="1.6"/>${ticks}${wedge}</svg>`;
   }
+  /** Undo for the part just ticked on this dish (for 10 minutes), shown on the dish's card as it moves on. */
+  private undoHtml(g: string): string {
+    const l = (this.L.last || {})[g];
+    if (!l || Date.now() - l[1] > 10 * 60000 || !this.store.isDone(l[0])) return "";
+    return `<button class="ubtn" data-done="${l[0]}" data-g="${g}" title="Undo the last Done on this dish">Undo</button>`;
+  }
   private pieLabel(g: string): string { const ps = this.parts(g), k = ps.filter((t) => this.store.isDone(t.id)).length; return k + " of " + ps.length + " parts of this dish done"; }
   private nameHtml(g: string): string {
     return this.recipe(g) ? `<button class="dlink" data-recipe="${g}" title="The whole recipe">${esc(this.gname(g))}</button>` : `<span class="dlink">${esc(this.gname(g))}</span>`;
@@ -590,11 +603,11 @@ export class PikHolidayCard extends LitElement {
     const pips = n > 1 ? `<span class="pips">${seq.map((x, j) => `<i class="${j === idx ? "on" : j < start ? "past" : x.t === e.t ? "part" : ""}"></i>`).join("")}</span>` : "";
     // ‹ › sit on either side of the step itself, like flipping through pages.
     const prev = `<button class="ar" data-step="${g}:${idx - 1}"${idx <= start ? " disabled" : ""} aria-label="Previous step">‹</button>`;
-    const next = `<button class="ar" data-step="${g}:${idx + 1}"${idx >= n - 1 ? " disabled" : ""} aria-label="Next step">›</button>`;
+    const next = `<button class="ar" data-step="${g}:${idx + 1}"${idx >= this.dayEnd(g) ? " disabled" : ""} aria-label="Next step">›</button>`;
     return `<div class="tc rc3${due && !ahead ? " due" : ""}${ahead ? " ahead" : ""}${k && k.rang ? " ringing" : ""}">
       <div class="tt">${this.timeCell(e.t)}${badge}</div>
       <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}</div>${e.s ? "" : `<div class="x">${esc(e.t.text)}</div>`}</div>
-      <div class="acts">${ahead ? `${foldable ? `<button class="clp" data-collapse="1" title="Fold this card" aria-label="Fold this card">▴</button>` : ""}${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${foldable ? `<button class="clp" data-collapse="1" title="Fold this card" aria-label="Fold this card">▴</button>` : ""}${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button>`}</div>
+      <div class="acts">${ahead ? `${foldable ? `<button class="clp" data-collapse="1" title="Fold this card" aria-label="Fold this card">▴</button>` : ""}${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${foldable ? `<button class="clp" data-collapse="1" title="Fold this card" aria-label="Fold this card">▴</button>` : ""}${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}${this.undoHtml(g)}<button class="dbtn" data-done="${e.t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button>`}</div>
       ${this.tipsHtml(e.t)}
       ${e.s || n > 1 ? `<div class="stp${n > 1 ? " car" : ""}">${n > 1 ? prev : ""}${e.s ? `<div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div>` : `<div class="sb2"><p class="muted">Nothing more to this step than the line above.</p></div>`}${n > 1 ? next : ""}</div>` : ""}
     </div>`;
@@ -616,14 +629,14 @@ export class PikHolidayCard extends LitElement {
     const badge = !this.isToday() || !due ? "" : started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`;
     return `<div class="tc cmp${due ? " due" : ""}${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
       <div class="tt">${this.timeCell(t)}${badge}</div>
-      <div class="cl">${rec ? `<b>${esc(this.gname(g))}</b>` : ""}<span>${esc(t.text)}</span>${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
-      <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button></div></div>`;
+      <div class="cl">${rec ? `<b>${esc(this.gname(g))}</b>` : ""}<span>${esc(live && e.s ? this.stepText(e.s.t) : t.text)}</span>${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
+      <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}${this.undoHtml(g)}<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button></div></div>`;
   }
   /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
-  private doneHtml(g: string, t: Task, next?: Task): string {
-    const rec = !!this.recipe(g);
+  private doneHtml(g: string, t: Task): string {
+    const finished = this.parts(g).every((x) => this.store.isDone(x.id));
     return `<div class="tc done"><div class="tt">${this.timeCell(t)}</div>
-      <div>${rec ? `<div class="nm">${this.nameHtml(g)}</div>` : ""}<div class="x">${esc(t.text)}</div>${!rec ? "" : next ? `<div class="nxt">Next: ${esc(this.when(next))} · ${esc(next.text)}</div>` : `<div class="nxt">${esc(this.gname(g))} is done.</div>`}</div>
+      <div><div class="nm">${this.nameHtml(g)}</div><div class="nxt">${finished ? "All done." : "Done for today."}</div></div>
       <div class="acts"><span class="donetag" title="${this.pieLabel(g)}">${this.pieHtml(g)}Done</span><button class="ubtn" data-done="${t.id}" data-g="${g}" aria-label="Undo">Undo</button></div></div>`;
   }
   private behindHtml(t: Task): string {
@@ -635,19 +648,19 @@ export class PikHolidayCard extends LitElement {
     const d = this.viewDay();
     const list = this.plan.tasks.filter((t) => t.day === d && !!t.rid);
     const title = !this.isToday() ? this.plan.dayNames[d] : this.inFinalHour() ? "The final hour" : due.length ? "Do these now" : next.length ? "Coming up" : "All done for " + this.plan.dayNames[d].toLowerCase();
-    const listCards = !due.length && !done.length;
+    const listCards = !due.length;
     // Every card is one line until you open it (tap, or Pik: "open the turkey card"). Which one is open is shared.
     const openG = this.store.focus();
     const dayBtns = this.echo ? "" : `<span class="dayseg">${Object.keys(this.plan.days).map((k) => `<button class="${k === d ? "on" : ""}" data-day="${k === this.currentDay() ? "" : k}">${SHORTDAY[k]}</button>`).join("")}</span>`;
-    const shown = listCards ? next.slice(0, this.isToday() ? 6 : 20) : next.filter((x) => !done.some((y) => y.g === x.g)).slice(0, 3);
+    const shown = listCards ? next : next.slice(0, 3);
     return `<div class="lc">
       <div class="nowh"><h2 class="serif">${title}</h2>${!this.isToday() ? `<span class="prev">Previewing · <button class="sb" data-day="">Back to now</button></span>` : `<span class="prev">${due.length > 1 ? due.length + " now · tap a dish to open it" : list.filter((t) => !this.store.isDone(t.id)).length + " of " + list.length + " left today"}</span>`}${dayBtns}</div>
       ${this.missingPackage ? `<div class="flag"><b>Not shared yet</b><span>The holiday package isn't installed in Home Assistant, so progress is saved on this screen only.</span></div>` : ""}
       <div class="tlist">
         ${behind.length ? `<details class="earl"${this.keep.earl ? " open" : ""}><summary>${behind.length} earlier ${behind.length === 1 ? "part isn't" : "parts aren't"} ticked off ▸</summary>${behind.map((t) => this.behindHtml(t)).join("")}</details>` : ""}
         ${due.map((x) => (x.g === openG ? this.cardHtml(x.g, x.cur, true, true) : this.compactHtml(x.g, x.cur, true))).join("")}
-        ${done.map((x) => this.doneHtml(x.g, x.t, x.next)).join("")}
         ${listCards ? shown.map((x) => (x.g === openG ? this.cardHtml(x.g, x.cur, false, true) : this.compactHtml(x.g, x.cur, false))).join("") : ""}
+        ${done.length ? `<div class="donehd">Done for today</div>${done.map((x) => this.doneHtml(x.g, x.t)).join("")}` : ""}
       </div>
       ${!listCards && shown.length ? `<div class="nextbox"><span class="eb">Next</span>${shown.map((x) => `<div class="nx"><span class="tt">${esc(this.when(x.cur))}</span><span>${this.gname(x.g) ? `<b>${esc(this.gname(x.g))}</b> · ` : ""}${esc(x.cur.text)}</span></div>`).join("")}</div>` : ""}
     </div>`;
@@ -787,6 +800,7 @@ export class PikHolidayCard extends LitElement {
       // Ticking (or undoing) a part puts that recipe's card back on the part it's now on.
       const t = this.plan.tasks.find((x) => x.id === ds.done);
       this.store.setDone(ds.done, !this.store.isDone(ds.done));
+      if (t && t.rid) { this.L.last = Object.assign({}, this.L.last, { [t.rid]: [t.id, Date.now()] as [string, number] }); this.saveL(); }
       if (t && this.store.getStep(this.gid(t)) > 0) { const f = this.store.focus(); this.store.setStep(this.gid(t), 0); this.store.setFocus(f); }
       this.requestUpdate(); return;
     }
