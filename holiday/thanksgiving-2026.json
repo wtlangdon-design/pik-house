@@ -72,6 +72,11 @@
       "Eggs: water boiling?",
       10,
       "check"
+     ],
+     "ing": [
+      [
+       0
+      ]
      ]
     },
     {
@@ -81,7 +86,8 @@
       "Eggs: check one egg",
       14,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "wed",
@@ -90,15 +96,28 @@
       "Eggs: cooled",
       10,
       "done"
+     ],
+     "ing": []
+    },
+    {
+     "d": "wed",
+     "t": "Peel, halve lengthwise, and pop the yolks into a bowl. Cover the whites and refrigerate.",
+     "ing": []
+    },
+    {
+     "d": "wed",
+     "t": "Mash yolks with the mayo, Dijon and a splash of cider vinegar until smooth. Taste. Spoon into the piping bag, seal, refrigerate.",
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ]
      ]
-    },
-    {
-     "d": "wed",
-     "t": "Peel, halve lengthwise, and pop the yolks into a bowl. Cover the whites and refrigerate."
-    },
-    {
-     "d": "wed",
-     "t": "Mash yolks with the mayo, Dijon and a splash of cider vinegar until smooth. Taste. Spoon into the piping bag, seal, refrigerate."
     },
     {
      "d": "thu",
@@ -107,15 +126,31 @@
       "Prosciutto: flip / check",
       3,
       "check"
+     ],
+     "ing": [
+      [
+       4
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "1:45 PM: pipe the filling into the whites. Cover and refrigerate."
+     "t": "1:45 PM: pipe the filling into the whites. Cover and refrigerate.",
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "2:30 PM: top with prosciutto and chives right before they go out. Back in the fridge by 4:30."
+     "t": "2:30 PM: top with prosciutto and chives right before they go out. Back in the fridge by 4:30.",
+     "ing": [
+      [
+       4,
+       "≈2 oz",
+       "prosciutto, crisped"
+      ],
+      [
+       5
+      ]
+     ]
     }
    ]
   },
@@ -189,23 +224,80 @@
    "steps": [
     {
      "d": "thu",
-     "t": "8:30 AM: take the cream cheese out to soften."
+     "t": "8:30 AM: take the cream cheese out to soften.",
+     "ing": [
+      [
+       0
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "9:15 AM: beat the cream cheese until smooth."
+     "t": "9:15 AM: beat the cream cheese until smooth.",
+     "ing": [
+      [
+       0
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "On medium, mix in sour cream, lemon juice, dill, scallion, cream, salt and pepper."
+     "t": "On medium, mix in sour cream, lemon juice, dill, scallion, cream, salt and pepper.",
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3,
+       "2 tbsp",
+       "fresh dill, minced (save the sprigs)"
+      ],
+      [
+       4
+      ],
+      [
+       5
+      ],
+      [
+       6
+      ],
+      [
+       7
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "Gently fold in about three-quarters of the roe with a spatula. Scrape into the serving bowl, cover, refrigerate. Keep the rest of the roe cold."
+     "t": "Gently fold in about three-quarters of the roe with a spatula. Scrape into the serving bowl, cover, refrigerate. Keep the rest of the roe cold.",
+     "ing": [
+      [
+       8,
+       "≈¾",
+       "salmon roe (keep the rest cold)"
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "2:30 PM: top with the remaining roe and dill sprigs. Serve with chips."
+     "t": "2:30 PM: top with the remaining roe and dill sprigs. Serve with chips.",
+     "ing": [
+      [
+       8,
+       "the rest",
+       "salmon roe"
+      ],
+      [
+       3,
+       "",
+       "dill sprigs"
+      ],
+      [
+       9
+      ]
+     ]
     }
    ]
   },
@@ -327,15 +419,28 @@
    "steps": [
     {
      "d": "tue",
-     "t": "7:00 PM: unwrap, check the label, weigh it. Pull out the neck and giblets and any pop-up timer or leg clip. Keep the neck in the fridge (optional gravy flavor)."
+     "t": "7:00 PM: unwrap, check the label, weigh it. Pull out the neck and giblets and any pop-up timer or leg clip. Keep the neck in the fridge (optional gravy flavor).",
+     "ing": []
     },
     {
      "d": "tue",
-     "t": "Spatchcock: breast down, cut along both sides of the backbone with shears and remove it. Flip, press firmly on the breastbone to flatten."
+     "t": "Spatchcock: breast down, cut along both sides of the backbone with shears and remove it. Flip, press firmly on the breastbone to flatten.",
+     "ing": []
     },
     {
      "d": "tue",
-     "t": "Mix brine: for each gallon, dissolve 230 g salt and ¾ cup brown sugar in 1 quart hot water, then add 3 quarts cold water and ice. It must be 40°F or colder before the turkey goes in."
+     "t": "Mix brine: for each gallon, dissolve 230 g salt and ¾ cup brown sugar in 1 quart hot water, then add 3 quarts cold water and ice. It must be 40°F or colder before the turkey goes in.",
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ]
+     ]
     },
     {
      "d": "tue",
@@ -344,19 +449,59 @@
       "Turkey: out of the brine",
       600,
       "done"
+     ],
+     "ing": []
+    },
+    {
+     "d": "wed",
+     "t": "6:30 AM: lift the turkey out and discard the brine. Pat completely dry, including under the wings. Set skin-up on the rack over the sheet and refrigerate uncovered until Thursday morning.",
+     "ing": []
+    },
+    {
+     "d": "wed",
+     "t": "2:30 PM: make the rub. Mash the butter with parsley, thyme, chives, sage, onion, garlic and 2 tbsp rub. Cover and refrigerate.",
+     "ing": [
+      [
+       10
+      ],
+      [
+       11
+      ],
+      [
+       12
+      ],
+      [
+       13
+      ],
+      [
+       14
+      ],
+      [
+       8,
+       "2 tbsp",
+       "of that rub, into the butter"
+      ],
+      [
+       5
+      ],
+      [
+       6
+      ],
+      [
+       7
+      ]
      ]
     },
     {
-     "d": "wed",
-     "t": "6:30 AM: lift the turkey out and discard the brine. Pat completely dry, including under the wings. Set skin-up on the rack over the sheet and refrigerate uncovered until Thursday morning."
-    },
-    {
-     "d": "wed",
-     "t": "2:30 PM: make the rub. Mash the butter with parsley, thyme, chives, sage, onion, garlic and 2 tbsp rub. Cover and refrigerate."
-    },
-    {
      "d": "thu",
-     "t": "8:30 AM: take the herb butter out to soften."
+     "t": "8:30 AM: take the herb butter out to soften.",
+     "ing": [
+      [
+       5,
+       "",
+       "herb butter (made Wednesday)"
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -365,11 +510,24 @@
       "Smoker at 250°F?",
       20,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "9:40 AM: loosen the skin over breast, thighs and legs with your fingers. Push all the herb butter under the skin and spread it flat. Dust the outside lightly with the remaining rub."
+     "t": "9:40 AM: loosen the skin over breast, thighs and legs with your fingers. Push all the herb butter under the skin and spread it flat. Dust the outside lightly with the remaining rub.",
+     "ing": [
+      [
+       5,
+       "all",
+       "herb butter"
+      ],
+      [
+       15,
+       "the rest",
+       "homemade rub, lightly on the outside"
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -378,7 +536,8 @@
       "Turkey: first temperature check",
       60,
       "temp"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
@@ -387,7 +546,8 @@
       "Turkey: temperature check",
       60,
       "temp"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
@@ -396,11 +556,13 @@
       "Turkey: temperature check",
       25,
       "temp"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "Done only when breast, thigh and wing all read 165°F (log all three on the Turkey tab). Expected window: 2:00–2:45 PM. It's an estimate, not a timer."
+     "t": "Done only when breast, thigh and wing all read 165°F (log all three on the Turkey tab). Expected window: 2:00–2:45 PM. It's an estimate, not a timer.",
+     "ing": []
     },
     {
      "d": "thu",
@@ -409,11 +571,13 @@
       "Turkey: rest check",
       30,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:20 PM: carve. Legs off, split drums and thighs, wings off, lift each breast half off in one piece and slice across. Platter, foil, into the 200°F smoker hold until 3:55."
+     "t": "3:20 PM: carve. Legs off, split drums and thighs, wings off, lift each breast half off in one piece and slice across. Platter, foil, into the 200°F smoker hold until 3:55.",
+     "ing": []
     }
    ]
   },
@@ -479,7 +643,12 @@
    "steps": [
     {
      "d": "thu",
-     "t": "2:45 PM: pour the drippings into the fat separator. Taste them."
+     "t": "2:45 PM: pour the drippings into the fat separator. Taste them.",
+     "ing": [
+      [
+       2
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -488,6 +657,14 @@
       "Gravy: roux 1 minute",
       1,
       "check"
+     ],
+     "ing": [
+      [
+       0
+      ],
+      [
+       1
+      ]
      ]
     },
     {
@@ -497,6 +674,14 @@
       "Gravy: thickened?",
       5,
       "check"
+     ],
+     "ing": [
+      [
+       2
+      ],
+      [
+       3
+      ]
      ]
     },
     {
@@ -506,11 +691,25 @@
       "Gravy: taste and adjust",
       10,
       "check"
+     ],
+     "ing": [
+      [
+       4
+      ],
+      [
+       5
+      ],
+      [
+       3,
+       "as needed",
+       "broth, to loosen"
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "Hold on the lowest heat, stirring now and then. 3:50 PM: into the gravy boat. Served separately."
+     "t": "Hold on the lowest heat, stirring now and then. 3:50 PM: into the gravy boat. Served separately.",
+     "ing": []
     }
    ]
   },
@@ -588,7 +787,12 @@
    "steps": [
     {
      "d": "tue",
-     "t": "8:30 PM: cut both loaves into ¾-inch cubes, spread on sheet pans, and leave out overnight to dry."
+     "t": "8:30 PM: cut both loaves into ¾-inch cubes, spread on sheet pans, and leave out overnight to dry.",
+     "ing": [
+      [
+       0
+      ]
+     ]
     },
     {
      "d": "wed",
@@ -597,6 +801,11 @@
       "Bread: dry yet?",
       30,
       "check"
+     ],
+     "ing": [
+      [
+       0
+      ]
      ]
     },
     {
@@ -606,19 +815,64 @@
       "Onion & celery soft?",
       8,
       "check"
+     ],
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ]
      ]
     },
     {
      "d": "wed",
-     "t": "Add the minced hearts and liver and cook through completely (no pink). Season with dried parsley, sage and salt. Cool in a shallow container; refrigerate."
+     "t": "Add the minced hearts and liver and cook through completely (no pink). Season with dried parsley, sage and salt. Cool in a shallow container; refrigerate.",
+     "ing": [
+      [
+       4
+      ],
+      [
+       5
+      ],
+      [
+       7
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "1:30 PM: warm the wet mix gently until the butter melts."
+     "t": "1:30 PM: warm the wet mix gently until the butter melts.",
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "1:45 PM: in the big bowl, toss bread with the wet mix. Add broth a cup at a time until evenly moist. Taste for salt. Pack into the buttered casserole; cover with foil."
+     "t": "1:45 PM: in the big bowl, toss bread with the wet mix. Add broth a cup at a time until evenly moist. Taste for salt. Pack into the buttered casserole; cover with foil.",
+     "ing": [
+      [
+       0,
+       "2 loaves",
+       "bread cubes, dried"
+      ],
+      [
+       6,
+       "a cup at a time",
+       "chicken broth"
+      ],
+      [
+       1,
+       "a little",
+       "butter, for the dish"
+      ],
+      [
+       7,
+       "",
+       "dried parsley, dried sage, salt"
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -627,7 +881,8 @@
       "Stuffing: uncover",
       35,
       "done"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
@@ -636,11 +891,13 @@
       "Stuffing: check center 165°F",
       20,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:00 PM: out, covered, into the smoker hot hold (200–225°F). Check it reads 140°F or hotter at 3:30 and 3:50."
+     "t": "3:00 PM: out, covered, into the smoker hot hold (200–225°F). Check it reads 140°F or hotter at 3:30 and 3:50.",
+     "ing": []
     }
    ]
   },
@@ -742,6 +999,13 @@
       "Bean water boiling?",
       15,
       "check"
+     ],
+     "ing": [
+      [
+       10,
+       "",
+       "salt, for the water"
+      ]
      ]
     },
     {
@@ -751,6 +1015,11 @@
       "Beans: bright and just tender?",
       5,
       "check"
+     ],
+     "ing": [
+      [
+       0
+      ]
      ]
     },
     {
@@ -760,11 +1029,30 @@
       "Mushrooms browned?",
       8,
       "check"
+     ],
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ]
      ]
     },
     {
      "d": "wed",
-     "t": "Add garlic for 30 seconds, then the gluten-free flour for 1–2 minutes, stirring."
+     "t": "Add garlic for 30 seconds, then the gluten-free flour for 1–2 minutes, stirring.",
+     "ing": [
+      [
+       4
+      ],
+      [
+       5
+      ]
+     ]
     },
     {
      "d": "wed",
@@ -773,11 +1061,40 @@
       "Sauce: simmered 5 min",
       5,
       "check"
+     ],
+     "ing": [
+      [
+       6
+      ],
+      [
+       7
+      ],
+      [
+       8
+      ],
+      [
+       9
+      ],
+      [
+       10
+      ]
      ]
     },
     {
      "d": "wed",
-     "t": "Fold in the beans and 1 cup crispy onions. Into the 13×9. Cool about 30 minutes, then cover and refrigerate."
+     "t": "Fold in the beans and 1 cup crispy onions. Into the 13×9. Cool about 30 minutes, then cover and refrigerate.",
+     "ing": [
+      [
+       0,
+       "2 lb",
+       "blanched beans"
+      ],
+      [
+       11,
+       "1 cup",
+       "crispy onions"
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -786,11 +1103,13 @@
       "Green beans: covered stage (check heat)",
       30,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:00 PM: out, still covered, into the smoker hot hold (200–225°F)."
+     "t": "3:00 PM: out, still covered, into the smoker hot hold (200–225°F).",
+     "ing": []
     },
     {
      "d": "thu",
@@ -799,11 +1118,19 @@
       "Green beans: bubbling?",
       5,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:50 PM: top with the remaining 1 cup crispy onions right before serving."
+     "t": "3:50 PM: top with the remaining 1 cup crispy onions right before serving.",
+     "ing": [
+      [
+       11,
+       "1 cup",
+       "crispy onions"
+      ]
+     ]
     }
    ]
   },
@@ -911,7 +1238,30 @@
    "steps": [
     {
      "d": "wed",
-     "t": "3:30 PM: mix fish sauce, water, sugar, rice vinegar, lime juice, garlic and chile until the sugar dissolves. Refrigerate (no herbs yet)."
+     "t": "3:30 PM: mix fish sauce, water, sugar, rice vinegar, lime juice, garlic and chile until the sugar dissolves. Refrigerate (no herbs yet).",
+     "ing": [
+      [
+       6
+      ],
+      [
+       7
+      ],
+      [
+       8
+      ],
+      [
+       9
+      ],
+      [
+       10
+      ],
+      [
+       11
+      ],
+      [
+       12
+      ]
+     ]
     },
     {
      "d": "wed",
@@ -920,6 +1270,24 @@
       "Crisps: toasted?",
       1,
       "check"
+     ],
+     "ing": [
+      [
+       2
+      ],
+      [
+       3
+      ],
+      [
+       4,
+       "pinch",
+       "salt"
+      ],
+      [
+       1,
+       "1 tbsp",
+       "oil"
+      ]
      ]
     },
     {
@@ -929,15 +1297,34 @@
       "Sprouts: just tender? (check 4–6 min)",
       4,
       "check"
+     ],
+     "ing": [
+      [
+       0
+      ],
+      [
+       4,
+       "",
+       "salt, for the water"
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "Drain, spread on towels to dry thoroughly, then refrigerate."
+     "t": "Drain, spread on towels to dry thoroughly, then refrigerate.",
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:40 PM: chop the cilantro and mint; stir into the dressing."
+     "t": "3:40 PM: chop the cilantro and mint; stir into the dressing.",
+     "ing": [
+      [
+       13
+      ],
+      [
+       14
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -946,6 +1333,18 @@
       "Sprouts batch 1: charred?",
       5,
       "check"
+     ],
+     "ing": [
+      [
+       1,
+       "½ tbsp",
+       "oil"
+      ],
+      [
+       0,
+       "half",
+       "sprouts"
+      ]
      ]
     },
     {
@@ -955,11 +1354,35 @@
       "Sprouts batch 2: charred?",
       5,
       "check"
+     ],
+     "ing": [
+      [
+       1,
+       "½ tbsp",
+       "oil"
+      ],
+      [
+       0,
+       "the other half",
+       "sprouts"
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "3:52 PM: toss with just enough dressing to coat. Crispy rice in its own dish on the side."
+     "t": "3:52 PM: toss with just enough dressing to coat. Crispy rice in its own dish on the side.",
+     "ing": [
+      [
+       -1,
+       "just enough",
+       "dressing (from Wednesday, herbs in)"
+      ],
+      [
+       2,
+       "",
+       "rice crisps, in their own dish"
+      ]
+     ]
     }
    ]
   },
@@ -1014,7 +1437,12 @@
    "steps": [
     {
      "d": "thu",
-     "t": "1:15 PM: cut the potatoes; cover with cold water; refrigerate."
+     "t": "1:15 PM: cut the potatoes; cover with cold water; refrigerate.",
+     "ing": [
+      [
+       0
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -1023,6 +1451,13 @@
       "Potato water boiling?",
       20,
       "check"
+     ],
+     "ing": [
+      [
+       2,
+       "",
+       "salt, for the water"
+      ]
      ]
     },
     {
@@ -1032,7 +1467,8 @@
       "Potatoes: knife-tender?",
       15,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
@@ -1041,15 +1477,34 @@
       "Butter: browned?",
       4,
       "check"
+     ],
+     "ing": [
+      [
+       1
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "Save 1½ cups of the hot cooking water, then drain. Back in the pot: pour in the brown butter, mash coarsely, add hot water a splash at a time, salt to taste."
+     "t": "Save 1½ cups of the hot cooking water, then drain. Back in the pot: pour in the brown butter, mash coarsely, add hot water a splash at a time, salt to taste.",
+     "ing": [
+      [
+       3,
+       "1½ cups",
+       "hot cooking water, saved"
+      ],
+      [
+       1
+      ],
+      [
+       2
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "Cover; hold on burner 1 at the lowest heat until 3:55, stirring once or twice. It should stay steaming (140°F or hotter)."
+     "t": "Cover; hold on burner 1 at the lowest heat until 3:55, stirring once or twice. It should stay steaming (140°F or hotter).",
+     "ing": []
     }
    ]
   },
@@ -1219,11 +1674,33 @@
       "Lobster: shells red?",
       5,
       "check"
+     ],
+     "ing": [
+      [
+       18
+      ]
      ]
     },
     {
      "d": "wed",
-     "t": "Shred the cheddar and gruyère; grate the pecorino. Refrigerate."
+     "t": "Shred the cheddar and gruyère; grate the pecorino. Refrigerate.",
+     "ing": [
+      [
+       10
+      ],
+      [
+       11
+      ],
+      [
+       19
+      ],
+      [
+       20
+      ],
+      [
+       21
+      ]
+     ]
     },
     {
      "d": "wed",
@@ -1232,6 +1709,26 @@
       "Panko: golden?",
       3,
       "check"
+     ],
+     "ing": [
+      [
+       23
+      ],
+      [
+       24
+      ],
+      [
+       25
+      ],
+      [
+       26
+      ],
+      [
+       27
+      ],
+      [
+       28
+      ]
      ]
     },
     {
@@ -1241,11 +1738,44 @@
       "Pasta water boiling?",
       15,
       "check"
+     ],
+     "ing": [
+      [
+       -1,
+       "",
+       "salt, for the water"
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "2:45 PM: sauce. Sauté shallot, garlic and thyme in butter and oil 2–3 min; stir in gochujang and gochugaru; add the cooking sherry and reduce by about a third."
+     "t": "2:45 PM: sauce. Sauté shallot, garlic and thyme in butter and oil 2–3 min; stir in gochujang and gochugaru; add the cooking sherry and reduce by about a third.",
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ],
+      [
+       4
+      ],
+      [
+       5
+      ],
+      [
+       6
+      ],
+      [
+       7
+      ],
+      [
+       8
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -1254,11 +1784,36 @@
       "Sauce: reduced by a third?",
       10,
       "check"
+     ],
+     "ing": [
+      [
+       9
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "Off the heat: stir in cheddar and gruyère in three additions, then mascarpone. Add Worcestershire and hot sauce. Taste, then salt only if needed."
+     "t": "Off the heat: stir in cheddar and gruyère in three additions, then mascarpone. Add Worcestershire and hot sauce. Taste, then salt only if needed.",
+     "ing": [
+      [
+       10
+      ],
+      [
+       11
+      ],
+      [
+       12
+      ],
+      [
+       13
+      ],
+      [
+       14
+      ],
+      [
+       15
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -1267,11 +1822,40 @@
       "Pasta: 2 min short of al dente",
       7,
       "check"
+     ],
+     "ing": [
+      [
+       17
+      ]
      ]
     },
     {
      "d": "thu",
-     "t": "3:08 PM: layer in the dish: half the pasta, half the sauce, all the lobster, the rest of the pasta and sauce, then the topping cheeses."
+     "t": "3:08 PM: layer in the dish: half the pasta, half the sauce, all the lobster, the rest of the pasta and sauce, then the topping cheeses.",
+     "ing": [
+      [
+       17,
+       "all",
+       "cooked elbows"
+      ],
+      [
+       -1,
+       "all",
+       "the sauce"
+      ],
+      [
+       18
+      ],
+      [
+       19
+      ],
+      [
+       20
+      ],
+      [
+       21
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -1280,11 +1864,25 @@
       "Mac: bubbling and golden?",
       20,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:35 PM: out. Fold parsley into the panko; scatter on with chives. Tent loosely with foil and rest until 3:55 (it sets the sauce); check it's 140°F or hotter before serving."
+     "t": "3:35 PM: out. Fold parsley into the panko; scatter on with chives. Tent loosely with foil and rest until 3:55 (it sets the sauce); check it's 140°F or hotter before serving.",
+     "ing": [
+      [
+       28,
+       "",
+       "toasted panko (from Wednesday)"
+      ],
+      [
+       29
+      ],
+      [
+       30
+      ]
+     ]
     }
    ]
   },
@@ -1349,6 +1947,20 @@
       "Cranberries boiling?",
       5,
       "check"
+     ],
+     "ing": [
+      [
+       0
+      ],
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ]
      ]
     },
     {
@@ -1358,7 +1970,8 @@
       "Cranberries: popped and thick?",
       10,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "wed",
@@ -1367,15 +1980,22 @@
       "Thick enough?",
       4,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "wed",
-     "t": "Cool, then into an airtight container in the fridge."
+     "t": "Cool, then into an airtight container in the fridge.",
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:00 PM: out of the fridge. 3:50 PM: into the bowl; zest on top."
+     "t": "3:00 PM: out of the fridge. 3:50 PM: into the bowl; zest on top.",
+     "ing": [
+      [
+       4
+      ]
+     ]
     }
    ]
   },
@@ -1474,27 +2094,89 @@
    "steps": [
     {
      "d": "wed",
-     "t": "3:30 PM: rinse the chopped shallot in a strainer; drain."
+     "t": "3:30 PM: rinse the chopped shallot in a strainer; drain.",
+     "ing": [
+      [
+       5
+      ]
+     ]
     },
     {
      "d": "wed",
-     "t": "Combine shallot, garlic, sugar, salt, thyme, sherry vinegar and warm water. Slowly whisk in the oil. Refrigerate."
+     "t": "Combine shallot, garlic, sugar, salt, thyme, sherry vinegar and warm water. Slowly whisk in the oil. Refrigerate.",
+     "ing": [
+      [
+       5
+      ],
+      [
+       6
+      ],
+      [
+       7
+      ],
+      [
+       8
+      ],
+      [
+       9
+      ],
+      [
+       10
+      ],
+      [
+       11
+      ],
+      [
+       12
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "12:00 PM: wash the lettuces; spin or towel completely dry; roll in towels; refrigerate."
+     "t": "12:00 PM: wash the lettuces; spin or towel completely dry; roll in towels; refrigerate.",
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "3:00 PM: vinaigrette out of the fridge; whisk again before using."
+     "t": "3:00 PM: vinaigrette out of the fridge; whisk again before using.",
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "3:45 PM: slice the endive. Set aside plain lettuce for Mom first."
+     "t": "3:45 PM: slice the endive. Set aside plain lettuce for Mom first.",
+     "ing": [
+      [
+       3
+      ],
+      [
+       1,
+       "a few leaves",
+       "butter lettuce, plain, for Mom"
+      ]
+     ]
     },
     {
      "d": "thu",
-     "t": "3:52 PM: toss the rest with dressing a little at a time; plate."
+     "t": "3:52 PM: toss the rest with dressing a little at a time; plate.",
+     "ing": [
+      [
+       -1,
+       "",
+       "the greens"
+      ],
+      [
+       -1,
+       "a little at a time",
+       "vinaigrette"
+      ]
+     ]
     }
    ]
   },
@@ -1591,15 +2273,53 @@
       "Oven at 350°F?",
       15,
       "check"
+     ],
+     "ing": []
+    },
+    {
+     "d": "wed",
+     "t": "Mix the 18¼ oz cake mix, 1 egg and 8 tbsp melted butter; pat evenly into the pan.",
+     "ing": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ]
      ]
     },
     {
      "d": "wed",
-     "t": "Mix the 18¼ oz cake mix, 1 egg and 8 tbsp melted butter; pat evenly into the pan."
-    },
-    {
-     "d": "wed",
-     "t": "Beat cream cheese and pumpkin smooth. Beat in 3 eggs, vanilla and melted butter. Mix in powdered sugar, cinnamon and nutmeg."
+     "t": "Beat cream cheese and pumpkin smooth. Beat in 3 eggs, vanilla and melted butter. Mix in powdered sugar, cinnamon and nutmeg.",
+     "ing": [
+      [
+       5
+      ],
+      [
+       6
+      ],
+      [
+       7
+      ],
+      [
+       8
+      ],
+      [
+       9
+      ],
+      [
+       10
+      ],
+      [
+       11
+      ],
+      [
+       12
+      ]
+     ]
     },
     {
      "d": "wed",
@@ -1608,15 +2328,18 @@
       "Cake: first doneness check",
       40,
       "check"
-     ]
+     ],
+     "ing": []
     },
     {
      "d": "wed",
-     "t": "Pull when the edges are set and the center still jiggles slightly. Cool on a rack, then cover and refrigerate."
+     "t": "Pull when the edges are set and the center still jiggles slightly. Cool on a rack, then cover and refrigerate.",
+     "ing": []
     },
     {
      "d": "thu",
-     "t": "≈4:45 PM: out of the fridge 30 minutes before dessert (if you like it less cold). Cut into squares."
+     "t": "≈4:45 PM: out of the fridge 30 minutes before dessert (if you like it less cold). Cut into squares.",
+     "ing": []
     }
    ]
   }
