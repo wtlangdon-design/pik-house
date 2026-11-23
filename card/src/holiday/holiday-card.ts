@@ -561,6 +561,12 @@ export class PikHolidayCard extends LitElement {
   private nameHtml(g: string): string {
     return this.recipe(g) ? `<button class="dlink" data-recipe="${g}" title="The whole recipe">${esc(this.gname(g))}</button>` : `<span class="dlink">${esc(this.gname(g))}</span>`;
   }
+  /** For a card's time column: the day (if not the day on screen) above the time, and the time never splits. */
+  private timeCell(t: Task): string {
+    const fm = fmt12(t.hm);
+    const full = /AM$/.test(fm) ? fm : fm + " PM";
+    return (t.day !== this.viewDay() ? `<span class="dy">${SHORTDAY[t.day]}</span>` : "") + `<span class="hm">${full}</span>`;
+  }
   private when(t: Task): string { return (t.day !== this.viewDay() ? SHORTDAY[t.day] + " " : "") + fmt12(t.hm); }
   /** One recipe's card: the part it's on, that part's step and ingredients; ‹ › walk the whole recipe and the time follows. */
   private cardHtml(g: string, cur: Task, due: boolean, foldable = false): string {
@@ -577,7 +583,7 @@ export class PikHolidayCard extends LitElement {
     const est = e.s && e.s.min ? `<span class="est" title="About how long the work takes${tm ? "; the timer covers the waiting" : ""}">≈ ${e.s.min} min of work</span>` : "";
     if (!this.recipe(g)) {
       // A job outside any recipe: just the time, what to do, a timer if it has one, and a tick.
-      return `<div class="tc rem${due ? " due" : ""}${k && k.rang ? " ringing" : ""}"><div class="tt">${this.when(e.t)}${badge}</div>
+      return `<div class="tc rem${due ? " due" : ""}${k && k.rang ? " ringing" : ""}"><div class="tt">${this.timeCell(e.t)}${badge}</div>
         <div><div class="x">${esc(e.t.text)}</div></div>
         <div class="acts">${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" title="${this.pieLabel(g)}" aria-label="Done">${this.pieHtml(g)}Done</button></div></div>`;
     }
@@ -586,9 +592,9 @@ export class PikHolidayCard extends LitElement {
     const prev = `<button class="ar" data-step="${g}:${idx - 1}"${idx <= start ? " disabled" : ""} aria-label="Previous step">‹</button>`;
     const next = `<button class="ar" data-step="${g}:${idx + 1}"${idx >= n - 1 ? " disabled" : ""} aria-label="Next step">›</button>`;
     return `<div class="tc rc3${due && !ahead ? " due" : ""}${ahead ? " ahead" : ""}${k && k.rang ? " ringing" : ""}">
-      <div class="tt">${this.when(e.t)}${badge}</div>
-      <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}${foldable ? `<button class="clp" data-collapse="1" title="Fold this card">Fold ▴</button>` : ""}</div>${e.s ? "" : `<div class="x">${esc(e.t.text)}</div>`}</div>
-      <div class="acts">${ahead ? `${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button>`}</div>
+      <div class="tt">${this.timeCell(e.t)}${badge}</div>
+      <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}</div>${e.s ? "" : `<div class="x">${esc(e.t.text)}</div>`}</div>
+      <div class="acts">${ahead ? `${foldable ? `<button class="clp" data-collapse="1" title="Fold this card" aria-label="Fold this card">▴</button>` : ""}${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${foldable ? `<button class="clp" data-collapse="1" title="Fold this card" aria-label="Fold this card">▴</button>` : ""}${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button>`}</div>
       ${this.tipsHtml(e.t)}
       ${e.s || n > 1 ? `<div class="stp${n > 1 ? " car" : ""}">${n > 1 ? prev : ""}${e.s ? `<div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div>` : `<div class="sb2"><p class="muted">Nothing more to this step than the line above.</p></div>`}${n > 1 ? next : ""}</div>` : ""}
     </div>`;
@@ -609,19 +615,19 @@ export class PikHolidayCard extends LitElement {
     const rec = !!this.recipe(g);
     const badge = !this.isToday() || !due ? "" : started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`;
     return `<div class="tc cmp${due ? " due" : ""}${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
-      <div class="tt">${this.when(t)}${badge}</div>
+      <div class="tt">${this.timeCell(t)}${badge}</div>
       <div class="cl">${rec ? `<b>${esc(this.gname(g))}</b>` : ""}<span>${esc(t.text)}</span>${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
       <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button></div></div>`;
   }
   /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
   private doneHtml(g: string, t: Task, next?: Task): string {
     const rec = !!this.recipe(g);
-    return `<div class="tc done"><div class="tt">${this.when(t)}</div>
+    return `<div class="tc done"><div class="tt">${this.timeCell(t)}</div>
       <div>${rec ? `<div class="nm">${this.nameHtml(g)}</div>` : ""}<div class="x">${esc(t.text)}</div>${!rec ? "" : next ? `<div class="nxt">Next: ${esc(this.when(next))} · ${esc(next.text)}</div>` : `<div class="nxt">${esc(this.gname(g))} is done.</div>`}</div>
       <div class="acts"><span class="donetag" title="${this.pieLabel(g)}">${this.pieHtml(g)}Done</span><button class="ubtn" data-done="${t.id}" data-g="${g}" aria-label="Undo">Undo</button></div></div>`;
   }
   private behindHtml(t: Task): string {
-    return `<div class="tc done late"><div class="tt">${this.when(t)}</div><div>${t.rid ? `<div class="nm">${esc(this.gname(t.rid))}</div>` : ""}<div class="x">${esc(t.text)}</div></div>
+    return `<div class="tc done late"><div class="tt">${this.timeCell(t)}</div><div>${t.rid ? `<div class="nm">${esc(this.gname(t.rid))}</div>` : ""}<div class="x">${esc(t.text)}</div></div>
       <div class="acts"><button class="dbtn" data-done="${t.id}" data-g="${this.gid(t)}" title="${this.pieLabel(this.gid(t))}" aria-label="Done">${this.pieHtml(this.gid(t))}Done</button></div></div>`;
   }
   private nowHtml(): string {
