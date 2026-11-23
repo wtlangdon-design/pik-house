@@ -411,7 +411,8 @@ export class PikHolidayCard extends LitElement {
   /** The recipe cards for the left column. */
   private cards() {
     const d = this.viewDay(), now = Date.now(), order = Object.keys(this.plan.days);
-    const groups = [...this.seqs().keys()];
+    // Cards are for dishes only. Jobs outside a recipe ("Dinner", the 140°F checks, leftovers) still ring as alarms.
+    const groups = [...this.seqs().keys()].filter((g) => !!this.recipe(g));
     const byTime = (a: { cur: Task }, b: { cur: Task }) => this.ms(a.cur) - this.ms(b.cur) || this.plan.tasks.indexOf(a.cur) - this.plan.tasks.indexOf(b.cur);
     if (!this.isToday()) {
       const list = groups.map((g) => ({ g, p: this.partOf(g, d) })).filter((x) => x.p).map((x) => ({ g: x.g, cur: x.p!.cur })).sort(byTime);
@@ -625,7 +626,7 @@ export class PikHolidayCard extends LitElement {
   private nowHtml(): string {
     const { due, done, next, behind } = this.cards();
     const d = this.viewDay();
-    const list = this.plan.tasks.filter((t) => t.day === d);
+    const list = this.plan.tasks.filter((t) => t.day === d && !!t.rid);
     const title = !this.isToday() ? this.plan.dayNames[d] : this.inFinalHour() ? "The final hour" : due.length ? "Do these now" : next.length ? "Coming up" : "All done for " + this.plan.dayNames[d].toLowerCase();
     const listCards = !due.length && !done.length;
     // Rush hour: with three or more things due, every card is one line and only the one you open shows its step.
@@ -869,7 +870,7 @@ export class PikHolidayCard extends LitElement {
     const count = left > 86400000 ? Math.floor(left / 86400000) + " d " + Math.floor((left % 86400000) / 3600000) + " h" : left > 0 ? fmtDur(left).replace(/:\d\d$/, "") : "Happy " + this.plan.title;
     const ts = this.turkeyStatus();
     const d = this.currentDay();
-    const todayLeft = this.plan.tasks.filter((t) => t.day === d && !this.store.isDone(t.id)).length;
+    const todayLeft = this.plan.tasks.filter((t) => t.day === d && !!t.rid && !this.store.isDone(t.id)).length;
     const sub = this.inFinalHour() ? "Everything hot by 4:00 · " + todayLeft + " left" : todayLeft + (todayLeft === 1 ? " task" : " tasks") + " left today" + (this.store.live ? "" : " · this screen only");
     const a = this.Q[this.Q.length - 1];
     return html`<div class="op" @click=${this.onClick}>
