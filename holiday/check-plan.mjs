@@ -49,6 +49,7 @@ for (const t of p.tasks) {
 // every step's ingredients point at real ingredients, and every ingredient is used by some step
 for (const r of p.recipes) {
   const used = new Set();
+  r.steps.forEach((s, i) => { if (!(s.min > 0)) bad(`recipe ${r.id} step ${i + 1} has no time estimate (min)`); });
   r.steps.forEach((s, i) => {
     if (!Array.isArray(s.ing)) { bad(`recipe ${r.id} step ${i + 1}: no ingredient list`); return; }
     for (const e of s.ing) {

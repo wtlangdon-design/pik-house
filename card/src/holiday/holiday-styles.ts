@@ -58,7 +58,7 @@ p{line-height:1.5;margin:0 0 10px}
 /* plan grid */
 .daybar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
 .planhead,.planrow{display:grid;grid-template-columns:70px repeat(4,1fr);gap:10px}
-.planhead{position:sticky;top:118px;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+.planhead{position:sticky;top:-18px;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
 .planrow{padding:8px 0;border-bottom:1px dashed var(--line)}
 .planrow .t{font:700 14px 'DM Sans',sans-serif;padding-top:8px;font-variant-numeric:tabular-nums}
 .cell{display:flex;flex-direction:column;gap:6px}
@@ -249,7 +249,7 @@ td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-
 .dr b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dr span{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
 .dr span.g{color:var(--done);font-weight:700}.dr span.w{color:#8A5A1C;font-weight:700}
-.dr.tky{background:#FFF6E8;border-radius:10px;padding:6px;margin:2px 0;border-bottom:0}.dr.tky span{font-weight:700;color:#8A5A1C}
+.dr.tky{background:#FFF6E8;border-radius:8px;box-shadow:0 0 0 4px #FFF6E8;margin:4px 0;border-bottom:0}.dr.tky span{font-weight:700;color:#8A5A1C}
 .dr.grp span{white-space:normal;max-width:none}
 .hotbtn{height:28px;padding:0 10px;border-radius:14px;border:1px solid var(--done);background:var(--doneBg);color:var(--done);font:700 12px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}
 .dkey{font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -320,4 +320,8 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .stp .si{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-content:start;font-size:13.5px;line-height:1.35;border-left:1px solid var(--line);padding-left:14px;margin-top:6px}
 .stp .si b{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tc.due .stp p{font-size:16px}
+/* review 2: badges, estimates, reminders */
+.tc .tt small.now{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:10px;background:var(--btn);color:var(--btnInk);letter-spacing:.08em}
+.tc .nm .est,.steps .est{font:600 12px 'DM Sans',sans-serif;font-style:normal;color:#6B5A48;background:var(--soft);border-radius:10px;padding:3px 9px;white-space:nowrap}
+.tc.rem{padding-top:9px;padding-bottom:9px;align-items:center}.tc.rem .x{font-size:16.5px}
 `;

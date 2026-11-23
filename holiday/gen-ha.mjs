@@ -30,7 +30,7 @@ plan.tasks.slice().sort((a, b) => DAYS.indexOf(a.day) - DAYS.indexOf(b.day) || (
   if (!own.length) { steps[g].e.push({ k: t.id, x: t.text, i: "", tm: t.tm || null }); return; }
   own.forEach((st) => {
     const ing = (st.ing || []).map(([k, q, w]) => { const gi = k >= 0 ? r.ingr[k] : null; return ((q !== undefined && q !== null ? q : gi ? gi[0] : "") + " " + (w || (gi ? gi[1] : ""))).trim(); }).filter(Boolean);
-    steps[g].e.push({ k: t.id, x: st.t, i: ing.join("; "), tm: st.tm || partTimer });
+    steps[g].e.push({ k: t.id, x: st.t, i: ing.join("; "), tm: st.tm || partTimer, m: st.min || null });
   });
 });
 const out = [];
@@ -215,7 +215,8 @@ L(`    description: >-`);
 L(`      Walks through a ${title} recipe step by step, from its first part to its last, the same way the kitchen screens do`);
 L(`      (one card per recipe; the screens move along too). action: next, back, repeat or first. dish: optional dish name,`);
 L(`      task id or a few words; without it, the recipe someone last used on a screen or by voice, else the one due now.`);
-L(`      Use for "next step", "go back", "what's this step", "read me the gravy steps". Read the step out with its ingredients.`);
+L(`      Use for "next step", "go back", "what's this step", "read me the gravy steps". Read the step out with its ingredients`);
+L(`      and, if given, about how many minutes of work it takes (minutes_of_work).`);
 L(`      If it has a timer, offer to start it with kitchen_timer (that label and minutes). When a part is finished,`);
 L(`      tick it off with holiday_task_done (task_id).`);
 L(`    mode: queued`);
@@ -296,6 +297,7 @@ L(`            step: "{{ (new | int) + 1 }}"`);
 L(`            of: "{{ n }}"`);
 L(`            text: "{{ s.x }}"`);
 L(`            ingredients: "{{ s.i }}"`);
+L(`            minutes_of_work: "{{ s.m }}"`);
 L(`            timer: "{{ {'label': s.tm[0], 'minutes': s.tm[1], 'kind': s.tm[2]} if s.tm else none }}"`);
 L(`            last_step: "{{ (new | int) == (n | int) - 1 }}"`);
 L(`            note: "{{ 'Already on the step it is up to.' if act == 'back' and cur == (start | int) else ('That is the last step of this part; when it is done, tick it off with holiday_task_done (task_id ' ~ s.k ~ ').' if part_end else '') }}"`);
