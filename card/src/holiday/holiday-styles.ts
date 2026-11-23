@@ -482,4 +482,10 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .tc.cmp .cl .r2{grid-column:1;font-size:15px;color:#4A3D31;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tc.cmp .cl em{grid-column:2;grid-row:1 / 3}
 .tipq .bp{font:700 10.5px 'DM Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-right:8px;color:var(--amberInk);opacity:.8}
+/* dish icons: same line style and amber as the station icons */
+.rcard{position:relative}
+.rcard .dic{position:absolute;top:16px;right:16px;width:30px;height:30px;color:var(--amberInk)}
+.rcard .nm{padding-right:34px}
+.dic svg{width:100%;height:100%;display:block}
+.rhd{display:flex;align-items:center;gap:14px}.rhd .dic{width:38px;height:38px;color:var(--amberInk);flex:none}
 `;

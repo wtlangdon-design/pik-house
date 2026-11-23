@@ -20,6 +20,7 @@
 import { LitElement, html, nothing } from "lit";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { holidayStyles } from "./holiday-styles";
+import { DISH_ICON } from "./dish-icons";
 import { PLANS, type Plan, type Recipe, type Run, type Task, type TimerKind, type TimerSpec } from "./plan";
 import { HaStore, LocalStore, SPOTS, type Hass, type KTimer, type Place, type Store } from "./store";
 
@@ -707,7 +708,7 @@ export class PikHolidayCard extends LitElement {
     const segs: Array<[Seg, string]> = [["recipes", "Recipes"], ["schedule", "Full schedule"]];
     let body = "";
     if (sh.seg === "recipes" && sh.recipe) body = this.recipeHtml(this.recipe(sh.recipe)!);
-    else if (sh.seg === "recipes") body = `<div class="rgrid">${this.plan.recipes.map((r) => `<button class="rcard" data-recipe="${r.id}"><span class="n">${r.n}</span><span class="nm">${esc(r.name)}</span><span class="tags"><span class="pill">${esc(r.gf)}</span>${r.tag.indexOf("Family") === 0 ? `<span class="pill ab">Family</span>` : ""}</span></button>`).join("")}</div>`;
+    else if (sh.seg === "recipes") body = `<div class="rgrid">${this.plan.recipes.map((r) => `<button class="rcard" data-recipe="${r.id}"><span class="dic">${DISH_ICON[r.id] || ""}</span><span class="n">${r.n}</span><span class="nm">${esc(r.name)}</span><span class="tags"><span class="pill">${esc(r.gf)}</span>${r.tag.indexOf("Family") === 0 ? `<span class="pill ab">Family</span>` : ""}</span></button>`).join("")}</div>`;
     else body = this.scheduleHtml(sh.day || this.viewDay());
     return `<button class="scrim2" data-close="1" aria-label="Close"></button><div class="psheet">
       <div style="display:flex;align-items:center;gap:12px"><h2 class="serif" style="margin:0;font-size:32px">Plan &amp; recipes</h2><span style="flex:1"></span><button class="btn" data-close="1">Back to the kitchen</button></div>
@@ -717,7 +718,7 @@ export class PikHolidayCard extends LitElement {
     const flagHtml = (r.flags || []).map(([k, h, t]) => `<div class="flag ${k === "conf" || k === "jc" ? "conf" : ""}"><b>${esc(h)}</b><span>${esc(t)}</span></div>`).join("");
     const byDay = Object.keys(this.plan.days).map((d) => [d, r.steps.map((s, i) => ({ s, i })).filter((x) => x.s.d === d)] as const).filter((x) => x[1].length);
     return `<div><button class="btn sm" data-recipe="">‹ All recipes</button></div>
-      <span class="eb">${esc(r.tag)}</span><h2 class="serif" style="font-size:36px;margin:0">${r.n}. ${esc(r.name)}</h2>
+      <div class="rhd"><span class="dic">${DISH_ICON[r.id] || ""}</span><div><span class="eb">${esc(r.tag)}</span><h2 class="serif" style="font-size:36px;margin:0">${r.n}. ${esc(r.name)}</h2></div></div>
       <div class="rdet"><div>
       <div class="meta"><div>Yield<b>${esc(r.yield)}</b></div><div>Gluten<b style="font-size:13px">${esc(r.gf)}</b></div><div>Active<b>${esc(r.active)}</b></div><div>Passive<b style="font-size:13px">${esc(r.passive)}</b></div></div>
       <h3>Ingredients</h3><ul class="ing">${r.ingr.map(([q, it, nt]) => q === "—" ? `<li style="grid-template-columns:1fr"><span class="eb" style="padding-top:6px">${esc(it)}</span></li>` : `<li><b>${esc(q)}</b><span>${esc(it)}${nt ? `<i>${esc(nt)}</i>` : ""}</span></li>`).join("")}</ul>
