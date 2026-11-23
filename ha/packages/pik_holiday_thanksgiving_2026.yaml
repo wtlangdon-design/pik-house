@@ -151,6 +151,48 @@ automation:
           message: "The turkey is done: 165 degrees in the breast, thigh and wing. Off the smoker, tent it, and rest it 30 to 45 minutes."
           phones: true
 
+  - id: tg26_inkbird_turkey
+    alias: "Thanksgiving: Inkbird readings go in the turkey log"
+    mode: queued
+    max: 20
+    triggers:
+      - trigger: state
+        entity_id: ["sensor.smoke_probe_1","sensor.smoke_probe_2","sensor.smoke_probe_3","sensor.smoke_probe_4"]
+    conditions:
+      - "{{ trigger.to_state is not none and trigger.to_state.state | is_number }}"
+    actions:
+      - variables:
+          what: "{{ (trigger.to_state.attributes.food | default('', true)) | lower }}"
+          spot: "{{ ['breast', 'thigh', 'wing'] | select('in', what) | first | default('') }}"
+      - condition: "{{ spot != '' and 'turkey' in what }}"
+      - action: input_number.set_value
+        target: { entity_id: "input_number.tg26_turkey_{{ spot }}" }
+        data: { value: "{{ [[trigger.to_state.state | float(0), 250] | min, 0] | max }}" }
+
+  - id: tg26_inkbird_setup
+    alias: "Thanksgiving: set up the Inkbird for the turkey"
+    description: "When the smoker starts: probe 1 breast, 2 thigh, 3 wing, 4 the smoker's air. Skipped if the probes already say turkey."
+    mode: single
+    triggers:
+      - trigger: time
+        at: "09:30:00"
+      - trigger: state
+        entity_id: input_boolean.tg26_thu_0930_turkey
+        to: "on"
+    conditions:
+      - "{{ now().strftime('%Y-%m-%d') == '2026-11-26' }}"
+      - "{{ states.script.smoke_probe is defined }}"
+      - "{{ [\"input_text.smoke_probe_1_food\",\"input_text.smoke_probe_2_food\",\"input_text.smoke_probe_3_food\",\"input_text.smoke_probe_4_food\"] | map('states') | map('lower') | select('search', 'turkey') | list | count == 0 }}"
+    actions:
+      - action: script.smoke_probe
+        data: { probe: 1, food: "Turkey breast", target: 0, kind: food }
+      - action: script.smoke_probe
+        data: { probe: 2, food: "Turkey thigh", target: 0, kind: food }
+      - action: script.smoke_probe
+        data: { probe: 3, food: "Turkey wing", target: 0, kind: food }
+      - action: script.smoke_probe
+        data: { probe: 4, food: "Smoker", target: 0, kind: smoker }
+
 script:
   holiday_whats_next:
     alias: "Holiday cooking: what's next"

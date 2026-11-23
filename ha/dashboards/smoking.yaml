@@ -1,0 +1,12 @@
+# The Smoking dashboard: the Inkbird's four probes on one page, for any cook on the smoker.
+# Paste into: Settings → Dashboards → (Smoking) → pencil → ⋮ → Raw configuration editor.
+# Works on the Chromebook, the Echo Show 15 and a phone (the tiles stack on a narrow screen).
+title: Smoking
+views:
+  - title: Smoking
+    path: probes
+    panel: true
+    cards:
+      - type: custom:pik-smoke-card
+        probes: 4
+        hours: 3

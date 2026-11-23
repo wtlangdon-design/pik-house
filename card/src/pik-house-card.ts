@@ -10,6 +10,7 @@ import { adjustStyles, daylightStyles, hostStyles } from "./styles";
 import { pikArt } from "./pik-art";
 // Holiday cooking mode ships in the same bundle: <pik-holiday-card>.
 import "./holiday/holiday-card";
+import "./smoke/smoke-card";
 import { energySheet, plantsSheet, homeSheet } from "./views";
 import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type PikState } from "./mock-data";
 

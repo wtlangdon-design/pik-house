@@ -18,27 +18,29 @@ const opts = {
 };
 
 // The backup page: holiday cooking mode on its own, with the card inlined (no Home Assistant needed).
+// Also the smoking screen on its own, with a made-up cook, for trying it without the hub.
 function standalone() {
   const js = readFileSync("dist/pik-house-card.js", "utf8").replace(/<\/script/gi, "<\\/script");
-  const page = `<!DOCTYPE html>
+  const page = (title, tag, config) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thanksgiving Kitchen · Pik House</title>
-<style>html,body{margin:0;height:100%;overflow:hidden;background:#F3ECE0}body{touch-action:manipulation;-webkit-tap-highlight-color:transparent}pik-holiday-card{display:block;height:100vh}</style>
+<title>${title} · Pik House</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#F3ECE0}body{touch-action:manipulation;-webkit-tap-highlight-color:transparent}${tag}{display:block;height:100vh}</style>
 </head>
 <body>
-<pik-holiday-card></pik-holiday-card>
+<${tag}></${tag}>
 <script type="module">
 ${js}
-const card = document.querySelector("pik-holiday-card");
-card.setConfig({ type: "custom:pik-holiday-card", plan: "thanksgiving_2026", mock: true });
+const card = document.querySelector("${tag}");
+card.setConfig(${JSON.stringify(config)});
 </script>
 </body>
 </html>
 `;
-  writeFileSync("dist/holiday-standalone.html", page);
+  writeFileSync("dist/holiday-standalone.html", page("Thanksgiving Kitchen", "pik-holiday-card", { type: "custom:pik-holiday-card", plan: "thanksgiving_2026", mock: true }));
+  writeFileSync("dist/smoke-standalone.html", page("Smoking", "pik-smoke-card", { type: "custom:pik-smoke-card", mock: true }));
 }
 
 function site() {
@@ -46,6 +48,7 @@ function site() {
   mkdirSync("../docs", { recursive: true });
   cpSync("preview/index.html", "../docs/index.html");
   cpSync("preview/holiday.html", "../docs/holiday.html");
+  cpSync("dist/smoke-standalone.html", "../docs/smoking.html");
   cpSync("dist/pik-house-card.js", "../docs/pik-house-card.js");
   cpSync("../reference/daylight-reference.html", "../docs/reference.html");
   writeFileSync("../docs/.nojekyll", "");
