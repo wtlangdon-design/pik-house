@@ -401,8 +401,8 @@ export class PikHolidayCard extends LitElement {
       step = `<div class="stp">
         <div class="sh"><button class="dlink" data-recipe="${cur.r.id}" title="The whole recipe">${esc(dn)}</button>${n > 1 ? `<span>· step ${i + 1} of ${n}</span><span class="pips">${st.map((_x, j) => `<i class="${j === i ? "on" : j < i ? "past" : ""}"></i>`).join("")}</span>` : ""}
           ${n > 1 ? `<span class="arr"><button class="ar" data-step="${t.id}:${i - 1}"${i === 0 ? " disabled" : ""} aria-label="Previous step">‹</button><button class="ar" data-step="${t.id}:${i + 1}"${i === n - 1 ? " disabled" : ""} aria-label="Next step">›</button></span>` : ""}</div>
-        <p>${esc(this.stepText(cur.s.t))}</p>
-        ${ings.length ? `<div class="si">${ings.map(([q, it]) => `<span>${q ? `<b>${esc(q)}</b> ` : ""}${esc(it)}</span>`).join("")}</div>` : ""}
+        <div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(cur.s.t))}</p>
+        ${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div>
       </div>`;
     }
     return `<div class="tc${done ? " done" : due ? " due" : ""}${k && k.rang ? " ringing" : ""}">
