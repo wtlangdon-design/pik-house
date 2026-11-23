@@ -42,6 +42,9 @@ export interface Store {
   /** The recipe card that's open during a rush (shared, so Pik can open one): a recipe id, or "-" for none. */
   focus(): string;
   setFocus(g: string): void;
+  /** When alarms were last acknowledged ("Got it"), on any screen or by voice (ms). */
+  ackedAt(): number;
+  setAck(ms: number): void;
   places(): Place[];
   /** Put run i on a station (null = take it off). keep: which other placements are still worth saving. */
   setPlace(i: number, st: string | null, keep: (p: Place) => boolean): void;
@@ -87,6 +90,8 @@ export class LocalStore implements Store {
   isHot(dish: string): boolean { return !!this.s.hot[dish]; }
   setHot(dish: string, v: boolean): void { this.s.hot[dish] = v; this.save(); }
   focus(): string { return this.s.focus || ""; }
+  ackedAt(): number { return (this.s as unknown as { ack?: number }).ack || 0; }
+  setAck(ms: number): void { (this.s as unknown as { ack?: number }).ack = ms; this.save(); }
   setFocus(g: string): void { this.s.focus = g; this.save(); }
   places(): Place[] { return (this.s.places || []).slice(); }
   setPlace(i: number, st: string | null, keep: (p: Place) => boolean): void {
@@ -224,6 +229,8 @@ export class HaStore implements Store {
   isHot(dish: string): boolean { const e = this.st("input_boolean." + this.prefix + "_hot_" + dish); return !!e && e.state === "on"; }
   setHot(dish: string, v: boolean): void { this.hass.callService("input_boolean", v ? "turn_on" : "turn_off", {}, { entity_id: "input_boolean." + this.prefix + "_hot_" + dish }); }
   focus(): string { const e = this.st("input_text." + this.prefix + "_focus"); return e ? String(e.state) : ""; }
+  ackedAt(): number { const e = this.st("input_text." + this.prefix + "_ack"); const v = e ? Number(e.state) : 0; return isNaN(v) ? 0 : v * 1000; }
+  setAck(ms: number): void { this.hass.callService("input_text", "set_value", { value: String(Math.round(ms / 1000)) }, { entity_id: "input_text." + this.prefix + "_ack" }); }
   setFocus(g: string): void { this.hass.callService("input_text", "set_value", { value: g }, { entity_id: "input_text." + this.prefix + "_focus" }); }
   places(): Place[] {
     const e = this.st("input_text." + this.prefix + "_places");
@@ -240,6 +247,7 @@ export class HaStore implements Store {
   resetAll(ids: string[]): void {
     this.setMany(ids, false);
     this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_places" });
+    this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_focus" });
     this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_steps" });
     SPOTS.forEach((l) => this.hass.callService("input_number", "set_value", { value: 0 }, { entity_id: "input_number." + this.prefix + "_turkey_" + l }));
     this.timers().forEach((t) => this.stopTimer(t.key));

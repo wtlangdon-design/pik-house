@@ -28,7 +28,7 @@ export interface HolidayConfig { type: string; plan?: string; prefix?: string; t
 type Seg = "recipes" | "schedule";
 /** One place in a recipe's run: a part (task) and, if it has any, one of its recipe steps. */
 interface Entry { t: Task; r?: Recipe; i?: number; s?: Recipe["steps"][number] }
-interface Alert { kind: string; when: string; text: string }
+interface Alert { kind: string; when: string; text: string; at: number }
 interface Local { day: string | null; open: string | null; fired: Record<string, number>; rung: Record<string, number>; allDishes: boolean; tips?: Record<string, boolean> }
 
 const LANES: Record<string, string> = { smoker: "Smoker", oven: "Oven", stove: "Stove", prep: "Counter", fridge: "Fridge" };
@@ -66,6 +66,8 @@ export class PikHolidayCard extends LitElement {
   private sheet: { seg: Seg; recipe: string | null; day: string | null } | null = null;
   private turkeyPad: { spot: number; entry: string } | null = null;
   private picker: { i: number } | null = null;
+  private askReset = false;
+  private seenAck = -1;
   private lastSig = "";
   private soundOff = true;
   private toast = "";
@@ -204,7 +206,7 @@ export class PikHolidayCard extends LitElement {
   // ---------------------------------------------------------------- alerts and the 1-second tick
 
   private pushAlert(kind: string, when: string, text: string): void {
-    this.Q.push({ kind, when, text });
+    this.Q.push({ kind, when, text, at: Date.now() });
     if (!this.ringStart) this.ringStart = Date.now();
     this.lastRing = Date.now();
     this.chime(kind);
@@ -212,6 +214,7 @@ export class PikHolidayCard extends LitElement {
   }
   private ackAlerts(): void {
     this.Q = []; this.ringStart = 0;
+    this.store.setAck(Date.now());
     this.store.timers().filter((t) => t.rang).forEach((t) => this.store.stopTimer(t.key));
     this.requestUpdate();
   }
@@ -219,6 +222,16 @@ export class PikHolidayCard extends LitElement {
   private tick(): void {
     const now = Date.now();
     let changed = false;
+    // "Got it" on another screen or by voice clears the alarms that were already showing here.
+    const ack = this.store.ackedAt();
+    if (this.seenAck < 0) this.seenAck = ack;
+    else if (ack > this.seenAck) {
+      this.seenAck = ack;
+      const before = this.Q.length;
+      this.Q = this.Q.filter((a) => a.at > ack);
+      if (!this.Q.length) this.ringStart = 0;
+      if (this.Q.length !== before) changed = true;
+    }
     this.store.timers().forEach((t) => {
       if (!t.rang) return;
       const prev = this.L.rung[t.key];
@@ -700,7 +713,7 @@ export class PikHolidayCard extends LitElement {
         <textarea id="exp" rows="3" readonly>${esc(local.exportCode ? local.exportCode() : "")}</textarea>
         <div><button class="btn sm ink" data-export="1">Copy progress for the hub</button></div>`}
       <p style="margin-top:14px">Start over: clears every tick, step, turkey reading and timer${this.store.live ? " on every screen" : " on this screen"}.</p>
-      <div><button class="btn sm" data-resetall="1">Reset all progress</button></div></div></details>`;
+      <div>${this.askReset ? `<b style="margin-right:10px">Clear everything?</b><button class="btn sm ink" data-resetall="yes">Yes, reset</button> <button class="btn sm" data-resetall="no">Cancel</button>` : `<button class="btn sm" data-resetall="ask">Reset all progress</button>`}</div></div></details>`;
   }
 
   // ---------------------------------------------------------------- turkey pad
@@ -784,10 +797,16 @@ export class PikHolidayCard extends LitElement {
     if (ds.import) { this.importProgress(); return; }
     if (ds.export) { this.copyExport(); return; }
     if (ds.resetall) {
-      if (confirm("Clear all ticks, steps, turkey readings and timers" + (this.store.live ? " on every screen?" : " on this screen?"))) {
+      if (ds.resetall === "yes") {
         this.store.resetAll(this.plan.tasks.map((t) => t.id).concat(this.plan.dishes.map((d) => "hot_" + d.id)));
-        this.L = { day: null, open: null, fired: {}, rung: {}, allDishes: false }; this.saveL(); this.requestUpdate();
-      }
+        // Back to the start: nothing ticked, every alarm due before now treated as already heard.
+        const now = Date.now(), fired: Record<string, number> = {};
+        this.plan.tasks.forEach((t) => { if (this.ms(t) <= now) fired[t.id] = 1; });
+        this.L = { day: null, open: null, fired, rung: {}, allDishes: false, tips: {} }; this.saveL();
+        this.Q = []; this.ringStart = 0; this.sheet = null; this.askReset = false;
+        this.flash("Reset. Everything is back to the start.");
+      } else this.askReset = ds.resetall === "ask";
+      this.requestUpdate(); return;
     }
   };
 
