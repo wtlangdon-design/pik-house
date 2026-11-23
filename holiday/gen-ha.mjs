@@ -18,7 +18,7 @@ const title = plan.title;
 const dishName = Object.fromEntries(plan.dishes.map((d) => [d.id, d.name]));
 // s: a few words for group alarms ("Four things at 3:00: stuffing, green beans, …"): the dish, or the job's first clause.
 const short = (t) => (t.rid ? (dishName[t.rid] || t.rid) : t.text.split(/[;:.(]/)[0]).trim().toLowerCase().replace(/^burner \d /, "");
-const tasks = plan.tasks.map((t) => ({ i: t.id, at: `${plan.days[t.day]} ${t.hm}`, d: SHORT[t.day] || t.day, h: t12(t.hm), x: t.text, s: short(t) }));
+const tasks = plan.tasks.map((t) => ({ i: t.id, at: `${plan.days[t.day]} ${t.hm}`, d: SHORT[t.day] || t.day, h: t12(t.hm), x: t.text, s: short(t), r: t.rid || '' }));
 // Each recipe's run from start to finish (the same order the kitchen screens walk), for Pik's "next step".
 // Jobs that aren't part of a recipe form a "kitchen" run. One entry per recipe step, or one per part without steps.
 const DAYS = Object.keys(plan.days);
@@ -51,7 +51,8 @@ L(`#   input_boolean.${P}_quiet       on = don't read tasks out on the Echos (of
 L(`#   input_boolean.${P}_push        on = also push each task to both phones (off by default)`);
 L(`#   input_number.${P}_turkey_*     latest probe reading for breast, thigh, wing (history = the log)`);
 L(`#   automations: read each task out at its time; announce "turkey is done" at 165°F everywhere`);
-L(`#   scripts for Pik: holiday_whats_next, holiday_task_done, holiday_log_turkey, holiday_step, holiday_place, holiday_card, holiday_kitchen`);
+L(`#   input_text.${P}_shift          running behind: "scope,minutes,day,from;…" (scope = all or a recipe); screens, alarms and Pik follow it`);
+L(`#   scripts for Pik: holiday_whats_next, holiday_task_done, holiday_log_turkey, holiday_step, holiday_place, holiday_card, holiday_kitchen, holiday_behind`);
 L(`# Needs pik_kitchen.yaml (timers and script.pik_announce).`);
 L();
 L(`input_boolean:`);
@@ -65,6 +66,7 @@ L(`  ${P}_steps: { name: ${J(title + ": recipe steps in progress")}, max: 255 }`
 L(`  ${P}_focus: { name: ${J(title + ": recipe Pik's next step follows")}, max: 255 }`);
 L(`  ${P}_ack: { name: ${J(title + ": alarms last acknowledged (unix seconds)")}, max: 20 }`);
 L(`  ${P}_places: { name: ${J(title + ": what's on the burners, in the oven, on the smoker")}, max: 255 }`);
+L(`  ${P}_shift: { name: ${J(title + ": running behind (scope,minutes,day,from;…)")}, max: 255 }`);
 L();
 L(`input_number:`);
 for (const s of ["breast", "thigh", "wing"]) L(`  ${P}_turkey_${s}: { name: ${J("Turkey " + s)}, min: 0, max: 250, step: 1, mode: box, unit_of_measurement: "°F", icon: "mdi:thermometer" }`);
@@ -72,6 +74,20 @@ L();
 
 // The plan as a compact list, shared by the automation and the scripts.
 const planVar = (indent) => `${indent}plan: ${J(tasks)}`;
+// Running behind: input_text.${P}_shift holds "scope,minutes,day,from;…". eplan = the plan with each task's
+// time moved by the delays that apply to it (everything, its recipe, or a recipe it waits on), soonest first.
+const FOLLOWS = plan.follows || {};
+const eplanVar = (indent) => [
+  `${indent}eplan: >-`,
+  `${indent}  {% set days = ${J(plan.days)} %}{% set fol = ${J(FOLLOWS)} %}`,
+  `${indent}  {% set sh0 = namespace(l=[]) %}{% for e in states('input_text.${P}_shift').split(';') if e is search('^[a-z_]+,-?[0-9]+,[a-z]+,[0-9][0-9]:[0-9][0-9]$') %}{% set sh0.l = sh0.l + [e.split(',')] %}{% endfor %}{% set sh = sh0.l %}`,
+  `${indent}  {% set ns = namespace(out=[]) %}`,
+  `${indent}  {% for t in plan %}{% set m = namespace(v=0) %}`,
+  `${indent}    {% for a in sh %}{% if days.get(a[2]) == t.at[:10] and t.at[11:] >= a[3] and (a[0] == 'all' or (t.r != '' and (a[0] == t.r or a[0] in fol.get(t.r, [])))) %}{% set m.v = m.v + (a[1] | int(0)) %}{% endif %}{% endfor %}`,
+  `${indent}    {% set at = ((t.at | as_datetime) + timedelta(minutes=m.v)).strftime('%Y-%m-%d %H:%M') if m.v else t.at %}`,
+  `${indent}    {% set ns.out = ns.out + [dict(t, at=at, h=(((at | as_datetime).strftime('%-I:%M %p')) if m.v else t.h), late=m.v)] %}`,
+  `${indent}  {% endfor %}{{ ns.out | sort(attribute='at') }}`,
+].join("\n");
 const turkeyDone = `{{ states('input_number.${P}_turkey_breast') | float(0) >= 165 and states('input_number.${P}_turkey_thigh') | float(0) >= 165 and states('input_number.${P}_turkey_wing') | float(0) >= 165 }}`;
 
 L(`automation:`);
@@ -90,11 +106,12 @@ L(`      - "{{ now().strftime('%Y-%m-%d') in [${Object.values(plan.days).map((d)
 L(`    actions:`);
 L(`      - variables:`);
 L(planVar("          "));
+L(eplanVar("          "));
 L(`          stamp: "{{ now().strftime('%Y-%m-%d %H:%M') }}"`);
 L(`          due: >-`);
 L(`            {% set ns = namespace(out=[]) %}`);
 L(`            {% set since = (now() - timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M') %}`);
-L(`            {% for t in plan if (t.at == stamp or (trigger.id == 'start' and since <= t.at <= stamp)) and not is_state('input_boolean.${P}_' ~ t.i, 'on') %}{% set ns.out = ns.out + [t] %}{% endfor %}`);
+L(`            {% for t in eplan if (t.at == stamp or (trigger.id == 'start' and since <= t.at <= stamp)) and not is_state('input_boolean.${P}_' ~ t.i, 'on') %}{% set ns.out = ns.out + [t] %}{% endfor %}`);
 L(`            {{ ns.out }}`);
 L(`      - condition: "{{ due | count > 0 }}"`);
 L(`      - event: pik_holiday_task_due`);
@@ -117,7 +134,7 @@ L(`        value_template: ${J(turkeyDone)}`);
 L(`    actions:`);
 L(`      - action: script.pik_announce`);
 L(`        data:`);
-L(`          message: "The turkey is done: 165 degrees in the breast, thigh and wing. Off the smoker, tent it, and rest it 30 to 45 minutes."`);
+L(`          message: "The turkey reads 165 degrees in the breast, thigh and wing. Check each spot with your instant-read thermometer, then take it off the smoker, tent it, and rest it 30 to 45 minutes."`);
 L(`          phones: true`);
 L();
 // The Inkbird (ha/packages/pik_smoke.yaml), if it's installed: any probe whose "in" says turkey breast,
@@ -219,20 +236,21 @@ L(`    mode: parallel`);
 L(`    sequence:`);
 L(`      - variables:`);
 L(planVar("          "));
+L(eplanVar("          "));
 L(`          result: >-`);
 L(`            {% set n = now() %}`);
 L(`            {% set soon = (n + timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M') %}`);
 L(`            {% set back = (n - timedelta(minutes=30)).strftime('%Y-%m-%d %H:%M') %}`);
 L(`            {% set ns = namespace(due=[], nxt=[], late=[]) %}`);
-L(`            {% for t in plan if not is_state('input_boolean.${P}_' ~ t.i, 'on') %}`);
-L(`              {% set row = {'id': t.i, 'when': t.d ~ ' ' ~ t.h, 'task': t.x} %}`);
+L(`            {% for t in eplan if not is_state('input_boolean.${P}_' ~ t.i, 'on') %}`);
+L(`              {% set row = {'id': t.i, 'when': t.d ~ ' ' ~ t.h ~ ((' (moved ' ~ t.late ~ ' min)') if t.late else ''), 'task': t.x} %}`);
 L(`              {% if back <= t.at <= soon %}{% set ns.due = ns.due + [row] %}`);
 L(`              {% elif t.at > soon and ns.nxt | count < 5 %}{% set ns.nxt = ns.nxt + [row] %}`);
 L(`              {% elif t.at < back %}{% set ns.late = ns.late + [row] %}{% endif %}`);
 L(`            {% endfor %}`);
 L(`            {% set tk = namespace(r={}) %}`);
 L(`            {% for s in ['breast', 'thigh', 'wing'] %}{% set v = states('input_number.${P}_turkey_' ~ s) | float(0) %}{% set tk.r = dict(tk.r, **{s: (v | int if v > 30 else 'no reading')}) %}{% endfor %}`);
-L(`            {{ {'now': n.strftime('%a %-I:%M %p'), 'dinner': ${J(plan.subtitle)}, 'due_now': ns.due, 'next': ns.nxt,`);
+L(`            {{ {'now': n.strftime('%a %-I:%M %p'), 'dinner': ${J(plan.subtitle)}, 'running_behind': states('input_text.${P}_shift') or 'no', 'due_now': ns.due, 'next': ns.nxt,`);
 L(`                'earlier_not_ticked': ns.late[-5:], 'earlier_not_ticked_count': ns.late | count,`);
 L(`                'turkey_f': tk.r, 'turkey_done': ${turkeyDone.slice(3, -3)},`);
 L(`                'turkey_rule': 'Done only at 165F in the thickest breast, innermost thigh and innermost wing. Never by a timer.'} }}`);
@@ -560,5 +578,99 @@ L(`              - stop: "Done"`);
 L(`                response_variable: result`);
 
 const dest = join(here, "..", "ha", "packages", `pik_holiday_${plan.id}.yaml`);
+// ---------------------------------------------------------------- running behind
+{
+  const dinnerDay = Object.keys(plan.days).find((k) => plan.dinner.startsWith(plan.days[k]));
+  const dinnerHm = plan.dinner.slice(11, 16);
+  // Words that name each recipe (its dish name and recipe name), for "the turkey is running late".
+  const STOP = new Set(["the", "and", "with", "for", "from", "into", "our", "a", "of"]);
+  const words = {};
+  plan.recipes.forEach((r) => {
+    const d = plan.dishes.find((x) => x.id === r.id);
+    words[r.id] = [...new Set(((d ? d.name : "") + " " + r.name).toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 2 && !STOP.has(w)))];
+  });
+  const names = Object.fromEntries(plan.recipes.map((r) => [r.id, (plan.dishes.find((x) => x.id === r.id) || r).name.toLowerCase()]));
+  const followers = {};
+  Object.entries(FOLLOWS).forEach(([k, v]) => v.forEach((g) => { (followers[g] = followers[g] || []).push(names[k] || k); }));
+  // A recipe that holds the smoker until a set time, and when the hot hold needs it: minutes of slack.
+  const hold = ((plan.stations || {}).smoker || []).find((x) => /hot hold/i.test(x[4]));
+  const toMin = (hm) => { const [h, m] = hm.split(":").map(Number); return h * 60 + m; };
+  const slack = {};
+  if (hold) (plan.runs || []).filter((u) => u.st === "smoker" && u.l === (names[u.r] || "").replace(/^./, (c) => c.toUpperCase())).forEach((u) => { slack[u.r] = toMin(hold[1]) - toMin(u.until); });
+  L(`  holiday_behind:`);
+  L(`    alias: "Holiday cooking: running behind"`);
+  L(`    description: >-`);
+  L(`      When the kitchen is behind (or ahead) of the ${title} plan: moves what's still to come today later, so the screens, alarms`);
+  L(`      and dinner countdown match. "we're 20 minutes behind" = minutes 20, everything. "the turkey is running 30 minutes late" =`);
+  L(`      dish "turkey", minutes 30 (dishes that wait on it move too). "we're back on schedule" = action clear. "how far behind are we" =`);
+  L(`      action status. Never ticks anything off; the turkey is still done only at 165°F. Read back the message.`);
+  L(`    mode: queued`);
+  L(`    fields:`);
+  L(`      minutes: { description: "How many minutes later (negative = ahead)", default: 15, selector: { number: { min: -120, max: 240, mode: box } } }`);
+  L(`      dish: { description: 'One dish that is late ("turkey", "mac and cheese"); leave out for everything', selector: { text: null } }`);
+  L(`      action: { description: "set (default), clear or status", default: set, selector: { select: { options: [set, clear, status] } } }`);
+  L(`    sequence:`);
+  L(`      - variables:`);
+  L(`          days: ${J(plan.days)}`);
+  L(`          today: "{% for k, v in days.items() if v == now().strftime('%Y-%m-%d') %}{{ k }}{% endfor %}"`);
+  L(`          act: "{{ action | default('set') }}"`);
+  L(`          q: "{{ (dish | default('') | string | lower | regex_findall('[a-z]+')) | reject('in', ['the', 'and', 'is', 'are', 'running', 'late', 'behind', 'everything', 'all']) | list }}"`);
+  L(`          scope: >-`);
+  L(`            {% set w = ${J(words)} %}{% set ns = namespace(id='', best=0) %}`);
+  L(`            {% for k, v in w.items() %}{% set hit = q | select('in', v) | list | count %}{% if hit > ns.best %}{% set ns.id = k %}{% set ns.best = hit %}{% endif %}{% endfor %}`);
+  L(`            {{ 'all' if q | count == 0 else ns.id }}`);
+  L(`          cur: "{{ states('input_text.${P}_shift') | replace('unknown', '') }}"`);
+  L(`          mine: "{{ cur.split(';') | select('search', ',' ~ today ~ ',') | list if today else [] }}"`);
+  L(`      - if: "{{ today == '' }}"`);
+  L(`        then:`);
+  L(`          - variables: { result: { ok: false, message: "That only works on the cooking days." } }`);
+  L(`          - stop: "Not a cooking day"`);
+  L(`            response_variable: result`);
+  L(`      - if: "{{ act == 'status' }}"`);
+  L(`        then:`);
+  L(`          - variables:`);
+  L(`              result: "{{ {'ok': true, 'delays_today': mine, 'message': ('Running behind today: ' ~ (mine | join('; '))) if mine else 'We are on the original schedule.'} }}"`);
+  L(`          - stop: "Status"`);
+  L(`            response_variable: result`);
+  L(`      - if: "{{ act == 'clear' }}"`);
+  L(`        then:`);
+  L(`          - action: input_text.set_value`);
+  L(`            target: { entity_id: input_text.${P}_shift }`);
+  L(`            data: { value: "{{ cur.split(';') | reject('search', ',' ~ today ~ ',') | reject('eq', '') | join(';') }}" }`);
+  L(`          - variables: { result: { ok: true, message: "Back on the original schedule. The screens and alarms use the planned times again." } }`);
+  L(`          - stop: "Cleared"`);
+  L(`            response_variable: result`);
+  L(`      - if: "{{ scope == '' }}"`);
+  L(`        then:`);
+  L(`          - variables: { result: { ok: false, message: "Which dish is late? Or say everything." } }`);
+  L(`          - stop: "No dish"`);
+  L(`            response_variable: result`);
+  L(`      - variables:`);
+  L(`          m: "{{ minutes | default(15) | int(15) }}"`);
+  L(`          entry: "{{ scope ~ ',' ~ m ~ ',' ~ today ~ ',' ~ now().strftime('%H:%M') }}"`);
+  L(`          txt: >-`);
+  L(`            {% set l = (cur.split(';') | reject('eq', '') | list) + [entry] %}{% set ns = namespace(l=l) %}`);
+  L(`            {% for _ in range(10) if ns.l | join(';') | length > 250 %}{% set ns.l = ns.l[1:] %}{% endfor %}{{ ns.l | join(';') }}`);
+  L(`      - action: input_text.set_value`);
+  L(`        target: { entity_id: input_text.${P}_shift }`);
+  L(`        data: { value: "{{ txt }}" }`);
+  L(`      - variables:`);
+  L(`          result: >-`);
+  L(`            {% set names = ${J(names)} %}{% set fol = ${J(followers)} %}{% set slack = ${J(slack)} %}`);
+  L(`            {% set later = (m ~ ' minutes later') if m >= 0 else ((-m) ~ ' minutes earlier') %}`);
+  L(`            {% if scope == 'all' %}`);
+  L(`              {% set tot = namespace(v=0) %}{% for e in txt.split(';') %}{% set a = e.split(',') %}{% if a | count == 4 and a[0] == 'all' and a[2] == '${dinnerDay}' and a[3] <= '${dinnerHm}' %}{% set tot.v = tot.v + (a[1] | int(0)) %}{% endif %}{% endfor %}`);
+  L(`              {% set msg = 'Everything still to come today moves ' ~ later ~ '.' ~ ((' Dinner is now ' ~ ((('${plan.days[dinnerDay]} ${dinnerHm}' | as_datetime) + timedelta(minutes=tot.v)).strftime('%-I:%M %p')) ~ '.') if today == '${dinnerDay}' else '') %}`);
+  L(`            {% else %}`);
+  L(`              {% set tot = namespace(v=0) %}{% for e in txt.split(';') %}{% set a = e.split(',') %}{% if a | count == 4 and a[0] == scope and a[2] == today %}{% set tot.v = tot.v + (a[1] | int(0)) %}{% endif %}{% endfor %}`);
+  L(`              {% set msg = 'The ' ~ names.get(scope, scope) ~ ' from now on moves ' ~ later ~ '.' ~ ((' The ' ~ (fol.get(scope, []) | join(' and ')) ~ ' waits for it, so it moves too.') if fol.get(scope) else '') ~ ' Everything else stays put.' %}`);
+  L(`              {% if scope in slack and tot.v > slack[scope] %}{% set msg = msg ~ ' It will still be on the smoker when the hot hold should start, so the sides go in the cooler hot-hold backup instead.' %}{% endif %}`);
+  L(`              {% if scope == 'turkey' %}{% set msg = msg ~ ' It is still done only at 165 degrees in all three spots.' %}{% endif %}`);
+  L(`            {% endif %}`);
+  L(`            {{ {'ok': true, 'scope': scope, 'minutes': m, 'message': msg ~ ' Nothing was ticked off.'} }}`);
+  L(`      - stop: "Moved"`);
+  L(`        response_variable: result`);
+  L();
+}
 writeFileSync(dest, out.join("\n") + "\n");
 console.log("wrote", dest, tasks.length, "tasks,", Object.keys(steps).length, "recipe runs");

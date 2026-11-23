@@ -38,6 +38,8 @@ export interface Plan {
   runs: Run[];
   shop: Array<[string, string, string, string, string]>;
   assume: string[]; optional: string[]; ifs: Array<[string, string]>; safe: Array<[string, string, string]>;
+  /** recipe -> recipes it waits on ("the turkey is running late" moves the gravy too) */
+  follows?: Record<string, string[]>;
 }
 
 export const PLANS: Record<string, Plan> = {

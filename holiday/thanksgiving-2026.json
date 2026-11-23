@@ -3120,6 +3120,17 @@
    ]
   },
   {
+   "id": "thu_1200_x",
+   "day": "thu",
+   "hm": "12:00",
+   "lane": "prep",
+   "rid": null,
+   "text": "Set out every serving bowl, platter, utensil and the gravy boat; put a note on each with its dish. Plates and napkins on the table.",
+   "tm": null,
+   "steps": [],
+   "dish": []
+  },
+  {
    "id": "thu_1215_turkey",
    "day": "thu",
    "hm": "12:15",
@@ -4095,7 +4106,7 @@
    "hm": "16:00",
    "lane": "prep",
    "rid": null,
-   "text": "Dinner.",
+   "text": "Dinner. Sit down; anything still cooking can wait for you.",
    "tm": null,
    "steps": [],
    "dish": []
@@ -5068,5 +5079,10 @@
    "to": "thu_1512_mac",
    "until": "15:12"
   }
- ]
+ ],
+ "follows": {
+  "gravy": [
+   "turkey"
+  ]
+ }
 }

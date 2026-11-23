@@ -22,7 +22,7 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { holidayStyles } from "./holiday-styles";
 import { DISH_ICON } from "./dish-icons";
 import { PLANS, type Plan, type Recipe, type Run, type Task, type TimerKind, type TimerSpec } from "./plan";
-import { HaStore, LocalStore, SPOTS, type Hass, type KTimer, type Place, type Store } from "./store";
+import { HaStore, LocalStore, SPOTS, type Hass, type KTimer, type Place, type Shift, type Store } from "./store";
 
 export interface HolidayConfig { type: string; plan?: string; prefix?: string; timers?: number; mock?: boolean; layout?: string }
 
@@ -39,6 +39,7 @@ const SHORTDAY: Record<string, string> = { tue: "Tue", wed: "Wed", thu: "Thu", f
 const esc = (s: unknown) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 function fmt12(hm: string): string { let [h, m] = hm.split(":").map(Number); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; return h + ":" + String(m).padStart(2, "0") + " " + ap; }
 function fmtDur(ms: number): string { const s = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : String(m)) + ":" + String(x).padStart(2, "0"); }
+function addMin(hm: string, m: number): string { const [h, mm] = hm.split(":").map(Number); const t = Math.max(0, Math.min(23 * 60 + 59, h * 60 + mm + m)); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); }
 function hmNow(): string { const d = new Date(); const h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ":" + String(m).padStart(2, "0") + " " + (h >= 12 ? "PM" : "AM"); }
 // Small station emblems for the "put on" buttons (the burner number sits on the top edge).
 const ICON: Record<string, string> = {
@@ -64,6 +65,8 @@ export class PikHolidayCard extends LitElement {
   private Q: Alert[] = [];
   private lastRing = 0;
   private ringStart = 0;
+  private rings = 0;
+  private behind: { s: string; m: number } | null = null;
   private sheet: { seg: Seg; recipe: string | null; day: string | null } | null = null;
   private turkeyPad: { spot: number; entry: string } | null = null;
   private picker: { i: number } | null = null;
@@ -165,7 +168,7 @@ export class PikHolidayCard extends LitElement {
     const d = new Date(), ymd = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     return Object.keys(this.plan.days).find((k) => this.plan.days[k] === ymd) || null;
   }
-  private whenLabel(t: { day: string; hm: string }): string { return (t.day === this.todayKey() ? "" : SHORTDAY[t.day] + " ") + fmt12(t.hm); }
+  private whenLabel(t: { day: string; hm: string; rid?: string | null }): string { return (t.day === this.todayKey() ? "" : SHORTDAY[t.day] + " ") + fmt12(this.effHm(t)); }
 
   // ---------------------------------------------------------------- sound, wake lock
 
@@ -208,8 +211,11 @@ export class PikHolidayCard extends LitElement {
   private pushAlert(kind: string, when: string, text: string): void {
     this.Q.push({ kind, when, text, at: Date.now() });
     if (!this.ringStart) this.ringStart = Date.now();
-    this.lastRing = Date.now();
-    this.chime(kind);
+    // Several things due in the same second chime once, not once each.
+    const now = Date.now(), fresh = now - this.lastRing > 2000;
+    this.lastRing = now;
+    this.rings = 1;
+    if (fresh) this.chime(kind);
     this.requestUpdate();
   }
   private ackAlerts(): void {
@@ -239,16 +245,19 @@ export class PikHolidayCard extends LitElement {
       this.L.rung[t.key] = t.end; changed = true;
       if (now - t.end > 10 * 60000) return; // finished long ago (screen was asleep): show it, don't ring
       const msg = t.kind === "temp" ? "Turkey temperature check: log breast, thigh and wing." : t.kind === "check" ? "Check now: " + t.label : "Done: " + t.label;
-      this.pushAlert(t.kind === "check" ? "task" : t.kind, "Timer", msg);
+      this.pushAlert(t.kind === "check" ? "timer" : t.kind, "Timer", msg);
     });
     this.plan.tasks.forEach((t) => {
-      const due = this.at(t.day, t.hm).getTime();
+      const due = this.ms(t);
       if (due <= now && !this.L.fired[t.id]) {
         this.L.fired[t.id] = 1; changed = true;
-        if (!this.store.isDone(t.id) && now - due < 10 * 60000) this.pushAlert("task", fmt12(t.hm), t.text);
+        if (!this.store.isDone(t.id) && now - due < 10 * 60000) this.pushAlert("task", fmt12(this.effHm(t)), t.text);
       }
     });
-    if (this.Q.length && now - this.lastRing >= 30000 && now - this.ringStart < 600000) { this.lastRing = now; this.chime(this.Q[this.Q.length - 1].kind); }
+    // Ordinary tasks chime three times and stop (the bar stays until Got it); a timer that's done, a turkey
+    // reading or the turkey being done keeps chiming every 30 s for up to 10 minutes.
+    const urgent = this.Q.some((q) => q.kind !== "task");
+    if (this.Q.length && now - this.lastRing >= 30000 && now - this.ringStart < 600000 && (urgent || this.rings < 3)) { this.lastRing = now; this.rings++; this.chime(this.Q[this.Q.length - 1].kind); }
     if (changed) this.saveL();
     this.updateCountdowns();
     const mk = new Date().getMinutes() + ":" + new Date().getHours();
@@ -318,7 +327,18 @@ export class PikHolidayCard extends LitElement {
     return (this._seq = m);
   }
   private parts(g: string): Task[] { return [...new Set((this.seqs().get(g) || []).map((e) => e.t))]; }
-  private ms(t: Task): number { return this.at(t.day, t.hm).getTime(); }
+  /** Running behind: minutes a planned time moves (entries for its day, from their time on, for everything or its recipe and what waits on it). */
+  private shiftMin(x: { day: string; hm: string; rid?: string | null }): number {
+    const follows = (this.plan.follows || {}) as Record<string, string[]>;
+    return this.store.shifts().filter((e) => e.d === x.day && x.hm >= e.f && (e.s === "all" || (!!x.rid && (e.s === x.rid || (follows[x.rid] || []).includes(e.s))))).reduce((a, e) => a + e.m, 0);
+  }
+  /** A task's time with any delay applied. */
+  private effHm(t: { day: string; hm: string; rid?: string | null }): string { const m = this.shiftMin(t); return m ? addMin(t.hm, m) : t.hm; }
+  private ms(t: Task): number { return this.at(t.day, this.effHm(t)).getTime(); }
+  private dinnerMs(): number {
+    const dd = Object.keys(this.plan.days).find((k) => this.plan.dinner.startsWith(this.plan.days[k])) || "";
+    return Date.parse(this.plan.dinner) + this.shiftMin({ day: dd, hm: this.plan.dinner.slice(11, 16), rid: null }) * 60000;
+  }
   private isDue(t: Task, now = Date.now()): boolean { return this.ms(t) <= now + 10 * 60000; }
   /** The part of a recipe to do now: the first open part that has started. Ticking moves the card on.
    *  A part left unticked more than 30 minutes behind a newer one, or over an hour old, folds away so the card keeps up.
@@ -369,7 +389,7 @@ export class PikHolidayCard extends LitElement {
   private onNow(): Array<{ p: Place; u: Run }> { return this.store.places().filter(this.alive).map((p) => ({ p, u: this.runs[p.i] })); }
   private placed(i: number): Place | undefined { return this.store.places().find((p) => p.i === i && this.alive(p)); }
   private runStart(u: Run): number { const t = this.taskById(u.from); return t ? this.ms(t) : 0; }
-  private runEnd(u: Run): number { const t = this.taskById(u.from); return t ? this.at(t.day, u.until).getTime() : 0; }
+  private runEnd(u: Run): number { const t = this.taskById(u.from); return t ? this.at(t.day, addMin(u.until, this.shiftMin(t))).getTime() : 0; }
   /** The plan's run for a station right now that nobody has put on yet (shown faded on the tile, even if its first part is ticked). */
   private plannedNow(st: string) {
     const now = Date.now();
@@ -415,6 +435,64 @@ export class PikHolidayCard extends LitElement {
         ? `<button disabled>${emblem("b" + n)}<b>${esc(x.u.l)}</b><span>on ${Math.max(1, Math.round((now - x.p.at) / 60000))} min</span></button>`
         : `<button data-pick="${i}:b${n}">${emblem("b" + n)}<b>Free</b><span>${n === Number(u.st.slice(1)) ? "" : "use this one"}</span></button>`; }).join("")}</div></div>`;
   }
+  // ---------------------------------------------------------------- running behind
+
+  /** Today's delays, newest last. */
+  private todayShifts(): Shift[] { const d = this.todayKey(); return d ? this.store.shifts().filter((e) => e.d === d) : []; }
+  private followers(g: string): string[] {
+    const f = (this.plan.follows || {}) as Record<string, string[]>;
+    return Object.keys(f).filter((k) => f[k].includes(g));
+  }
+  /** What a delay would do, in plain words (also what Pik says). */
+  private behindWords(scope: string, m: number): string {
+    const d = this.todayKey();
+    if (!d) return "This works on the cooking days: it moves everything still to come that day.";
+    const later = m >= 0 ? m + " minutes later" : -m + " minutes earlier";
+    if (scope === "all") {
+      const dd = Object.keys(this.plan.days).find((k) => this.plan.dinner.startsWith(this.plan.days[k]));
+      const dinner = dd === d ? ` Dinner moves to ${fmt12(addMin(this.plan.dinner.slice(11, 16), this.shiftMin({ day: d, hm: this.plan.dinner.slice(11, 16), rid: null }) + m))}.` : "";
+      return `Everything still to come today moves ${later}.${dinner} Nothing gets ticked off for you.`;
+    }
+    const fol = this.followers(scope).map((g) => this.gname(g).toLowerCase());
+    let w = `The ${this.gname(scope).toLowerCase()} from now on moves ${later}.` + (fol.length ? ` The ${fol.join(" and ")} waits for it, so it moves too.` : "") + " Everything else stays put.";
+    const run = this.runs.find((u) => u.st === "smoker" && u.r === scope && u.l === this.gname(scope));
+    const hold = (this.plan.stations.smoker || []).find((x) => x[0] === d && /hot hold/i.test(x[4]));
+    if (run && hold) {
+      const t = this.taskById(run.from);
+      if (t && t.day === d && addMin(run.until, this.shiftMin(t) + m) > hold[1]) w += ` It will still be on the smoker at ${fmt12(hold[1])}, so the sides go in the cooler hot-hold backup instead.`;
+    }
+    if (scope === "turkey") w += " The turkey is still done only at 165°F in all three spots.";
+    return w;
+  }
+  private lateHtml(): string {
+    const b = this.behind!, d = this.todayKey();
+    const open = d ? [...new Set(this.plan.tasks.filter((t) => t.day === d && t.rid && !this.store.isDone(t.id)).map((t) => t.rid as string))] : [];
+    const cur = this.todayShifts();
+    const chip = (attr: string, v: string, label: string, on: boolean) => `<button class="chip${on ? " on" : ""}" data-${attr}="${esc(v)}">${esc(label)}</button>`;
+    return `<button class="scrim2" data-bclose="1" aria-label="Close"></button><div class="tpop behindp" role="dialog" aria-label="Running behind">
+      <div class="tph"><div><h3 class="serif">Running behind?</h3><p>Move what's still to come, so the alarms and cards match the kitchen.</p></div><button class="btn sm" data-bclose="1">Cancel</button></div>
+      <span class="eb">How much later</span>
+      <div class="chips">${[10, 15, 20, 30, 45, 60].map((m) => chip("bmin", String(m), m + " min", b.m === m)).join("")}</div>
+      <span class="eb">What's late</span>
+      <div class="chips">${chip("bscope", "all", "Everything", b.s === "all")}${open.map((g) => chip("bscope", g, this.gname(g), b.s === g)).join("")}</div>
+      <p class="bw">${esc(this.behindWords(b.s, b.m))}</p>
+      ${cur.length ? `<p class="bnow">Already moved today: ${cur.map((e) => (e.s === "all" ? "everything" : this.gname(e.s).toLowerCase()) + " " + e.m + " min (from " + fmt12(e.f) + ")").join(", ")}.</p>` : ""}
+      <div class="bfoot">${cur.length ? `<button class="btn" data-bclear="1">Back on schedule</button>` : ""}<span style="flex:1"></span><button class="btn ink" data-bapply="1"${d ? "" : " disabled"}>Move ${b.s === "all" ? "everything" : esc(this.gname(b.s).toLowerCase())} ${b.m} min</button></div></div>`;
+  }
+  private applyBehind(): void {
+    const d = this.todayKey(), b = this.behind;
+    if (!d || !b) return;
+    const n = new Date(), f = String(n.getHours()).padStart(2, "0") + ":" + String(n.getMinutes()).padStart(2, "0");
+    this.store.setShifts([...this.store.shifts(), { s: b.s, m: b.m, d, f }]);
+    this.flash(b.s === "all" ? `Everything moved ${b.m} min later.` : `${this.gname(b.s)} moved ${b.m} min later.`);
+    this.behind = null;
+  }
+  private clearBehind(): void {
+    const d = this.todayKey();
+    this.store.setShifts(this.store.shifts().filter((e) => e.d !== d));
+    this.flash("Back on the original schedule.");
+    this.behind = null;
+  }
   private isToday(): boolean { return !this.L.day || this.L.day === this.currentDay(); }
 
   /** The recipe cards for the left column. */
@@ -442,7 +520,8 @@ export class PikHolidayCard extends LitElement {
     return { due: due.sort(byTime), done: done.sort((a, b) => this.ms(a.t) - this.ms(b.t)), next: next.sort(byTime), behind: behind.sort((a, b) => this.ms(a) - this.ms(b)) };
   }
   private inFinalHour(): boolean {
-    const h = this.plan.hotCheck, now = Date.now();
+    const h0 = this.plan.hotCheck, now = Date.now(), sh = this.shiftMin({ day: h0.day, hm: h0.from, rid: null });
+    const h = { day: h0.day, from: addMin(h0.from, sh), to: addMin(h0.to, sh) };
     return this.isToday() && this.currentDay() === h.day && now >= this.at(h.day, "15:00").getTime() && now < this.at(h.day, h.to).getTime();
   }
 
@@ -499,7 +578,7 @@ export class PikHolidayCard extends LitElement {
       const sub = !on ? "" : this.store.isDone(on.id) ? "On the smoker · no reading yet" : `On the smoker ${this.whenMs(this.ms(on))}`;
       return { cls: "off", sym: "—", head: "Turkey: not on yet", sub };
     }
-    if (L.every((x) => x && x.f >= 165)) return { cls: "ok", sym: "✓", head: "Turkey: done", sub: "165°F in all three · rest it" };
+    if (L.every((x) => x && x.f >= 165)) return { cls: "ok", sym: "✓", head: "Turkey: 165°F in all three", sub: "Confirm with the instant-read, then rest it" };
     const have = L.map((x, i) => ({ x, i })).filter((o) => o.x);
     const low = have.reduce((a, b) => (b.x!.f < a.x!.f ? b : a));
     return { cls: low.x!.f >= 150 ? "warn" : "hot", sym: low.x!.f + "°", head: "Turkey: lowest " + low.x!.f + "°F", sub: SPOTNAME[SPOTS[low.i]] + " · " + (this.store.inkbird(SPOTS[low.i]) ? "Inkbird, live" : tf(low.x!.t) + (have.length < 3 ? " · log all 3" : "")) };
@@ -509,18 +588,19 @@ export class PikHolidayCard extends LitElement {
 
   private dishRows() {
     const now = Date.now(), recent = now - 15 * 60000, today = this.todayKey();
-    const hc = this.plan.hotCheck;
+    const hc0 = this.plan.hotCheck, hcs = this.shiftMin({ day: hc0.day, hm: hc0.from, rid: null });
+    const hc = { day: hc0.day, from: addMin(hc0.from, hcs), to: addMin(hc0.to, hcs) };
     const hotWin = this.isToday() && this.currentDay() === hc.day && now >= this.at(hc.day, hc.from).getTime() && now < this.at(hc.day, hc.to).getTime();
     const involves = (t: Task, d: string) => t.rid === d || (t.steps || []).some(([r]) => r === d) || (t.dish || []).some((e) => e[0] === d);
     const readings = SPOTS.map((k) => this.store.latest(k));
     return this.plan.dishes.map((dish) => {
       let state = "wait", words = "";
       this.plan.tasks.forEach((t) => { if (this.store.isDone(t.id)) (t.dish || []).forEach((e) => { if (e[0] === dish.id) { state = e[1]; words = e[2]; } }); });
-      const active = this.plan.tasks.find((t) => involves(t, dish.id) && !this.store.isDone(t.id) && this.at(t.day, t.hm).getTime() <= now && this.at(t.day, t.hm).getTime() >= recent);
+      const active = this.plan.tasks.find((t) => involves(t, dish.id) && !this.store.isDone(t.id) && this.ms(t) <= now && this.ms(t) >= recent);
       if (active) { state = state === "hot" ? "hot" : "act"; words = "In progress"; }
       if (!words) {
         const nx = this.plan.tasks.find((t) => involves(t, dish.id) && !this.store.isDone(t.id));
-        words = nx ? (nx.day === today ? fmt12(nx.hm) + " today" : SHORTDAY[nx.day] + " " + fmt12(nx.hm)) : "";
+        words = nx ? (nx.day === today ? fmt12(this.effHm(nx)) + " today" : SHORTDAY[nx.day] + " " + fmt12(this.effHm(nx))) : "";
       }
       let tky = false;
       if (dish.id === "turkey" && readings.some((x) => x) && !this.store.isDone("thu_1445_turkey")) { words = SPOTS.map((k, i) => SPOTNAME[k] + " " + (readings[i] ? readings[i]!.f : "–")).join(" · "); tky = true; }
@@ -580,10 +660,10 @@ export class PikHolidayCard extends LitElement {
   }
   /** For a card's time column: the day (if not the day on screen) above the time, and the time never splits. */
   private timeCell(t: Task): string {
-    const full = fmt12(t.hm);
+    const full = fmt12(this.effHm(t));
     return (t.day !== this.viewDay() ? `<span class="dy">${SHORTDAY[t.day]}</span>` : "") + `<span class="hm">${full}</span>`;
   }
-  private when(t: Task): string { return (t.day !== this.viewDay() ? SHORTDAY[t.day] + " " : "") + fmt12(t.hm); }
+  private when(t: Task): string { return (t.day !== this.viewDay() ? SHORTDAY[t.day] + " " : "") + fmt12(this.effHm(t)); }
   /** One recipe's card: the part it's on, that part's step and ingredients; ‹ › walk the whole recipe and the time follows. */
   private cardHtml(g: string, cur: Task, due: boolean, foldable = false): string {
     const seq = this.seqs().get(g)!, n = seq.length;
@@ -692,7 +772,7 @@ export class PikHolidayCard extends LitElement {
     if (this.echo) return "";
     const d = this.viewDay();
     const list = this.plan.tasks.filter((t) => t.day === d);
-    const hrs = list.map((t) => { const [h, m] = t.hm.split(":").map(Number); return h + m / 60; });
+    const hrs = list.map((t) => { const [h, m] = this.effHm(t).split(":").map(Number); return h + m / 60; });
     const a = Math.floor(Math.min(...hrs)), b = Math.ceil(Math.max(...hrs) + 0.01);
     const pct = (h: number) => (((h - a) / (b - a)) * 100).toFixed(2);
     const now = new Date(); const nh = now.getHours() + now.getMinutes() / 60;
@@ -781,7 +861,7 @@ export class PikHolidayCard extends LitElement {
       this.store.logTemps({ [loc]: v });
       this.flash(SPOTNAME[loc] + ": " + v + "°F logged.");
       p.entry = ""; p.spot = (p.spot + 1) % 3;
-      if (after.every((f) => f >= 165)) this.pushAlert("done", hmNow(), "Turkey is done: 165°F in breast, thigh and wing. Off the smoker, tent, rest.");
+      if (after.every((f) => f >= 165)) this.pushAlert("done", hmNow(), "Turkey reads 165°F in breast, thigh and wing. Check each spot with the instant-read, then off the smoker, tent, rest.");
     } else if (p.entry.length < 3) p.entry += k;
     this.requestUpdate();
   }
@@ -789,7 +869,7 @@ export class PikHolidayCard extends LitElement {
   // ---------------------------------------------------------------- events
 
   private onClick = (e: Event): void => {
-    const el = (e.target as HTMLElement).closest("[data-collapse],[data-tip],[data-open],[data-place],[data-pick],[data-pickclose],[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack]") as HTMLElement | null;
+    const el = (e.target as HTMLElement).closest("[data-collapse],[data-tip],[data-open],[data-place],[data-pick],[data-pickclose],[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack],[data-behind],[data-bmin],[data-bscope],[data-bapply],[data-bclear],[data-bclose]") as HTMLElement | null;
     if (!el) return;
     const ds = el.dataset;
     if (ds.ack) { this.ackAlerts(); return; }
@@ -824,6 +904,12 @@ export class PikHolidayCard extends LitElement {
     if (ds.plus) { this.store.plus5(ds.plus); this.flash("5 more minutes."); this.requestUpdate(); return; }
     if (ds.step) { const [g, i] = ds.step.split(":"); if (Number(i) >= 0) this.store.setStep(g, Number(i)); this.requestUpdate(); return; } // also tells Pik which recipe "next step" means
     if (ds.finish) { this.store.setDone(ds.finish, true); this.L.open = null; this.saveL(); this.flash("Ticked off."); this.requestUpdate(); return; }
+    if (ds.behind !== undefined) { this.behind = { s: "all", m: 15 }; this.requestUpdate(); return; }
+    if (ds.bclose !== undefined) { this.behind = null; this.requestUpdate(); return; }
+    if (ds.bmin && this.behind) { this.behind.m = Number(ds.bmin); this.requestUpdate(); return; }
+    if (ds.bscope && this.behind) { this.behind.s = ds.bscope; this.requestUpdate(); return; }
+    if (ds.bapply !== undefined) { this.applyBehind(); this.requestUpdate(); return; }
+    if (ds.bclear !== undefined) { this.clearBehind(); this.requestUpdate(); return; }
     if (ds.plan !== undefined) { this.keep.resetSheet = true; this.sheet = { seg: "recipes", recipe: null, day: null }; this.requestUpdate(); return; }
     if (ds.recipe !== undefined) { this.keep.resetSheet = true; this.sheet = { seg: "recipes", recipe: ds.recipe || null, day: null }; this.requestUpdate(); return; }
     if (ds.dish) { this.keep.resetSheet = true; this.sheet = { seg: "recipes", recipe: ds.dish, day: null }; this.requestUpdate(); return; }
@@ -894,12 +980,12 @@ export class PikHolidayCard extends LitElement {
 
   render() {
     const now = new Date();
-    const left = Date.parse(this.plan.dinner) - now.getTime();
+    const left = this.dinnerMs() - now.getTime();
     const count = left > 86400000 ? Math.floor(left / 86400000) + " d " + Math.floor((left % 86400000) / 3600000) + " h" : left > 0 ? fmtDur(left).replace(/:\d\d$/, "") : "Happy " + this.plan.title;
     const ts = this.turkeyStatus();
     const d = this.currentDay();
     const todayLeft = this.plan.tasks.filter((t) => t.day === d && !!t.rid && !this.store.isDone(t.id)).length;
-    const sub = this.inFinalHour() ? "Everything hot by 4:00 · " + todayLeft + " left" : todayLeft + (todayLeft === 1 ? " task" : " tasks") + " left today" + (this.store.live ? "" : " · this screen only");
+    const sub = this.inFinalHour() ? "Everything hot by " + fmt12(new Date(this.dinnerMs()).toTimeString().slice(0, 5)) + " · " + todayLeft + " left" : todayLeft + (todayLeft === 1 ? " task" : " tasks") + " left today" + (this.store.live ? "" : " · this screen only");
     const a = this.Q[this.Q.length - 1];
     return html`<div class="op" @click=${this.onClick}>
 <header><div class="hd">
@@ -908,6 +994,7 @@ export class PikHolidayCard extends LitElement {
       : html`<div class="ttl"><b>${this.todayKey() ? this.plan.dayNames[d] + " · " + this.plan.title : this.plan.title + " prep starts " + this.plan.dayNames[Object.keys(this.plan.days)[0]]}</b><span>${sub}</span></div>`}
   <button class="tkb" data-turkey="1"><span class="dot ${ts.cls}">${ts.sym}</span><span class="t"><b>${ts.head}</b><span>${ts.sub}</span></span></button>
   <button class="ico ${this.store.alarmsOn() ? "" : "off"}" data-alarms="1" title=${this.store.alarmsOn() ? "Sound is on: the screen chimes and the Echos read tasks out. Tap to mute." : "Sound is off. Tap to turn it back on."}>${this.store.alarmsOn() ? "🔊" : "🔇"}</button>
+  ${(() => { const sh = this.todayShifts(), all = sh.filter((e) => e.s === "all").reduce((a, e) => a + e.m, 0); return html`<button class="ibtn bh${sh.length ? " on" : ""}" data-behind="1" title="Running behind? Move what's still to come.">${sh.length ? (all ? "Behind " + all + " min" : "Running late") : "Behind?"}</button>`; })()}
   <button class="ibtn" data-plan="1">Plan &amp; recipes</button>
   <div class="cdn"><span class="eb">${left > 0 ? "Dinner in" : "Dinner"}</span><div class="big">${count}</div></div>
 </div></header>
@@ -917,6 +1004,7 @@ ${unsafeHTML(this.stationsHtml())}
 ${this.sheet ? unsafeHTML(this.sheetHtml()) : nothing}
 ${this.turkeyPad ? unsafeHTML(this.padHtml()) : nothing}
 ${this.picker ? unsafeHTML(this.pickerHtml()) : nothing}
+${this.behind ? unsafeHTML(this.lateHtml()) : nothing}
 
 ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
 </div>`;
