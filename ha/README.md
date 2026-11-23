@@ -5,8 +5,8 @@ Everything here goes onto the Home Assistant Green. Nothing in this folder runs 
 | File | What it is |
 |---|---|
 | `packages/pik_kitchen.yaml` | The shared kitchen timer pool (12 timers), the timer scripts Pik uses, and `script.pik_announce`, which speaks on every Echo and can push to both phones. |
-| `packages/pik_holiday_thanksgiving_2026.yaml` | Holiday cooking mode for Thanksgiving. **Generated** from `holiday/thanksgiving-2026.json` by `node holiday/gen-ha.mjs thanksgiving-2026 tg26`; don't edit it by hand. |
-| `dashboards/thanksgiving.yaml` | The Thanksgiving dashboard: one full-screen view with the holiday card. |
+| `packages/pik_holiday_thanksgiving_2026.yaml` | Holiday cooking mode for Thanksgiving. **Generated** from `holiday/thanksgiving-2026.json` by `node holiday/gen-ha.mjs thanksgiving-2026 tg26`; don't edit it by hand. `node holiday/check-plan.mjs` cross-checks the plan (it also runs on every card build). |
+| `dashboards/thanksgiving.yaml` | The Thanksgiving dashboard: one page for the Chromebook (`/kitchen`) and one for the Echo Show 15 (`/echo`). |
 | `../card/dist/pik-house-card.js` | The card file. It contains both the house feed and the holiday card. |
 
 Only one holiday package can be installed at a time (they share the `holiday_*` script names
@@ -63,7 +63,8 @@ file** button (the down arrow at the top right of the file):
 2. Open it from the sidebar → pencil (top right) → three dots → **Raw configuration editor**.
 3. Delete everything there, paste the whole of `thanksgiving.yaml`, and **Save**. Close the editor.
 
-You should see the Thanksgiving Kitchen screen with the turkey card and today's tasks.
+You should see the Thanksgiving Kitchen screen: the clock, the smoker, oven and stove, today's
+tasks, and the 12 dishes.
 If it says **"this screen only"** at the top, the packages didn't load; recheck step 5.
 
 **8. Echos and phones.** If the Alexa Devices integration is set up (main setup), Echo
@@ -73,9 +74,9 @@ For phone pushes ("the turkey is done"), each of you only needs the Home Assista
 signed in on your phone.
 
 **9. Let Pik help.** Settings → Voice assistants → **Expose** tab → **Expose entities**. Tick
-these seven, then **Expose**:
+these eight, then **Expose**:
 
-- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures
+- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures · Holiday cooking: recipe step
 - Kitchen timer: start · Kitchen timer: stop or acknowledge · Kitchen timer: add time · Kitchen timers: what's running
 
 Then Settings → Devices & services → **Anthropic** → **Configure** on Pik's conversation
@@ -83,7 +84,9 @@ agent, and add this paragraph to the end of the instructions:
 
 > Holiday cooking: while a holiday plan is running, use holiday_whats_next for "what's next",
 > "where are we" and "how's the turkey"; holiday_task_done when someone says a task is done
-> ("the stuffing's in"); holiday_log_turkey for probe readings ("the breast is 158"). Use
+> ("the stuffing's in"); holiday_log_turkey for probe readings ("the breast is 158");
+> holiday_step for "next step", "go back", "say that again" and "read me the gravy steps" (read
+> the step out; if it has a timer, offer to start it). Use
 > kitchen_timer for every timer, kitchen_timer_stop to stop or silence one, and
 > kitchen_timers_list for "how long on the…". The turkey is done only at 165°F in the breast,
 > thigh and wing; never call it done from the clock. Keep answers short; the cooks' hands are full.
@@ -92,15 +95,23 @@ agent, and add this paragraph to the end of the instructions:
 
 - **Chromebook:** open the Thanksgiving dashboard, go full screen, and tap the screen once
   (so alarms can make sound). Settings → Device → Power → while charging, keep the display on.
-- **Echo Show 15:** open Silk, go to the same address as on the Chromebook (for example
-  `http://homeassistant.local:8123/dashboard-thanksgiving/kitchen`), sign in, and tap once.
+- **Echo Show 15:** open Silk, go to the same address as on the Chromebook but ending in
+  `/echo` (for example `http://homeassistant.local:8123/dashboard-thanksgiving/echo`), sign in,
+  and tap once.
 
-**11. If you started on the Thanksgiving page.** On the page: Notes & safety → **Copy progress
-for the hub**. On the hub: Notes & safety → paste → **Bring it over**. Ticks, running timers
-(like the brine) and turkey readings come across. After that, use only the hub; the page
-stays as a backup.
+**11. If you started on the Thanksgiving page.** On the page: **Plan & recipes → Notes & safety →
+Copy progress for the hub**. On the hub: **Plan & recipes → Notes & safety** → paste → **Bring it
+over**. Ticks, recipe steps, running timers (like the brine) and turkey readings come across.
+After that, use only the hub; the page stays as a backup.
 
 ## How it behaves
+
+- One page, run by the clock: what's on the smoker, oven and each burner; what to do now (tap
+  **How** to walk through that task's recipe steps, with Back and Next); the next few tasks; the
+  timers; and where each of the 12 dishes is. From 3:00 Thursday the dish list becomes the
+  "keeping hot" check: tap **140°F ✓** for each hot dish at 3:55.
+- Recipes, the full schedule (tick or undo anything), the shopping check, notes and safety are
+  one tap away under **Plan & recipes**.
 
 - Every screen shows the same ticks, timers and turkey readings within a second or two.
 - At each task's time, every screen chimes (and keeps chiming every 30 s until **Got it**),

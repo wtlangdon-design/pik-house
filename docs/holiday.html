@@ -17,7 +17,8 @@
   import "./pik-house-card.js";
   const card = document.querySelector("pik-holiday-card");
   const plan = new URLSearchParams(location.search).get("plan") || "thanksgiving_2026";
-  card.setConfig({ type: "custom:pik-holiday-card", plan, mock: true });
+  const layout = new URLSearchParams(location.search).get("layout") || undefined;
+  card.setConfig({ type: "custom:pik-holiday-card", plan, mock: true, layout });
 </script>
 </body>
 </html>

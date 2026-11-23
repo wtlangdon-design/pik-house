@@ -1,5 +1,7 @@
-# The Thanksgiving dashboard: one full-screen view with holiday cooking mode.
-# Paste into: Settings → Dashboards → (Thanksgiving) → ⋮ Edit → ⋮ Raw configuration editor.
+# The Thanksgiving dashboard: holiday cooking mode on one full-screen page.
+# Paste into: Settings → Dashboards → (Thanksgiving) → pencil → ⋮ → Raw configuration editor.
+#   …/kitchen  the Chromebook (1280×800)
+#   …/echo     the Echo Show 15 (1280×720, no day strip)
 title: Thanksgiving
 views:
   - title: Kitchen
@@ -10,3 +12,12 @@ views:
         plan: thanksgiving_2026
         prefix: tg26
         timers: 12
+  - title: Echo Show
+    path: echo
+    panel: true
+    cards:
+      - type: custom:pik-holiday-card
+        plan: thanksgiving_2026
+        prefix: tg26
+        timers: 12
+        layout: echo

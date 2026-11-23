@@ -5,6 +5,9 @@
 //   input_boolean.<prefix>_<task id>      a task is ticked off (one per task and final-hour item)
 //   input_number.<prefix>_turkey_<spot>   latest probe reading (breast, thigh, wing); history = the log
 //   input_boolean.<prefix>_quiet          on = Echo announcements muted (off by default, so they start on)
+//   input_boolean.<prefix>_hot_<dish>     the dish read 140°F or hotter at the final check
+//   input_text.<prefix>_steps             where each recipe-in-progress is: "task:step,task:step"
+//   input_text.<prefix>_focus             the task whose steps were last used (Pik's "next step" follows it)
 //   timer.kitchen_<n> + input_text.kitchen_timer_<n>   the shared kitchen timer pool ("kind|label")
 //   script.kitchen_timer / kitchen_timer_stop / kitchen_timer_add5   start, stop/acknowledge, +5 min
 // LocalStore (mock / preview): the same data in this browser's localStorage.
@@ -28,6 +31,10 @@ export interface Store {
   plus5(key: string): void;
   alarmsOn(): boolean;
   setAlarms(v: boolean): void;
+  getStep(task: string): number;
+  setStep(task: string, i: number): void;
+  isHot(dish: string): boolean;
+  setHot(dish: string, v: boolean): void;
   resetAll(ids: string[]): void;
   /** A signature of everything that affects the screen, so the card only redraws on real changes. */
   sig(): string;
@@ -35,11 +42,11 @@ export interface Store {
 
 // ---------------------------------------------------------------- local
 
-interface LocalState { done: Record<string, boolean>; temps: Reading[]; timers: KTimer[]; alarms: boolean }
+interface LocalState { done: Record<string, boolean>; temps: Reading[]; timers: KTimer[]; alarms: boolean; steps: Record<string, number>; hot: Record<string, boolean>; focus: string }
 
 export class LocalStore implements Store {
   readonly live = false;
-  private s: LocalState = { done: {}, temps: [], timers: [], alarms: true };
+  private s: LocalState = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "" };
   constructor(private key: string) {
     try { const raw = localStorage.getItem(key); if (raw) this.s = Object.assign(this.s, JSON.parse(raw)); } catch (e) { /* private mode */ }
   }
@@ -65,8 +72,18 @@ export class LocalStore implements Store {
   plus5(key: string): void { const t = this.s.timers.find((x) => x.key === key); if (t) { t.end += 300000; t.total += 300000; this.save(); } }
   alarmsOn(): boolean { return this.s.alarms; }
   setAlarms(v: boolean): void { this.s.alarms = v; this.save(); }
-  resetAll(): void { this.s = { done: {}, temps: [], timers: [], alarms: true }; this.save(); }
-  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms]); }
+  getStep(task: string): number { return this.s.steps[task] || 0; }
+  setStep(task: string, i: number): void { this.s.steps[task] = i; this.s.focus = task; this.save(); }
+  isHot(dish: string): boolean { return !!this.s.hot[dish]; }
+  setHot(dish: string, v: boolean): void { this.s.hot[dish] = v; this.save(); }
+  /** Everything needed to move to the hub: the same code the hub's import reads. */
+  exportCode(): string {
+    const data = { v: 2, done: Object.keys(this.s.done).filter((k) => this.s.done[k]), steps: this.s.steps, hot: Object.keys(this.s.hot).filter((k) => this.s.hot[k]),
+      temps: this.s.temps.map((x) => ({ loc: x.loc, f: x.f, t: x.t })), timers: this.s.timers.filter((t) => t.end > Date.now()).map((t) => ({ label: t.label, kind: t.kind, end: t.end })) };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  }
+  resetAll(): void { this.s = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "" }; this.save(); }
+  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms, this.s.steps, this.s.hot]); }
 }
 
 // ---------------------------------------------------------------- Home Assistant
@@ -171,8 +188,26 @@ export class HaStore implements Store {
   plus5(key: string): void { this.hass.callService("script", "kitchen_timer_add5", { slot: Number(key) }); }
   alarmsOn(): boolean { const e = this.st("input_boolean." + this.prefix + "_quiet"); return !e || e.state !== "on"; }
   setAlarms(v: boolean): void { this.hass.callService("input_boolean", v ? "turn_off" : "turn_on", {}, { entity_id: "input_boolean." + this.prefix + "_quiet" }); }
+  private stepMap(): Record<string, number> {
+    const e = this.st("input_text." + this.prefix + "_steps"), out: Record<string, number> = {};
+    String(e ? e.state : "").split(",").forEach((kv) => { const [k, v] = kv.split(":"); if (k && v && !isNaN(Number(v))) out[k] = Number(v); });
+    return out;
+  }
+  getStep(task: string): number { return this.stepMap()[task] || 0; }
+  setStep(task: string, i: number): void {
+    const m = this.stepMap();
+    m[task] = i;
+    // Keep only recipes still in progress so the list fits in one helper (255 characters).
+    let txt = Object.keys(m).filter((k) => m[k] > 0 && !this.isDone(k)).map((k) => k + ":" + m[k]).join(",");
+    while (txt.length > 250) txt = txt.slice(txt.indexOf(",") + 1);
+    this.hass.callService("input_text", "set_value", { value: txt }, { entity_id: "input_text." + this.prefix + "_steps" });
+    this.hass.callService("input_text", "set_value", { value: task }, { entity_id: "input_text." + this.prefix + "_focus" });
+  }
+  isHot(dish: string): boolean { const e = this.st("input_boolean." + this.prefix + "_hot_" + dish); return !!e && e.state === "on"; }
+  setHot(dish: string, v: boolean): void { this.hass.callService("input_boolean", v ? "turn_on" : "turn_off", {}, { entity_id: "input_boolean." + this.prefix + "_hot_" + dish }); }
   resetAll(ids: string[]): void {
     this.setMany(ids, false);
+    this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_steps" });
     SPOTS.forEach((l) => this.hass.callService("input_number", "set_value", { value: 0 }, { entity_id: "input_number." + this.prefix + "_turkey_" + l }));
     this.timers().forEach((t) => this.stopTimer(t.key));
   }
@@ -181,7 +216,7 @@ export class HaStore implements Store {
     const parts: string[] = [];
     const pre = this.prefix + "_";
     for (const id in this.hass.states) {
-      if (id.startsWith("input_boolean." + pre) || id.startsWith("input_number." + pre) || id.startsWith("timer.kitchen_") || id.startsWith("input_text.kitchen_timer_")) {
+      if (id.startsWith("input_boolean." + pre) || id.startsWith("input_number." + pre) || id.startsWith("input_text." + pre) || id.startsWith("timer.kitchen_") || id.startsWith("input_text.kitchen_timer_")) {
         const e = this.hass.states[id];
         parts.push(id + "=" + e.state + (id.startsWith("timer.") ? "/" + e.attributes.finishes_at + "/" + e.attributes.duration : "") + (id.startsWith("input_number.") ? "/" + (e.last_reported || e.last_updated) : ""));
       }
