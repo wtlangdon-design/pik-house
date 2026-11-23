@@ -3021,6 +3021,12 @@
      "hot",
      "On the smoker"
     ]
+   ],
+   "tips": [
+    [
+     "Smoker trouble?",
+     "Turkey to the oven at 350°F on its sheet pan; stuffing and green beans to the cooler hot box; mac bakes after."
+    ]
    ]
   },
   {
@@ -3280,7 +3286,17 @@
      12
     ]
    ],
-   "dish": []
+   "dish": [],
+   "tips": [
+    [
+     "Turkey done early?",
+     "Rest it tented 30 minutes, then foil and into the smoker at 200°F (or the cooler hot box). Check it stays 140°F or hotter. Carve at 3:20 as planned."
+    ],
+    [
+     "Turkey running late?",
+     "1:45 PM, breast under 145°F: smoker to 350°F now. 2:45 PM, any spot under 155°F: keep going; sides hold in the cooler hot box. 3:15 PM, still not 165°F everywhere: cut off the leg quarters, or move it to the oven after the mac (3:35, at 350–425°F). Push dinner to 4:30 rather than serve it under 165°F."
+    ]
+   ]
   },
   {
    "id": "thu_1405_stuffing",
@@ -3402,6 +3418,12 @@
      "hot",
      "Oven · to 165°F"
     ]
+   ],
+   "tips": [
+    [
+     "Not 165°F by 3:00?",
+     "Leave it in while the oven climbs to 425°F; it fits beside the mac. Pull it at 165°F, then into the hold."
+    ]
    ]
   },
   {
@@ -3475,6 +3497,12 @@
      "turkey",
      "hot",
      "Resting, tented"
+    ]
+   ],
+   "tips": [
+    [
+     "Not 165°F everywhere yet?",
+     "1:45 PM, breast under 145°F: smoker to 350°F now. 2:45 PM, any spot under 155°F: keep going; sides hold in the cooler hot box. 3:15 PM, still not 165°F everywhere: cut off the leg quarters, or move it to the oven after the mac (3:35, at 350–425°F). Push dinner to 4:30 rather than serve it under 165°F."
     ]
    ]
   },
@@ -3552,6 +3580,12 @@
      "hot",
      "Burner 4, lowest"
     ]
+   ],
+   "tips": [
+    [
+     "Not much drippings?",
+     "Make the gravy with 3 cups broth; that's why broth is held back."
+    ]
    ]
   },
   {
@@ -3574,6 +3608,12 @@
      "hot",
      "Smoker hold"
     ]
+   ],
+   "tips": [
+    [
+     "Smoker not free or not holding 200°F?",
+     "Hot-hold backup: a dry cooler, preheated with hot water for 10 minutes then dried, lined with towels. Pans go in covered; check 140°F or hotter at 3:30 and 3:50. Reheat anything that drops below to 165°F."
+    ]
    ]
   },
   {
@@ -3595,6 +3635,12 @@
      "gbc",
      "hot",
      "Smoker hold"
+    ]
+   ],
+   "tips": [
+    [
+     "Smoker not free or not holding 200°F?",
+     "Hot-hold backup: a dry cooler, preheated with hot water for 10 minutes then dried, lined with towels. Pans go in covered; check 140°F or hotter at 3:30 and 3:50. Reheat anything that drops below to 165°F."
     ]
    ]
   },

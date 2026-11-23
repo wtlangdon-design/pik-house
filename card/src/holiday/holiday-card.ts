@@ -29,7 +29,7 @@ type Seg = "recipes" | "schedule";
 /** One place in a recipe's run: a part (task) and, if it has any, one of its recipe steps. */
 interface Entry { t: Task; r?: Recipe; i?: number; s?: Recipe["steps"][number] }
 interface Alert { kind: string; when: string; text: string }
-interface Local { day: string | null; open: string | null; fired: Record<string, number>; rung: Record<string, number>; allDishes: boolean }
+interface Local { day: string | null; open: string | null; fired: Record<string, number>; rung: Record<string, number>; allDishes: boolean; tips?: Record<string, boolean> }
 
 const LANES: Record<string, string> = { smoker: "Smoker", oven: "Oven", stove: "Stove", prep: "Counter", fridge: "Fridge" };
 const SPOTNAME: Record<string, string> = { breast: "Breast", thigh: "Thigh", wing: "Wing" };
@@ -348,10 +348,10 @@ export class PikHolidayCard extends LitElement {
   private placed(i: number): Place | undefined { return this.store.places().find((p) => p.i === i && this.alive(p)); }
   private runStart(u: Run): number { const t = this.taskById(u.from); return t ? this.ms(t) : 0; }
   private runEnd(u: Run): number { const t = this.taskById(u.from); return t ? this.at(t.day, u.until).getTime() : 0; }
-  /** The plan's run for a station right now that nobody has put on yet (shown faded on the tile). */
+  /** The plan's run for a station right now that nobody has put on yet (shown faded on the tile, even if its first part is ticked). */
   private plannedNow(st: string) {
     const now = Date.now();
-    return this.runs.map((u, i) => ({ u, i })).find(({ u, i }) => u.st === st && !this.placed(i) && !this.store.isDone(u.from) && !this.store.isDone(u.to) && this.runStart(u) <= now && now < this.runEnd(u));
+    return this.runs.map((u, i) => ({ u, i })).find(({ u, i }) => u.st === st && !this.placed(i) && !this.store.isDone(u.to) && this.runStart(u) <= now && now < this.runEnd(u));
   }
   private plannedNext(st: string) {
     const now = Date.now();
@@ -558,8 +558,28 @@ export class PikHolidayCard extends LitElement {
       <div class="tt">${this.when(e.t)}${badge}</div>
       <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}</div><div class="x">${esc(e.t.text)}</div></div>
       <div class="acts">${ahead ? `${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="tick" data-done="${e.t.id}" data-g="${g}" aria-label="Tick off this part"></button>`}</div>
+      ${this.tipsHtml(e.t)}
       ${e.s || n > 1 ? `<div class="stp${n > 1 ? " car" : ""}">${n > 1 ? prev : ""}${e.s ? `<div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div>` : `<div class="sb2"><p class="muted">Nothing more to this step than the line above.</p></div>`}${n > 1 ? next : ""}</div>` : ""}
     </div>`;
+  }
+  /** "If something slips" help for this part, folded to one line until tapped. */
+  private tipsHtml(t: Task): string {
+    if (!t.tips || !t.tips.length) return "";
+    const open = (this.L.tips || {})[t.id];
+    return `<div class="tips">${t.tips.map(([q, a], j) => `<button class="tipq${open ? " on" : ""}" data-tip="${t.id}">⚠ ${esc(q)}${open ? "" : " ▸"}</button>${open ? `<p class="tipa">${esc(a)}</p>` : ""}`).join("")}</div>`;
+  }
+  /** Focus mode (three or more things due): a one-line card with its buttons; tap it to open the step. */
+  private compactHtml(g: string, cur: Task): string {
+    const seq = this.seqs().get(g)!, e = seq[this.cardIdx(g, cur)];
+    const live = e.t === cur || this.isDue(e.t), t = live ? e.t : cur;
+    const tm = this.timerOf(live ? e : seq[seq.findIndex((x) => x.t === cur)]);
+    const k = tm ? this.timerByLabel(tm[0]) : undefined;
+    const started = this.ms(t) <= Date.now();
+    const rec = !!this.recipe(g);
+    return `<div class="tc cmp due${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
+      <div class="tt">${this.when(t)}${started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`}</div>
+      <div class="cl">${rec ? `<b>${esc(this.gname(g))}</b>` : ""}<span>${esc(t.text)}</span>${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
+      <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}<button class="tick" data-done="${t.id}" data-g="${g}" aria-label="Tick off this part"></button></div></div>`;
   }
   /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
   private doneHtml(g: string, t: Task, next?: Task): string {
@@ -578,13 +598,17 @@ export class PikHolidayCard extends LitElement {
     const list = this.plan.tasks.filter((t) => t.day === d);
     const title = !this.isToday() ? this.plan.dayNames[d] : this.inFinalHour() ? "The final hour" : due.length ? "Do these now" : next.length ? "Coming up" : "All done for " + this.plan.dayNames[d].toLowerCase();
     const listCards = !due.length && !done.length;
+    // Rush hour: with three or more things due, every card is one line and only the one you open shows its step.
+    const focus = this.isToday() && due.length >= 3;
+    const openG = focus ? (due.some((x) => x.g === this.L.open) ? this.L.open : due[0].g) : null;
+    const dayBtns = this.echo ? "" : `<span class="dayseg">${Object.keys(this.plan.days).map((k) => `<button class="${k === d ? "on" : ""}" data-day="${k === this.currentDay() ? "" : k}">${SHORTDAY[k]}</button>`).join("")}</span>`;
     const shown = listCards ? next.slice(0, this.isToday() ? 6 : 20) : next.filter((x) => !done.some((y) => y.g === x.g)).slice(0, 3);
     return `<div class="lc">
-      <div class="nowh"><h2 class="serif">${title}</h2>${!this.isToday() ? `<span class="prev">Previewing · <button class="sb" data-day="">Back to now</button></span>` : `<span class="prev">${list.filter((t) => !this.store.isDone(t.id)).length} of ${list.length} left today</span>`}</div>
+      <div class="nowh"><h2 class="serif">${title}</h2>${!this.isToday() ? `<span class="prev">Previewing · <button class="sb" data-day="">Back to now</button></span>` : `<span class="prev">${focus ? due.length + " at once · tap a line to open its step" : list.filter((t) => !this.store.isDone(t.id)).length + " of " + list.length + " left today"}</span>`}${dayBtns}</div>
       ${this.missingPackage ? `<div class="flag"><b>Not shared yet</b><span>The holiday package isn't installed in Home Assistant, so progress is saved on this screen only.</span></div>` : ""}
       <div class="tlist">
         ${behind.length ? `<details class="earl"${this.keep.earl ? " open" : ""}><summary>${behind.length} earlier ${behind.length === 1 ? "part isn't" : "parts aren't"} ticked off ▸</summary>${behind.map((t) => this.behindHtml(t)).join("")}</details>` : ""}
-        ${due.map((x) => this.cardHtml(x.g, x.cur, true)).join("")}
+        ${focus ? due.map((x) => (x.g === openG ? this.cardHtml(x.g, x.cur, true) : this.compactHtml(x.g, x.cur))).join("") : due.map((x) => this.cardHtml(x.g, x.cur, true)).join("")}
         ${done.map((x) => this.doneHtml(x.g, x.t, x.next)).join("")}
         ${listCards ? shown.map((x) => this.cardHtml(x.g, x.cur, false)).join("") : ""}
       </div>
@@ -705,10 +729,12 @@ export class PikHolidayCard extends LitElement {
   // ---------------------------------------------------------------- events
 
   private onClick = (e: Event): void => {
-    const el = (e.target as HTMLElement).closest("[data-place],[data-pick],[data-pickclose],[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack]") as HTMLElement | null;
+    const el = (e.target as HTMLElement).closest("[data-tip],[data-open],[data-place],[data-pick],[data-pickclose],[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack]") as HTMLElement | null;
     if (!el) return;
     const ds = el.dataset;
     if (ds.ack) { this.ackAlerts(); return; }
+    if (ds.tip) { this.L.tips = Object.assign({}, this.L.tips, { [ds.tip]: !(this.L.tips || {})[ds.tip] }); this.saveL(); this.requestUpdate(); return; }
+    if (ds.open) { this.L.open = ds.open; this.saveL(); this.requestUpdate(); return; }
     if (ds.place) {
       const i = Number(ds.place), u = this.runs[i], pl = this.placed(i);
       if (pl) { this.store.setPlace(i, null, this.alive); this.flash(u.l + ": off " + (pl.st[0] === "b" ? "burner " + pl.st.slice(1) : "the " + pl.st) + "."); }
@@ -818,8 +844,8 @@ export class PikHolidayCard extends LitElement {
   <div class="cdn"><span class="eb">${left > 0 ? "Dinner in" : "Dinner"}</span><div class="big">${count}</div></div>
 </div></header>
 ${unsafeHTML(this.stationsHtml())}
-<div class="bdy">${unsafeHTML(this.nowHtml())}<div class="rc">${unsafeHTML(this.timersHtml())}${unsafeHTML(this.dishesHtml())}</div></div>
-${unsafeHTML(this.ribbonHtml())}
+<div class="bdy${this.inFinalHour() ? " fh" : ""}">${unsafeHTML(this.nowHtml())}<div class="rc">${unsafeHTML(this.timersHtml())}${unsafeHTML(this.dishesHtml())}</div></div>
+
 ${this.sheet ? unsafeHTML(this.sheetHtml()) : nothing}
 ${this.turkeyPad ? unsafeHTML(this.padHtml()) : nothing}
 ${this.picker ? unsafeHTML(this.pickerHtml()) : nothing}

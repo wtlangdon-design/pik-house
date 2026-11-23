@@ -192,7 +192,7 @@ td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-
 .bn div{display:flex;flex-direction:column;min-width:0}
 .bn b{font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bn i{font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bdy{flex:1;display:grid;grid-template-columns:1fr 420px;gap:18px;padding:14px 22px 10px;min-height:0}
+.bdy{flex:1;display:grid;grid-template-columns:1fr 330px;gap:18px;padding:14px 22px 10px;min-height:0}
 .lc{display:flex;flex-direction:column;min-height:0;gap:8px}
 .rc{display:flex;flex-direction:column;min-height:0;gap:12px}
 .nowh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -369,4 +369,21 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .stp.car .ar{width:40px;height:56px;border-radius:14px;border:1px solid var(--line);background:var(--card);font:500 26px/1 'DM Sans',sans-serif;cursor:pointer;color:var(--ink);padding:0}
 .stp.car .ar:disabled{opacity:.25;cursor:default}
 .stp.car p.muted{color:var(--muted);font-size:14px}
+/* rush-ready: focus mode, tips, day buttons in the header, slimmer dish list */
+.bdy.fh{grid-template-columns:1fr 420px}
+.bdy:not(.fh) .dkey{display:none}
+.nowh .dayseg{margin-left:auto;display:flex;gap:4px}
+.nowh .dayseg button{height:32px;padding:0 13px;border-radius:16px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:12.5px;cursor:pointer}
+.nowh .dayseg button.on{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
+.tc.cmp{align-items:center;padding-top:8px;padding-bottom:8px;cursor:pointer}
+.tc.cmp .tt small.now{margin-top:3px}
+.tc.cmp .cl{display:flex;align-items:baseline;gap:10px;min-width:0}
+.tc.cmp .cl b{font-size:17px;white-space:nowrap}
+.tc.cmp .cl span{font-size:15px;color:#4A3D31;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.tc.cmp .cl em{font-style:normal;color:var(--muted);font-size:14px}
+.tc.cmp .cl .tipdot{font-style:normal;color:#B25A1C}
+.tips{grid-column:2 / 4;display:flex;flex-direction:column;gap:6px;margin-top:-4px}
+.tipq{align-self:flex-start;border:1px solid #EBCB98;background:#FFF6E8;color:#8A5A1C;border-radius:14px;padding:5px 12px;font-weight:600;font-size:13px;cursor:pointer}
+.tipq.on{background:#FBE7C6}
+.tipa{margin:0;font-size:14.5px;line-height:1.45;background:#FFF6E8;border-left:3px solid #E3B474;border-radius:0 10px 10px 0;padding:8px 12px}
 `;

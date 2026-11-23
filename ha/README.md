@@ -107,6 +107,28 @@ bottom) **→ Copy progress for the hub**. On the hub: **Plan & recipes → Sett
 over**. Ticks, recipe steps, running timers (like the brine) and turkey readings come across.
 After that, use only the hub; the page stays as a backup.
 
+## Tuesday rehearsal (15 minutes, before 7 PM)
+
+Do this once the steps above are done. Each check takes a minute.
+
+1. **The Echo talks.** Settings → Automations & scenes → Scripts → **Pik: announce** → ⋮ → Run.
+   The Echo Show 15 should say the test message. If it doesn't, the task alarms won't either.
+2. **The kitchen page is up on both screens.** Chromebook: the Thanksgiving dashboard, full screen.
+   Echo Show 15: `/dashboard-thanksgiving/echo`. Tap each screen once so it can make sound.
+3. **They agree.** On the Chromebook, tap **Tue** at the top of "Coming up", then tick the 7:00
+   turkey card. Within a couple of seconds it's ticked on the Echo too. Tap the tick again to undo.
+4. **A timer rings.** On any card tap **Set N min timer**, then on the Echo tap the timer's **×**.
+   It should disappear on both. Then ask Pik to "set a 1 minute timer" and wait for it to ring on
+   both screens.
+5. **The burner buttons.** Tap the burner icon on the cranberry sauce card: burner 1 lights up on
+   both screens. Tap it again to take it off.
+6. **Pik answers.** Ask "what's next?" and "what's the next step for the turkey?"
+7. **The screens stay on.** Leave both alone for 10 minutes. If the Echo Show goes back to its
+   home screen, set its screen timeout to never in its settings, and reopen the page.
+
+If the hub isn't ready by 7:00, start on the backup page and move your progress over later
+(step 11).
+
 ## How it behaves
 
 - One page, run by the clock: what's on the smoker, oven and each burner (what's next and when);
@@ -114,6 +136,12 @@ After that, use only the hub; the page stays as a backup.
   (‹ › walk through the whole recipe, Tuesday to Thursday, and the time moves with the steps; tick
   a part off and the card moves on; tap the dish name for the whole recipe); the next few recipes;
   the timers ("Set 5 min timer", then the time left); and where each of the 12 dishes is.
+- Rush hour: when three or more things are due at once, every card shrinks to one line (time,
+  dish, what to do, its buttons) and only the one you tap opens to show its step.
+- Where something could slip (turkey early or late, smoker trouble, not enough drippings,
+  stuffing not at 165°F), the card has a "⚠ …?" line; tap it for what to do.
+- When several things come due together, the Echo says them in one short line ("Four things at
+  3:00: stuffing, green bean casserole, lobster mac and mashed potatoes. Check the screen.").
 - Burner, oven and smoker emblems on the cards (the burner number on top): tap one when the dish
   goes on and the tile at the top shows it, with how long it's been on. Tap it again to take it off;
   ticking off the part that ends it frees the burner by itself. A dish the plan expects but nobody
