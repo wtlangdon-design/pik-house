@@ -587,7 +587,8 @@ export class PikHolidayCard extends LitElement {
     const seq = this.seqs().get(g)!, n = seq.length;
     const start = seq.findIndex((e) => e.t === cur);
     const idx = this.cardIdx(g, cur), e = seq[idx];
-    const ahead = e.t !== cur && !this.isDue(e.t);
+    // "Later" only for a part that comes after the one the card is on (not one at the same time).
+    const ahead = e.t !== cur && this.ms(e.t) > this.ms(cur) && !this.isDue(e.t);
     const tm = ahead ? null : this.timerOf(e);
     const k = tm ? this.timerByLabel(tm[0]) : undefined;
     const ings = e.s && e.r ? this.stepIngr(e.r, e.s) : [];
@@ -624,7 +625,7 @@ export class PikHolidayCard extends LitElement {
     // Folded: the step it's on, and only what's worth seeing at a glance (a running timer, what's on a burner).
     // Done shows here only once you've reached the last step of this part.
     const seq = this.seqs().get(g)!, idx = this.cardIdx(g, cur), e = seq[idx];
-    const live = e.t === cur || this.isDue(e.t), t = live ? e.t : cur;
+    const live = e.t === cur || this.isDue(e.t) || this.ms(e.t) <= this.ms(cur), t = live ? e.t : cur;
     const tm = this.timerOf(live ? e : seq[seq.findIndex((x) => x.t === cur)]);
     const k = tm ? this.timerByLabel(tm[0]) : undefined;
     const started = this.ms(t) <= Date.now();
