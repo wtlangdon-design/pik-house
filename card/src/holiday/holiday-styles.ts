@@ -461,4 +461,5 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .bdy.fh .dr span.w{font-size:12.5px;flex:none;line-height:1.3}
 /* the tile's second line may wrap onto a second row rather than be cut off */
 .sn i,.bn i{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tc .nm .clp{margin-left:auto;height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--line);background:#fff;color:var(--muted);font:600 12.5px 'DM Sans',sans-serif;cursor:pointer}
 `;

@@ -10,7 +10,7 @@
 #   input_boolean.tg26_push        on = also push each task to both phones (off by default)
 #   input_number.tg26_turkey_*     latest probe reading for breast, thigh, wing (history = the log)
 #   automations: read each task out at its time; announce "turkey is done" at 165°F everywhere
-#   scripts for Pik: holiday_whats_next, holiday_task_done, holiday_log_turkey, holiday_step, holiday_place
+#   scripts for Pik: holiday_whats_next, holiday_task_done, holiday_log_turkey, holiday_step, holiday_place, holiday_card
 # Needs pik_kitchen.yaml (timers and script.pik_announce).
 
 input_boolean:
@@ -264,7 +264,8 @@ script:
       Walks through a Thanksgiving recipe step by step, from its first part to its last, the same way the kitchen screens do
       (one card per recipe; the screens move along too). action: next, back, repeat or first. dish: optional dish name,
       task id or a few words; without it, the recipe someone last used on a screen or by voice, else the one due now.
-      Use for "next step", "go back", "what's this step", "read me the gravy steps". Read the step out with its ingredients
+      Use for "next step", "next step on the stuffing" (moves it on), "go back", "what's this step" (repeat),
+      "read me the gravy steps" (first). Read the step out with its ingredients
       and, if given, about how many minutes of work it takes (minutes_of_work).
       If it has a timer, offer to start it with kitchen_timer (that label and minutes). When a part is finished,
       tick it off with holiday_task_done (task_id).
@@ -322,7 +323,7 @@ script:
             {% set ns = namespace(i=-1) %}{% for j in range(ents | count) if ns.i < 0 and not is_state('input_boolean.tg26_' ~ ents[j].k, 'on') %}{% set ns.i = j %}{% endfor %}{{ [ns.i, 0] | max }}
           cur: "{{ [smap.get(target, 0) | int, start | int] | max }}"
           new: >-
-            {% if act == 'first' %}{{ start }}{% elif act == 'back' %}{{ [cur - 1, start | int] | max }}{% elif act == 'repeat' %}{{ [cur, n - 1] | min }}{% else %}{{ [cur + (1 if target == states('input_text.tg26_focus') else 0), n - 1] | min }}{% endif %}
+            {% if act == 'first' %}{{ start }}{% elif act == 'back' %}{{ [cur - 1, start | int] | max }}{% elif act == 'repeat' %}{{ [cur, n - 1] | min }}{% else %}{{ [cur + (1 if target == states('input_text.tg26_focus') or (dish | default('') | trim) != '' else 0), n - 1] | min }}{% endif %}
           txt: >-
             {% set ns = namespace(out=[]) %}
             {% for k, v in dict(smap, **{target: new | int}).items() if (v | int) > 0 %}{% set ns.out = ns.out + [k ~ ':' ~ v] %}{% endfor %}
@@ -410,5 +411,37 @@ script:
       - variables:
           where_words: "{{ 'in the oven' if st == 'oven' else ('on the smoker' if st == 'smoker' else 'on burner ' ~ st[1:]) }}"
           result: { ok: true, dish: "{{ u.l }}", station: "{{ st }}", message: "{{ u.l ~ (' is ' ~ where_words if act == 'on' else ' is off ' ~ where_words[3:] if st != 'oven' else ' is out of the oven') }}." }
+      - stop: "Done"
+        response_variable: result
+  holiday_card:
+    alias: "Holiday cooking: open or fold a card"
+    description: >-
+      Thanksgiving: open a recipe's card on the kitchen screens (its step and ingredients show), or fold it. Use for
+      "open the turkey card", "expand stuffing", "show me the gravy", "collapse the stuffing card", "fold that".
+      dish: a few words for the dish (optional for close). action: open (default) or close. "Next step" afterwards
+      follows the card you opened.
+    mode: queued
+    fields:
+      dish: { description: "A few words for the dish", selector: { text: null } }
+      action: { description: "open or close", default: "open", selector: { select: { options: ["open", "close"] } } }
+    sequence:
+      - variables:
+          names: {"turkey":"Turkey","stuffing":"Stuffing","cran":"Cranberry sauce","eggs":"Deviled eggs","mac":"Lobster mac","gbc":"Green bean casserole","cake":"Gooey butter cake","salad":"Salad","sprouts":"Brussels sprouts","dip":"Salmon roe dip","mash":"Mashed potatoes","gravy":"Gravy"}
+          act: "{{ action | default('open') }}"
+          words: "{{ (dish | default('')) | lower | regex_findall('[a-z0-9]+') }}"
+          target: >-
+            {% set ns = namespace(id='') %}
+            {% for g, n in names.items() if ns.id == '' and words | count > 0 and (words | select('in', (g ~ ' ' ~ n) | lower | regex_findall('[a-z0-9]+')) | list | count == words | count) %}{% set ns.id = g %}{% endfor %}
+            {{ ns.id }}
+      - if: "{{ act == 'open' and target == '' }}"
+        then:
+          - variables: { result: { ok: false, message: "Which dish? Say the dish, like turkey or stuffing." } }
+          - stop: "No dish"
+            response_variable: result
+      - action: input_text.set_value
+        target: { entity_id: input_text.tg26_focus }
+        data: { value: "{{ target if act == 'open' else '-' }}" }
+      - variables:
+          result: { ok: true, message: "{{ (names[target] ~ ' is open on the screens.') if act == 'open' else 'Folded. Every card is one line now.' }}" }
       - stop: "Done"
         response_variable: result

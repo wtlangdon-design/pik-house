@@ -74,9 +74,9 @@ For phone pushes ("the turkey is done"), each of you only needs the Home Assista
 signed in on your phone.
 
 **9. Let Pik help.** Settings → Voice assistants → **Expose** tab → **Expose entities**. Tick
-these nine, then **Expose**:
+these ten, then **Expose**:
 
-- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures · Holiday cooking: recipe step · Holiday cooking: put on / take off
+- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures · Holiday cooking: recipe step · Holiday cooking: put on / take off · Holiday cooking: open or fold a card
 - Kitchen timer: start · Kitchen timer: stop or acknowledge · Kitchen timer: add time · Kitchen timers: what's running
 
 Then Settings → Devices & services → **Anthropic** → **Configure** on Pik's conversation
@@ -89,7 +89,9 @@ agent, and add this paragraph to the end of the instructions:
 > one recipe from start to finish, like the cards on the screens; read the step out; if it has a
 > timer, offer to start it; when a part is finished, tick it off with holiday_task_done);
 > holiday_place when something goes on a burner, in the oven or on the smoker, or comes off ("the
-> cranberry sauce is on", "put the gravy on burner 3", "take the potatoes off"). Use
+> cranberry sauce is on", "put the gravy on burner 3", "take the potatoes off"); holiday_card to
+> open or fold a recipe's card on the screens ("open the turkey card", "collapse the stuffing").
+> For "next step on the stuffing", call holiday_step with that dish. Use
 > kitchen_timer for every timer, kitchen_timer_stop to stop or silence one, and
 > kitchen_timers_list for "how long on the…". The turkey is done only at 165°F in the breast,
 > thigh and wing; never call it done from the clock. Keep answers short; the cooks' hands are full.
