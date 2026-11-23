@@ -131,7 +131,8 @@ export class PikSmokeCard extends LitElement {
       if (p.target && Math.abs(p.v - p.target) > 25) return { cls: "warn", word: p.v > p.target ? "Running hot" : "Running cool", line: `Set for ${p.target}°.${rate ? " " + rate + "." : ""}` };
       return { cls: "ok", word: p.target ? "On target" : "", line: rate ? rate + "." : "Watching the smoker." };
     }
-    if (!p.target) return { cls: "idle", word: "", line: (rate ? rate + ". " : "") + "No temperature to tell you at. Tap to add one." };
+    if (p.v > 230) return { cls: "bad", word: "Out of the meat?", line: `Reads ${p.v}°, hotter than meat can get. Push the probe back into the thickest part.` };
+    if (!p.target) return { cls: "idle", word: "", line: (rate ? rate + ". " : "") + "Watching. No alert set; tap to add one." };
     if (p.v >= p.target || "d" in p.flags) {
       const ago = "d" in p.flags && p.flags.d ? Math.max(0, Math.floor(Date.now() / 60000) - p.flags.d) : 0;
       return { cls: "done", word: "Done", line: `Hit ${p.target}°${ago ? " " + dur(ago) + " ago" : ""}. Time to take it off.`, done: !("a" in p.flags) };

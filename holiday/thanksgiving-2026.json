@@ -433,12 +433,6 @@
     },
     {
      "d": "tue",
-     "t": "Spatchcock: breast down, cut along both sides of the backbone with shears and remove it. Flip, press firmly on the breastbone to flatten.",
-     "min": 15,
-     "ing": []
-    },
-    {
-     "d": "tue",
      "t": "Mix brine: for each gallon, dissolve 230 g salt and ¾ cup brown sugar in 1 quart hot water, then add 3 quarts cold water and ice. It must be 40°F or colder before the turkey goes in.",
      "min": 15,
      "ing": [
@@ -452,6 +446,12 @@
        3
       ]
      ]
+    },
+    {
+     "d": "tue",
+     "t": "Spatchcock: breast down, cut along both sides of the backbone with shears and remove it. Flip, press firmly on the breastbone to flatten.",
+     "min": 15,
+     "ing": []
     },
     {
      "d": "tue",
@@ -735,7 +735,13 @@
     },
     {
      "d": "thu",
-     "t": "Hold on the lowest heat, stirring now and then. 3:50 PM: into the gravy boat. Served separately.",
+     "t": "Hold on the lowest heat, stirring now and then.",
+     "min": 2,
+     "ing": []
+    },
+    {
+     "d": "thu",
+     "t": "3:50 PM: into the gravy boat. Served separately.",
      "min": 2,
      "ing": []
     }
@@ -845,7 +851,7 @@
     },
     {
      "d": "wed",
-     "t": "Add the minced hearts and liver and cook through completely (no pink). Season with dried parsley, sage and salt. Cool in a shallow container; refrigerate.",
+     "t": "Add the minced hearts and liver and cook until no pink remains and the largest piece reads 165°F. Season with dried parsley, sage and salt. Cool in a shallow container; refrigerate.",
      "min": 10,
      "ing": [
       [
@@ -1148,8 +1154,8 @@
     },
     {
      "d": "thu",
-     "t": "3:00 PM: out, still covered, into the smoker hot hold (200–225°F).",
-     "min": 2,
+     "t": "3:00 PM: check the center reads 165°F (it was made Wednesday). If not, leave it in, covered, while the oven heats for the mac, and check every 5 minutes; out by 3:10. Then, still covered, into the smoker hot hold (200–225°F).",
+     "min": 3,
      "ing": []
     },
     {
@@ -1363,7 +1369,7 @@
     },
     {
      "d": "thu",
-     "t": "3:40 PM: chop the cilantro and mint; stir into the dressing.",
+     "t": "3:30 PM: chop the cilantro and mint; stir into the dressing.",
      "min": 5,
      "ing": [
       [
@@ -1726,11 +1732,11 @@
    "steps": [
     {
      "d": "wed",
-     "t": "10:30 AM: boil the lobster tails in salted water just until the shells turn red (slightly under). Ice, then pull the meat, chop, refrigerate.",
+     "t": "10:30 AM: boil the lobster tails in salted water until the shells are bright red and the meat is opaque and firm all the way through. Ice, then pull the meat, chop, refrigerate.",
      "min": 15,
      "tm": [
-      "Lobster: shells red?",
-      5,
+      "Lobster: meat opaque?",
+      6,
       "check"
      ],
      "ing": [
@@ -1793,7 +1799,7 @@
     },
     {
      "d": "thu",
-     "t": "2:40 PM: pasta water on (salted).",
+     "t": "2:35 PM: pasta water on (salted).",
      "min": 2,
      "tm": [
       "Pasta water boiling?",
@@ -1810,7 +1816,7 @@
     },
     {
      "d": "thu",
-     "t": "2:45 PM: sauce. Sauté shallot, garlic and thyme in butter and oil 2–3 min; stir in gochujang and gochugaru; add the cooking sherry and reduce by about a third.",
+     "t": "2:40 PM: sauce. Sauté shallot, garlic and thyme in butter and oil 2–3 min; stir in gochujang and gochugaru; add the cooking sherry and reduce by about a third.",
      "min": 8,
      "ing": [
       [
@@ -1881,7 +1887,7 @@
     },
     {
      "d": "thu",
-     "t": "3:00 PM: cook the elbows about 2 minutes short of the box's al dente time. Drain.",
+     "t": "2:52 PM: cook the elbows about 2 minutes short of the box's al dente time. Drain.",
      "min": 2,
      "tm": [
       "Pasta: 2 min short of al dente",
@@ -1896,7 +1902,7 @@
     },
     {
      "d": "thu",
-     "t": "3:08 PM: layer in the dish: half the pasta, half the sauce, all the lobster, the rest of the pasta and sauce, then the topping cheeses.",
+     "t": "3:03 PM: layer in the dish: half the pasta, half the sauce, all the lobster, the rest of the pasta and sauce, then the topping cheeses.",
      "min": 8,
      "ing": [
       [
@@ -1936,7 +1942,7 @@
     },
     {
      "d": "thu",
-     "t": "3:35 PM: out. Fold parsley into the panko; scatter on with chives. Tent loosely with foil and rest until 3:55 (it sets the sauce); check it's 140°F or hotter before serving.",
+     "t": "3:35 PM: out. Check the center reads 165°F (the lobster went in cold from the fridge); if not, back in for 5 minutes and check again. Fold parsley into the panko; scatter on with chives. Tent loosely with foil and rest until 3:55 (it sets the sauce).",
      "min": 5,
      "ing": [
       [
@@ -2062,13 +2068,19 @@
     },
     {
      "d": "thu",
-     "t": "3:00 PM: out of the fridge. 3:50 PM: into the bowl; zest on top.",
-     "min": 2,
+     "t": "3:00 PM: out of the fridge.",
+     "min": 1,
      "ing": [
       [
        4
       ]
      ]
+    },
+    {
+     "d": "thu",
+     "t": "3:50 PM: into the bowl; zest on top.",
+     "min": 2,
+     "ing": []
     }
    ]
   },
@@ -2347,7 +2359,7 @@
    "steps": [
     {
      "d": "wed",
-     "t": "1:00 PM: heat the oven to 350°F. Grease the 13×9.",
+     "t": "12:55 PM: heat the oven to 350°F. Grease the 13×9. Start the crust while it heats.",
      "min": 5,
      "tm": [
       "Oven at 350°F?",
@@ -2444,7 +2456,13 @@
      0
     ]
    ],
-   "dish": []
+   "dish": [],
+   "tips": [
+    [
+     "Still icy inside?",
+     "Cold-water thaw: keep it in its wrapper, breast down in a cooler or sink of cold water, and change the water every 30 minutes (about 30 minutes per pound, so a 16 lb bird takes about 8 hours). Never warm water or the counter. Once it's thawed and still cold, brine it for 10 to 13 hours; if that pushes the brine past Wednesday morning, move Wednesday's turkey steps later by the same amount."
+    ]
+   ]
   },
   {
    "id": "tue_1900_brine",
@@ -2457,7 +2475,7 @@
    "steps": [
     [
      "turkey",
-     2
+     1
     ]
    ],
    "dish": []
@@ -2473,7 +2491,7 @@
    "steps": [
     [
      "turkey",
-     1
+     2
     ]
    ],
    "dish": []
@@ -2663,7 +2681,7 @@
    "hm": "11:00",
    "lane": "stove",
    "rid": "stuffing",
-   "text": "Stuffing wet mix (butter, onion, celery, hearts, liver cooked through); cool in a shallow container; fridge.",
+   "text": "Stuffing wet mix (butter, onion, celery, hearts, liver to 165°F); cool in a shallow container; fridge.",
    "tm": null,
    "steps": [
     [
@@ -2726,9 +2744,9 @@
    ]
   },
   {
-   "id": "wed_1300_cake",
+   "id": "wed_1255_cake",
    "day": "wed",
-   "hm": "13:00",
+   "hm": "12:55",
    "lane": "oven",
    "rid": "cake",
    "text": "Oven to 350°F; gooey butter cake in at 1:20; check at 2:00; cool; fridge.",
@@ -3369,6 +3387,32 @@
    ]
   },
   {
+   "id": "thu_1435_mac",
+   "day": "thu",
+   "hm": "14:35",
+   "lane": "stove",
+   "rid": "mac",
+   "text": "Burner 2: pasta water on.",
+   "tm": [
+    "Pasta water boiling?",
+    15,
+    "check"
+   ],
+   "steps": [
+    [
+     "mac",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "act",
+     "Water on, burner 2"
+    ]
+   ]
+  },
+  {
    "id": "thu_1440_stuffing",
    "day": "thu",
    "hm": "14:40",
@@ -3432,23 +3476,31 @@
    "hm": "14:40",
    "lane": "stove",
    "rid": "mac",
-   "text": "Burner 2: pasta water on.",
+   "text": "Burner 3: mac sauce.",
    "tm": [
-    "Pasta water boiling?",
-    15,
+    "Sauce: reduced by a third?",
+    10,
     "check"
    ],
    "steps": [
     [
      "mac",
-     3
+     4
+    ],
+    [
+     "mac",
+     5
+    ],
+    [
+     "mac",
+     6
     ]
    ],
    "dish": [
     [
      "mac",
      "act",
-     "Water on, burner 2"
+     "Sauce, burner 3"
     ]
    ]
   },
@@ -3477,40 +3529,6 @@
     [
      "Not 165°F everywhere yet?",
      "1:45 PM, breast under 145°F: smoker to 350°F now. 2:45 PM, any spot under 155°F: keep going; sides hold in the cooler hot box. 3:15 PM, still not 165°F everywhere: cut off the leg quarters, or move it to the oven after the mac (3:35, at 350–425°F). Push dinner to 4:30 rather than serve it under 165°F."
-    ]
-   ]
-  },
-  {
-   "id": "thu_1445_mac",
-   "day": "thu",
-   "hm": "14:45",
-   "lane": "stove",
-   "rid": "mac",
-   "text": "Burner 3: mac sauce.",
-   "tm": [
-    "Sauce: reduced by a third?",
-    10,
-    "check"
-   ],
-   "steps": [
-    [
-     "mac",
-     4
-    ],
-    [
-     "mac",
-     5
-    ],
-    [
-     "mac",
-     6
-    ]
-   ],
-   "dish": [
-    [
-     "mac",
-     "act",
-     "Sauce, burner 3"
     ]
    ]
   },
@@ -3561,6 +3579,26 @@
      "Make the gravy with 3 cups broth; that's why broth is held back."
     ]
    ]
+  },
+  {
+   "id": "thu_1452_mac",
+   "day": "thu",
+   "hm": "14:52",
+   "lane": "stove",
+   "rid": "mac",
+   "text": "Burner 2: elbows in, 2 min short of al dente.",
+   "tm": [
+    "Pasta: 2 min short of al dente",
+    7,
+    "check"
+   ],
+   "steps": [
+    [
+     "mac",
+     7
+    ]
+   ],
+   "dish": []
   },
   {
    "id": "thu_1500_stuffing",
@@ -3660,26 +3698,6 @@
    ]
   },
   {
-   "id": "thu_1500_mac",
-   "day": "thu",
-   "hm": "15:00",
-   "lane": "stove",
-   "rid": "mac",
-   "text": "Burner 2: elbows in, 2 min short of al dente.",
-   "tm": [
-    "Pasta: 2 min short of al dente",
-    7,
-    "check"
-   ],
-   "steps": [
-    [
-     "mac",
-     7
-    ]
-   ],
-   "dish": []
-  },
-  {
    "id": "thu_1500_cran",
    "day": "thu",
    "hm": "15:00",
@@ -3724,9 +3742,9 @@
    ]
   },
   {
-   "id": "thu_1508_mac",
+   "id": "thu_1503_mac",
    "day": "thu",
-   "hm": "15:08",
+   "hm": "15:03",
    "lane": "prep",
    "rid": "mac",
    "text": "Assemble the mac and cheese.",
@@ -3835,6 +3853,22 @@
    "dish": []
   },
   {
+   "id": "thu_1530_sprouts",
+   "day": "thu",
+   "hm": "15:30",
+   "lane": "prep",
+   "rid": "sprouts",
+   "text": "Chop the cilantro and mint into the sprouts dressing.",
+   "tm": null,
+   "steps": [
+    [
+     "sprouts",
+     4
+    ]
+   ],
+   "dish": []
+  },
+  {
    "id": "thu_1535_mac",
    "day": "thu",
    "hm": "15:35",
@@ -3888,17 +3922,13 @@
    "hm": "15:40",
    "lane": "stove",
    "rid": "sprouts",
-   "text": "Burner 5: char sprouts, batch 1 then 2 (herbs into the dressing first).",
+   "text": "Burner 5: char sprouts, batch 1 then 2.",
    "tm": [
     "Sprouts batch 1: charred?",
     5,
     "check"
    ],
    "steps": [
-    [
-     "sprouts",
-     4
-    ],
     [
      "sprouts",
      5
@@ -4015,7 +4045,7 @@
    "steps": [
     [
      "gravy",
-     4
+     5
     ]
    ],
    "dish": [
@@ -4034,7 +4064,12 @@
    "rid": "cran",
    "text": "Cranberry sauce into the bowl; zest on top.",
    "tm": null,
-   "steps": [],
+   "steps": [
+    [
+     "cran",
+     5
+    ]
+   ],
    "dish": [
     [
      "cran",
@@ -4049,7 +4084,7 @@
    "hm": "15:55",
    "lane": "prep",
    "rid": null,
-   "text": "Spot-check every hot dish: 140°F or hotter. Anything cooler goes back in the still-warm oven for 5 minutes. Then to the table.",
+   "text": "Spot-check every hot dish: 140°F or hotter. Anything cooler gets reheated to 165°F (covered, in the microwave or the oven), checked again, then served. Dinner can wait a few minutes.",
    "tm": null,
    "steps": [],
    "dish": []
@@ -4293,7 +4328,7 @@
    "16 oz (cake)",
    "On a grocery order",
    "chk",
-   "Needed by Wednesday 1:00 PM for the cake. Tick it off when it arrives; check it wasn't substituted."
+   "Needed by Wednesday 12:55 PM for the cake. Tick it off when it arrives; check it wasn't substituted."
   ],
   [
    "Fresh oranges",
@@ -4573,7 +4608,7 @@
   "oven": [
    [
     "wed",
-    "13:00",
+    "12:55",
     "13:20",
     "350°F",
     "Preheating for the cake"
@@ -4745,15 +4780,15 @@
    ],
    [
     "thu",
-    "14:40",
-    "15:00",
+    "14:35",
+    "14:52",
     "",
     "Pasta water"
    ],
    [
     "thu",
+    "14:52",
     "15:00",
-    "15:08",
     "",
     "Elbows"
    ]
@@ -4761,8 +4796,8 @@
   "b3": [
    [
     "thu",
-    "14:45",
-    "15:08",
+    "14:40",
+    "15:03",
     "",
     "Mac sauce"
    ],
@@ -4901,17 +4936,17 @@
    "st": "b2",
    "r": "mac",
    "l": "Pasta",
-   "from": "thu_1440_mac",
-   "to": "thu_1500_mac",
-   "until": "15:08"
+   "from": "thu_1435_mac",
+   "to": "thu_1452_mac",
+   "until": "15:00"
   },
   {
    "st": "b3",
    "r": "mac",
    "l": "Mac sauce",
-   "from": "thu_1445_mac",
-   "to": "thu_1508_mac",
-   "until": "15:08"
+   "from": "thu_1440_mac",
+   "to": "thu_1503_mac",
+   "until": "15:03"
   },
   {
    "st": "b4",
@@ -4941,8 +4976,8 @@
    "st": "oven",
    "r": "cake",
    "l": "Gooey butter cake",
-   "from": "wed_1300_cake",
-   "to": "wed_1300_cake",
+   "from": "wed_1255_cake",
+   "to": "wed_1255_cake",
    "until": "14:15"
   },
   {

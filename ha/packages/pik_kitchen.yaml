@@ -239,6 +239,29 @@ automation:
             {% elif k == 'done' %}Timer done: {{ name }}.
             {% else %}Check now: {{ name }}.{% endif %}
 
+  # A timer that runs out while the hub is restarting never fires timer.finished, so on startup
+  # any idle timer still carrying a label (it finished, or was finishing, and nobody stopped it) is said once.
+  - id: kitchen_timer_after_restart
+    alias: "Kitchen timers: say any that finished during a restart"
+    mode: single
+    triggers:
+      - trigger: homeassistant
+        event: start
+    actions:
+      - delay: { seconds: 30 }
+      - variables:
+          missed: >-
+            {% set ns = namespace(out=[]) %}
+            {% for i in range(1, 13) %}
+              {% set lab = states('input_text.kitchen_timer_' ~ i) %}
+              {% if is_state('timer.kitchen_' ~ i, 'idle') and lab not in ['', 'unknown', 'unavailable'] %}{% set ns.out = ns.out + [lab.split('|', 1) | last] %}{% endif %}
+            {% endfor %}{{ ns.out }}
+      - condition: "{{ missed | count > 0 and not is_state('input_boolean.kitchen_timer_quiet', 'on') }}"
+      - action: script.pik_announce
+        data:
+          message: "While the hub was restarting, {{ 'this timer' if missed | count == 1 else 'these timers' }} finished: {{ missed | join(', ') }}. Check the screen."
+          phones: true
+
   - id: kitchen_timer_clear_stale
     alias: "Kitchen timers: clear finished ones nobody stopped"
     mode: single

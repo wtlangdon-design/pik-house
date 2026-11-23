@@ -75,7 +75,7 @@ template:
             {% for e in ids %}
             {% set l = expand(e) if e else [] %}{% set s = l[0] if l | count > 0 else none %}
             {% set seen = (s.last_reported if s and s.last_reported is defined else (s.last_updated if s else none)) %}
-            {% set ok = s is not none and s.state | is_number and seen is not none and (now() - seen).total_seconds() < 300 %}
+            {% set ok = s is not none and s.state | is_number and seen is not none and (now() - seen).total_seconds() < 150 %}
             {% set v = s.state | float(0) if ok else 0 %}
             {% if ok and (s.attributes.unit_of_measurement | default('°F')) == '°C' %}{% set v = v * 9 / 5 + 32 %}{% endif %}
             {% set ns.out = ns.out + [(v | round(0) | int) if ok and -40 < v < 1100 else none] %}
@@ -214,7 +214,7 @@ template:
 automation:
   - id: smoke_start
     alias: "Smoking: the Inkbird started reading"
-    description: "Turns the cook on. If the last cook ended more than 3 hours ago, starts fresh (clears what each probe was in)."
+    description: "Turns the cook on. If the last cook ended more than 3 hours ago it's a new cook: probes set up more than 3 hours ago are cleared (ones just set, like Thanksgiving's, stay), and the start time is set."
     mode: single
     triggers:
       - trigger: template
@@ -229,18 +229,15 @@ automation:
           fresh: "{{ (now() - states.input_boolean.smoke_on.last_changed).total_seconds() > 10800 }}"
       - if: "{{ fresh }}"
         then:
-          - action: input_text.set_value
-            target: { entity_id: ["input_text.smoke_probe_1_flags","input_text.smoke_probe_2_flags","input_text.smoke_probe_3_flags","input_text.smoke_probe_4_flags"] }
-            data: { value: "" }
-          - action: input_text.set_value
-            target: { entity_id: ["input_text.smoke_probe_1_food","input_text.smoke_probe_2_food","input_text.smoke_probe_3_food","input_text.smoke_probe_4_food"] }
-            data: { value: "" }
-          - action: input_number.set_value
-            target: { entity_id: ["input_number.smoke_probe_1_target","input_number.smoke_probe_2_target","input_number.smoke_probe_3_target","input_number.smoke_probe_4_target"] }
-            data: { value: 0 }
-          - action: input_select.select_option
-            target: { entity_id: ["input_select.smoke_probe_1_kind","input_select.smoke_probe_2_kind","input_select.smoke_probe_3_kind","input_select.smoke_probe_4_kind"] }
-            data: { option: food }
+          - repeat:
+              for_each: "{{ range(1, 5) | list }}"
+              sequence:
+                - if: "{{ (now() - (expand('input_text.smoke_probe_' ~ repeat.item ~ '_food') | first).last_changed).total_seconds() > 10800 }}"
+                  then:
+                    - action: script.smoke_probe
+                      data: { probe: "{{ repeat.item }}", food: "" }
+      - if: "{{ fresh or states('input_datetime.smoke_started') in ['unknown', 'unavailable', ''] or (now() - (states('input_datetime.smoke_started') | as_datetime | as_local)).total_seconds() > 43200 }}"
+        then:
           - action: input_datetime.set_datetime
             target: { entity_id: input_datetime.smoke_started }
             data: { timestamp: "{{ now().timestamp() }}" }
@@ -303,13 +300,16 @@ automation:
             {% set out.labeled = out.labeled + 1 %}
             {% if not ok %}
             {% set away = (now() - s.last_changed).total_seconds() if s is not none else 9999 %}
-            {% if away >= 180 %}
+            {% if away >= 120 %}
             {% set out.gone = out.gone + 1 %}
             {% if 'l' not in d.v %}{% set out.lost = out.lost + [[i, what]] %}{% set d.v = dict(d.v, l=0) %}{% endif %}
             {% endif %}
             {% else %}
             {% set d.v = dict(d.v | items | rejectattr(0, 'eq', 'l') | list) %}
-            {% if kind == 'food' and target > 0 %}
+            {% if kind == 'food' and v > 230 %}
+            {% if 'x' not in d.v %}{% set out.msgs = out.msgs + ['Probe ' ~ i ~ ' reads ' ~ v ~ '. It may have slipped out of ' ~ what ~ '.'] %}{% set out.phones = true %}{% set d.v = dict(d.v, x=0) %}{% endif %}
+            {% elif kind == 'food' and target > 0 %}
+            {% set d.v = dict(d.v | items | rejectattr(0, 'eq', 'x') | list) %}
             {% if v < target - 15 %}
             {% set d.v = dict(d.v | items | rejectattr(0, 'in', ['n', 'd', 'a', 'r1', 'r2']) | list) %}
             {% elif v >= target and 'd' not in d.v %}
@@ -340,7 +340,8 @@ automation:
             {% set d.v = dict(d.v, f=0) %}
             {% elif rate is number and rate > 0 %}{% set d.v = dict(d.v | items | rejectattr(0, 'eq', 'f') | list) %}
             {% endif %}
-            {% if target > 0 and (v - target) | abs > 25 %}
+            {% if target > 0 and (v - target) | abs <= 15 and 'k' not in d.v %}{% set d.v = dict(d.v, k=0) %}{% endif %}
+            {% if target > 0 and (v - target) | abs > 25 and 'k' in d.v %}
             {% if 'o' not in d.v %}{% set d.v = dict(d.v, o=m) %}
             {% elif m - d.v['o'] >= 10 and 'O' not in d.v %}
             {% set out.msgs = out.msgs + ['The smoker is at ' ~ v ~ ', and it is set for ' ~ target ~ '.'] %}{% set d.v = dict(d.v, O=0) %}

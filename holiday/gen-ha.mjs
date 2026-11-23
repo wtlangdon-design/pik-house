@@ -77,11 +77,14 @@ const turkeyDone = `{{ states('input_number.${P}_turkey_breast') | float(0) >= 1
 L(`automation:`);
 L(`  - id: ${P}_task_alarms`);
 L(`    alias: ${J(title + ": read each task out at its time")}`);
-L(`    description: "Every minute: any planned task due now and not ticked off is announced on the Echos (and phones, if turned on)."`);
+L(`    description: "Every minute: any planned task due now and not ticked off is announced on the Echos (and phones, if turned on). After a restart, it catches up on tasks from the last 15 minutes."`);
 L(`    mode: queued`);
 L(`    triggers:`);
 L(`      - trigger: time_pattern`);
 L(`        minutes: "/1"`);
+L(`      - trigger: homeassistant`);
+L(`        event: start`);
+L(`        id: start`);
 L(`    conditions:`);
 L(`      - "{{ now().strftime('%Y-%m-%d') in [${Object.values(plan.days).map((d) => "'" + d + "'").join(", ")}] }}"`);
 L(`    actions:`);
@@ -90,7 +93,8 @@ L(planVar("          "));
 L(`          stamp: "{{ now().strftime('%Y-%m-%d %H:%M') }}"`);
 L(`          due: >-`);
 L(`            {% set ns = namespace(out=[]) %}`);
-L(`            {% for t in plan if t.at == stamp and not is_state('input_boolean.${P}_' ~ t.i, 'on') %}{% set ns.out = ns.out + [t] %}{% endfor %}`);
+L(`            {% set since = (now() - timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M') %}`);
+L(`            {% for t in plan if (t.at == stamp or (trigger.id == 'start' and since <= t.at <= stamp)) and not is_state('input_boolean.${P}_' ~ t.i, 'on') %}{% set ns.out = ns.out + [t] %}{% endfor %}`);
 L(`            {{ ns.out }}`);
 L(`      - condition: "{{ due | count > 0 }}"`);
 L(`      - event: pik_holiday_task_due`);
@@ -99,7 +103,7 @@ L(`      - condition: "{{ not is_state('input_boolean.${P}_quiet', 'on') }}"`);
 L(`      - action: script.pik_announce`);
 L(`        data:`);
 L(`          message: >-`);
-L(`            {% if due | count == 1 %}{{ due[0].h }}. {{ due[0].x | replace(' → ', ', then ') | replace('→', ', then') | replace('°F', ' degrees') | replace('·', ',') }}`);
+L(`            {% if trigger.id == 'start' %}While the hub was restarting: {% endif %}{% if due | count == 1 %}{{ due[0].h }}. {{ due[0].x | replace(' → ', ', then ') | replace('→', ', then') | replace('°F', ' degrees') | replace('·', ',') }}`);
 L(`            {% else %}{% set names = due | map(attribute='s') | unique | list %}{% set n = ['zero','one','two','three','four','five','six','seven','eight','nine'][due | count] if due | count < 10 else due | count %}`);
 L(`            {{ n | capitalize }} things at {{ due[0].h }}: {{ names[:-1] | join(', ') ~ (' and ' if names | count > 1 else '') ~ names[-1] }}. Check the screen.{% endif %}`);
 L(`          phones: "{{ is_state('input_boolean.${P}_push', 'on') }}"`);
@@ -123,6 +127,13 @@ const SMOKE = [1, 2, 3, 4];
 const smokeRun = (plan.runs || []).filter((u) => u.st === "smoker" && u.r === "turkey").map((u) => plan.tasks.find((t) => t.id === u.from)).filter(Boolean)
   .sort((x, y) => (plan.days[x.day] + x.hm < plan.days[y.day] + y.hm ? -1 : 1))[0];
 const smokeDay = smokeRun || null;
+// When the bird itself goes on (the smoker run labeled "Turkey"), and the smoker's planned temperature by stage.
+const turkeyOnRun = (plan.runs || []).find((u) => u.st === "smoker" && u.r === "turkey" && u.l === "Turkey");
+const turkeyOn = turkeyOnRun ? plan.tasks.find((t) => t.id === turkeyOnRun.from) : null;
+const smokerStages = ((plan.stations || {}).smoker || []).map(([d, from, , temp, label]) => {
+  const n = (String(temp).match(/\d+/g) || []).map(Number);
+  return { d, from, label, f: n.length ? Math.round(n.reduce((a, b) => a + b, 0) / n.length) : null };
+}).filter((x) => x.f && smokeDay && x.d === smokeDay.day);
 L(`  - id: ${P}_inkbird_turkey`);
 L(`    alias: ${J(title + ": Inkbird readings go in the turkey log")}`);
 L(`    mode: queued`);
@@ -137,14 +148,20 @@ L(`      - variables:`);
 L(`          what: "{{ (trigger.to_state.attributes.food | default('', true)) | lower }}"`);
 L(`          spot: "{{ ['breast', 'thigh', 'wing'] | select('in', what) | first | default('') }}"`);
 L(`      - condition: "{{ spot != '' and 'turkey' in what }}"`);
+L(`      # Meat can't read above 212°F; a higher number means the probe is out of the turkey.`);
+L(`      - condition: "{{ trigger.to_state.state | float(0) <= 212 }}"`);
+if (turkeyOn) {
+  L(`      # Only once the turkey is on the smoker (ticked, or its time has come), so a probe warming in the smoker can't log.`);
+  L(`      - condition: ${J(`{{ is_state('input_boolean.${P}_${turkeyOn.id}', 'on') or now() >= ('${plan.days[turkeyOn.day]} ${turkeyOn.hm}' | as_datetime | as_local) }}`)}`);
+}
 L(`      - action: input_number.set_value`);
 L(`        target: { entity_id: "input_number.${P}_turkey_{{ spot }}" }`);
-L(`        data: { value: "{{ [[trigger.to_state.state | float(0), 250] | min, 0] | max }}" }`);
+L(`        data: { value: "{{ [trigger.to_state.state | float(0), 0] | max }}" }`);
 L();
 if (smokeDay) {
   L(`  - id: ${P}_inkbird_setup`);
   L(`    alias: ${J(title + ": set up the Inkbird for the turkey")}`);
-  L(`    description: "When the smoker starts: probe 1 breast, 2 thigh, 3 wing, 4 the smoker's air. Skipped if the probes already say turkey."`);
+  L(`    description: "When the smoker starts: probe 1 breast, 2 thigh, 3 wing, 4 the smoker's air (set to the plan's temperature), each unless it already says so; and a fresh turkey log."`);
   L(`    mode: single`);
   L(`    triggers:`);
   L(`      - trigger: time`);
@@ -155,15 +172,40 @@ if (smokeDay) {
   L(`    conditions:`);
   L(`      - "{{ now().strftime('%Y-%m-%d') == '${plan.days[smokeDay.day]}' }}"`);
   L(`      - "{{ states.script.smoke_probe is defined }}"`);
-  L(`      - ${J(`{{ ${J(SMOKE.map((i) => `input_text.smoke_probe_${i}_food`))} | map('states') | map('lower') | select('search', 'turkey') | list | count == 0 }}`)}`);
   L(`    actions:`);
-  [["Turkey breast", 1], ["Turkey thigh", 2], ["Turkey wing", 3]].forEach(([f, n]) => {
-    L(`      - action: script.smoke_probe`);
-    L(`        data: { probe: ${n}, food: ${J(f)}, target: 0, kind: food }`);
+  L(`      # A fresh turkey log for the day (nothing from a rehearsal or test can count toward "done").`);
+  L(`      - if: ${J(`{{ ${J(SMOKE.slice(0, 3).map((i) => `input_text.smoke_probe_${i}_food`))} | map('states') | map('lower') | select('search', 'turkey') | list | count == 0 }}`)}`);
+  L(`        then:`);
+  L(`          - action: input_number.set_value`);
+  L(`            target: { entity_id: ${J(["breast", "thigh", "wing"].map((s) => `input_number.${P}_turkey_${s}`))} }`);
+  L(`            data: { value: 0 }`);
+  const stage0 = smokerStages.find((x) => x.from === smokeDay.hm) || smokerStages[0];
+  [["Turkey breast", 1, 0, "food"], ["Turkey thigh", 2, 0, "food"], ["Turkey wing", 3, 0, "food"], ["Smoker", 4, stage0 ? stage0.f : 0, "smoker"]].forEach(([f, n, tgt, kind]) => {
+    // Each probe on its own: one already set right is left alone.
+    L(`      - if: ${J(`{{ states('input_text.smoke_probe_${n}_food') | lower != '${f.toLowerCase()}' }}`)}`);
+    L(`        then:`);
+    L(`          - action: script.smoke_probe`);
+    L(`            data: { probe: ${n}, food: ${J(f)}, target: ${tgt}, kind: ${kind} }`);
   });
-  L(`      - action: script.smoke_probe`);
-  L(`        data: { probe: 4, food: "Smoker", target: 0, kind: smoker }`);
   L();
+  // The smoker probe's target follows the plan (250 to start, then the higher heat, then the hot hold),
+  // so "the smoker is running cool/hot" means something. Only while probe 4 is the smoker.
+  const later = smokerStages.filter((x) => (x.d + x.from) > (smokeDay.day + smokeDay.hm)).filter((x, i, all) => x.f !== (i ? all[i - 1].f : (stage0 ? stage0.f : null)));
+  if (later.length) {
+    L(`  - id: ${P}_inkbird_smoker_stage`);
+    L(`    alias: ${J(title + ": smoker probe follows the plan's temperature")}`);
+    L(`    mode: queued`);
+    L(`    triggers:`);
+    later.forEach((x) => { L(`      - trigger: time`); L(`        at: "${x.from}:00"`); L(`        id: "${x.f}"`); });
+    L(`    conditions:`);
+    L(`      - "{{ now().strftime('%Y-%m-%d') == '${plan.days[smokeDay.day]}' }}"`);
+    L(`      - "{{ states.script.smoke_probe is defined and is_state('input_select.smoke_probe_4_kind', 'smoker') }}"`);
+    L(`      - "{{ (trigger.id | default('0')) | int(0) > 0 }}"`);
+    L(`    actions:`);
+    L(`      - action: script.smoke_probe`);
+    L(`        data: { probe: 4, food: "Smoker", target: "{{ trigger.id | int }}", kind: smoker }`);
+    L();
+  }
 }
 
 L(`script:`);
@@ -331,7 +373,7 @@ L(`          start: >-`);
 L(`            {% set ns = namespace(i=-1) %}{% for j in range(ents | count) if ns.i < 0 and not is_state('input_boolean.${P}_' ~ ents[j].k, 'on') %}{% set ns.i = j %}{% endfor %}{{ [ns.i, 0] | max }}`);
 L(`          cur: "{{ [smap.get(target, 0) | int, start | int] | max }}"`);
 L(`          new: >-`);
-L(`            {% if act == 'first' %}{{ start }}{% elif act == 'back' %}{{ [cur - 1, start | int] | max }}{% elif act == 'repeat' %}{{ [cur, n - 1] | min }}{% else %}{{ [cur + (1 if target == states('input_text.${P}_focus') or (dish | default('') | trim) != '' else 0), n - 1] | min }}{% endif %}`);
+L(`            {% if act == 'first' %}{{ start }}{% elif act == 'back' %}{{ [cur - 1, start | int] | max }}{% elif act == 'repeat' %}{{ [cur, n - 1] | min }}{% else %}{{ [cur + (1 if target == states('input_text.${P}_focus') or (target in smap and (dish | default('') | trim) != '') else 0), n - 1] | min }}{% endif %}`);
 L(`          txt: >-`);
 L(`            {% set ns = namespace(out=[]) %}`);
 L(`            {% for k, v in dict(smap, **{target: new | int}).items() if (v | int) > 0 %}{% set ns.out = ns.out + [k ~ ':' ~ v] %}{% endfor %}`);
