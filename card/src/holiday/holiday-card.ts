@@ -627,7 +627,9 @@ export class PikHolidayCard extends LitElement {
     const tm = this.timerOf(live ? e : seq[seq.findIndex((x) => x.t === cur)]);
     const k = tm ? this.timerByLabel(tm[0]) : undefined;
     const started = this.ms(t) <= Date.now();
-    const lastOfPart = live && (idx === seq.length - 1 || seq[idx + 1].t !== e.t);
+    // Done shows folded only after you've stepped through to the end of this part with ›.
+    const start = seq.findIndex((x) => x.t === cur);
+    const lastOfPart = live && idx > start && (idx === seq.length - 1 || seq[idx + 1].t !== e.t);
     const badge = !this.isToday() || !due ? "" : started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`;
     const onNow = this.runsFor(g, t).filter((i) => !!this.placed(i));
     const n = seq.length;
