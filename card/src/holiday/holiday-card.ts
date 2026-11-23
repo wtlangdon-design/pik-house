@@ -543,6 +543,20 @@ export class PikHolidayCard extends LitElement {
     const len = tm[1] >= 120 ? (Math.round(tm[1] / 6) / 10) + " hr" : tm[1] + " min";
     return `<button class="sb set" data-timer='${esc(JSON.stringify(tm))}' title="${esc(tm[0])}">Set ${len} timer</button>`;
   }
+  /** A small pie: how many of the dish's parts are done (fills a slice per part). */
+  private pieHtml(g: string): string {
+    const ps = this.parts(g), n = ps.length, k = ps.filter((t) => this.store.isDone(t.id)).length, f = n ? k / n : 0;
+    const r = 7, c = 9;
+    let wedge = "";
+    if (f >= 1) wedge = `<circle cx="${c}" cy="${c}" r="${r}" fill="currentColor"/>`;
+    else if (f > 0) {
+      const a = f * 2 * Math.PI, x = c + r * Math.sin(a), y = c - r * Math.cos(a);
+      wedge = `<path d="M${c} ${c} L${c} ${c - r} A${r} ${r} 0 ${f > 0.5 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z" fill="currentColor"/>`;
+    }
+    const ticks = n > 1 && n <= 12 ? Array.from({ length: n }, (_x, i) => { const a = (i / n) * 2 * Math.PI; return `<line x1="${c}" y1="${c}" x2="${(c + r * Math.sin(a)).toFixed(2)}" y2="${(c - r * Math.cos(a)).toFixed(2)}" stroke="currentColor" stroke-width=".8" opacity=".35"/>`; }).join("") : "";
+    return `<svg class="pie" viewBox="0 0 18 18" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="currentColor" stroke-width="1.6"/>${ticks}${wedge}</svg>`;
+  }
+  private pieLabel(g: string): string { const ps = this.parts(g), k = ps.filter((t) => this.store.isDone(t.id)).length; return k + " of " + ps.length + " parts of this dish done"; }
   private nameHtml(g: string): string {
     return this.recipe(g) ? `<button class="dlink" data-recipe="${g}" title="The whole recipe">${esc(this.gname(g))}</button>` : `<span class="dlink">${esc(this.gname(g))}</span>`;
   }
@@ -564,7 +578,7 @@ export class PikHolidayCard extends LitElement {
       // A job outside any recipe: just the time, what to do, a timer if it has one, and a tick.
       return `<div class="tc rem${due ? " due" : ""}${k && k.rang ? " ringing" : ""}"><div class="tt">${this.when(e.t)}${badge}</div>
         <div><div class="x">${esc(e.t.text)}</div></div>
-        <div class="acts">${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" aria-label="Done">✓ Done</button></div></div>`;
+        <div class="acts">${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" title="${this.pieLabel(g)}" aria-label="Done">${this.pieHtml(g)}Done</button></div></div>`;
     }
     const pips = n > 1 ? `<span class="pips">${seq.map((x, j) => `<i class="${j === idx ? "on" : j < start ? "past" : x.t === e.t ? "part" : ""}"></i>`).join("")}</span>` : "";
     // ‹ › sit on either side of the step itself, like flipping through pages.
@@ -573,7 +587,7 @@ export class PikHolidayCard extends LitElement {
     return `<div class="tc rc3${due && !ahead ? " due" : ""}${ahead ? " ahead" : ""}${k && k.rang ? " ringing" : ""}">
       <div class="tt">${this.when(e.t)}${badge}</div>
       <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${est}${foldable ? `<button class="clp" data-collapse="1" title="Fold this card">Fold ▴</button>` : ""}</div>${e.s ? "" : `<div class="x">${esc(e.t.text)}</div>`}</div>
-      <div class="acts">${ahead ? `${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" data-g="${g}" aria-label="Done with this part">✓ Done</button>`}</div>
+      <div class="acts">${ahead ? `${this.runsFor(g, e.t).map((i) => this.placeBtn(i, true)).join("")}<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.runsFor(g, e.t).map((i) => this.placeBtn(i)).join("")}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${e.t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button>`}</div>
       ${this.tipsHtml(e.t)}
       ${e.s || n > 1 ? `<div class="stp${n > 1 ? " car" : ""}">${n > 1 ? prev : ""}${e.s ? `<div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div>` : `<div class="sb2"><p class="muted">Nothing more to this step than the line above.</p></div>`}${n > 1 ? next : ""}</div>` : ""}
     </div>`;
@@ -595,18 +609,18 @@ export class PikHolidayCard extends LitElement {
     return `<div class="tc cmp due${k && k.rang ? " ringing" : ""}" data-open="${g}" title="Tap to open the step">
       <div class="tt">${this.when(t)}${started ? `<small class="now">Now</small>` : `<small>in ${Math.ceil((this.ms(t) - Date.now()) / 60000)} min</small>`}</div>
       <div class="cl">${rec ? `<b>${esc(this.gname(g))}</b>` : ""}<span>${esc(t.text)}</span>${t.tips && t.tips.length ? `<i class="tipdot" title="Has an 'if something slips' note">⚠</i>` : ""}<em>▾</em></div>
-      <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${t.id}" data-g="${g}" aria-label="Done with this part">✓ Done</button></div></div>`;
+      <div class="acts">${rec ? this.runsFor(g, t).map((i) => this.placeBtn(i)).join("") : ""}${this.timerBtnHtml(tm)}<button class="dbtn" data-done="${t.id}" data-g="${g}" title="${this.pieLabel(g)}" aria-label="Done with this part">${this.pieHtml(g)}Done</button></div></div>`;
   }
   /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
   private doneHtml(g: string, t: Task, next?: Task): string {
     const rec = !!this.recipe(g);
     return `<div class="tc done"><div class="tt">${this.when(t)}</div>
       <div>${rec ? `<div class="nm">${this.nameHtml(g)}</div>` : ""}<div class="x">${esc(t.text)}</div>${!rec ? "" : next ? `<div class="nxt">Next: ${esc(this.when(next))} · ${esc(next.text)}</div>` : `<div class="nxt">${esc(this.gname(g))} is done.</div>`}</div>
-      <div class="acts"><span class="donetag">✓ Done</span><button class="ubtn" data-done="${t.id}" data-g="${g}" aria-label="Undo">Undo</button></div></div>`;
+      <div class="acts"><span class="donetag" title="${this.pieLabel(g)}">${this.pieHtml(g)}Done</span><button class="ubtn" data-done="${t.id}" data-g="${g}" aria-label="Undo">Undo</button></div></div>`;
   }
   private behindHtml(t: Task): string {
     return `<div class="tc done late"><div class="tt">${this.when(t)}</div><div>${t.rid ? `<div class="nm">${esc(this.gname(t.rid))}</div>` : ""}<div class="x">${esc(t.text)}</div></div>
-      <div class="acts"><button class="dbtn" data-done="${t.id}" data-g="${this.gid(t)}" aria-label="Done">✓ Done</button></div></div>`;
+      <div class="acts"><button class="dbtn" data-done="${t.id}" data-g="${this.gid(t)}" title="${this.pieLabel(this.gid(t))}" aria-label="Done">${this.pieHtml(this.gid(t))}Done</button></div></div>`;
   }
   private nowHtml(): string {
     const { due, done, next, behind } = this.cards();
