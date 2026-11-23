@@ -3,7 +3,7 @@
 // One page, driven by the clock (design: "Holiday cooking: one page v3" on the design canvas):
 //   header     clock · the alarm when a task's time comes · turkey · Echo mute · Plan & recipes · countdown
 //   stations   smoker · oven · the five burners, now and next
-//   left       what to do now (tap How to walk through that task's recipe steps), next tasks pinned below
+//   left       what to do now, each with its recipe step and that step's ingredients (‹ › to move), next tasks pinned below
 //   right      timers not already shown on a task · the 12 dishes and where each one is
 //   bottom     the day at a glance (Chromebook only); tap it for the full schedule
 //   one sheet  Plan & recipes: recipes, full schedule with ticks, shopping check, notes & safety
@@ -250,6 +250,20 @@ export class PikHolidayCard extends LitElement {
   private stepsOf(t: Task) {
     return (t.steps || []).map(([rid, i]) => { const r = this.recipe(rid); return { r: r as Recipe, i, s: r ? r.steps[i] : undefined }; }).filter((x) => x.r && x.s) as Array<{ r: Recipe; i: number; s: Recipe["steps"][number] }>;
   }
+  /** A step's ingredients as [amount, item], using the step's own amount where it uses only part. */
+  private stepIngr(r: Recipe, s: Recipe["steps"][number]): Array<[string, string]> {
+    return (s.ing || []).map(([k, q, w]) => {
+      const g = k >= 0 ? r.ingr[k] : undefined;
+      // An amount given for the step wins, even an empty one ("salt, for the water" has no amount).
+      return [q !== undefined && q !== null ? q : g ? g[0] : "", w || (g ? g[1] : "")] as [string, string];
+    }).filter((x) => x[1]);
+  }
+  /** Step text without the time it starts with (the task already shows the time). */
+  private stepText(t: string): string {
+    const m = t.match(/^(?:About |≈)?\d{1,2}:\d\d (?:AM|PM): (.*)$/s);
+    const x = m ? m[1] : t;
+    return x.charAt(0).toUpperCase() + x.slice(1);
+  }
   private stepIdx(t: Task): number { const n = this.stepsOf(t).length; return Math.max(0, Math.min(this.store.getStep(t.id), n - 1)); }
   /** The timer that goes with where this task is now: the current step's, or the task's own. */
   private timerFor(t: Task): TimerSpec | null {
@@ -377,24 +391,25 @@ export class PikHolidayCard extends LitElement {
   private taskHtml(t: Task, due: boolean): string {
     const done = this.store.isDone(t.id);
     const st = this.stepsOf(t), tm = done ? null : this.timerFor(t);
-    const open = !done && this.L.open === t.id && st.length > 0;
     const k = tm ? this.timerByLabel(tm[0]) : undefined;
-    let how = "";
-    if (open) {
-      const i = this.stepIdx(t), cur = st[i];
-      const ing = cur.r.ingr.map(([q, it]) => (q === "—" ? `<span class="sec">${esc(it)}</span>` : `<b>${esc(q)}</b><span>${esc(it)}</span>`)).join("");
+    let step = "";
+    if (!done && st.length) {
+      // The task's recipe step is always shown; ‹ › walk through the task's steps (shared with every screen and Pik).
+      const i = this.stepIdx(t), cur = st[i], n = st.length;
       const dn = (this.plan.dishes.find((x) => x.id === cur.r.id) || { name: cur.r.name }).name;
-      how = `<div class="how"><div><span class="eb">${esc(dn)} · step ${i + 1} of ${st.length}${st.length > 1 ? " for this task" : ""}</span>
-        <p>${esc(cur.s.t)}</p>
-        <div class="snav"><button class="sb" data-step="${t.id}:${i - 1}"${i === 0 ? " disabled" : ""}>‹ Back</button>${i < st.length - 1 ? `<button class="sb ink" data-step="${t.id}:${i + 1}">Next step ›</button>` : `<button class="sb ink" data-finish="${t.id}">Done · tick it off</button>`}<span class="pips">${st.map((_x, j) => `<i class="${j === i ? "on" : j < i ? "past" : ""}"></i>`).join("")}</span></div>
-        <button class="lnk" data-recipe="${cur.r.id}">Whole recipe ›</button></div>
-        <div class="hing"><span class="eb">All ${esc(dn.toLowerCase())} ingredients</span><div class="ig">${ing}</div></div></div>`;
+      const ings = this.stepIngr(cur.r, cur.s);
+      step = `<div class="stp">
+        <div class="sh"><button class="dlink" data-recipe="${cur.r.id}" title="The whole recipe">${esc(dn)}</button>${n > 1 ? `<span>· step ${i + 1} of ${n}</span><span class="pips">${st.map((_x, j) => `<i class="${j === i ? "on" : j < i ? "past" : ""}"></i>`).join("")}</span>` : ""}
+          ${n > 1 ? `<span class="arr"><button class="ar" data-step="${t.id}:${i - 1}"${i === 0 ? " disabled" : ""} aria-label="Previous step">‹</button><button class="ar" data-step="${t.id}:${i + 1}"${i === n - 1 ? " disabled" : ""} aria-label="Next step">›</button></span>` : ""}</div>
+        <p>${esc(this.stepText(cur.s.t))}</p>
+        ${ings.length ? `<div class="si">${ings.map(([q, it]) => `<span>${q ? `<b>${esc(q)}</b> ` : ""}${esc(it)}</span>`).join("")}</div>` : ""}
+      </div>`;
     }
     return `<div class="tc${done ? " done" : due ? " due" : ""}${k && k.rang ? " ringing" : ""}">
       <div class="tt">${t.day !== this.viewDay() ? SHORTDAY[t.day] + " " : ""}${fmt12(t.hm)}</div>
       <div><div class="x">${esc(t.text)}</div><div class="meta">${LANES[t.lane] || ""}</div></div>
-      <div class="acts">${this.timerBtnHtml(tm)}${st.length && !done ? `<button class="sb" data-how="${t.id}">${open ? "Hide" : "How"}</button>` : ""}<button class="tick${done ? " on" : ""}" data-done="${t.id}" aria-label="${done ? "Ticked off; tap to undo" : "Tick off"}">${done ? "✓" : ""}</button></div>
-      ${how}</div>`;
+      <div class="acts">${this.timerBtnHtml(tm)}<button class="tick${done ? " on" : ""}" data-done="${t.id}" aria-label="${done ? "Ticked off; tap to undo" : "Tick off"}">${done ? "✓" : ""}</button></div>
+      ${step}</div>`;
   }
   private nowHtml(): string {
     const { due, earlier, next, list } = this.windowTasks();
@@ -473,7 +488,7 @@ export class PikHolidayCard extends LitElement {
       <h3>Storage</h3><p style="font-size:14px">${esc(r.store)}</p>
       ${r.src ? `<p class="note">Original: <a href="${esc(r.src[1])}" target="_blank" rel="noopener">${esc(r.src[0])}</a>. Steps here are a short summary in our own words.</p>` : `<p class="note">Your family's recipe, as you gave it.</p>`}
       </div><div>${flagHtml}
-      ${byDay.map(([d, arr]) => `<h3 class="dayhd">${this.plan.dayNames[d]}</h3><ol class="steps">${arr.map(({ s, i }) => `<li><span class="num">${i + 1}</span><span class="tx">${esc(s.t)}</span><span>${this.timerBtnHtml(s.tm || null)}</span></li>`).join("")}</ol>`).join("")}
+      ${byDay.map(([d, arr]) => `<h3 class="dayhd">${this.plan.dayNames[d]}</h3><ol class="steps">${arr.map(({ s, i }) => `<li><span class="num">${i + 1}</span><span class="tx">${esc(s.t)}${this.stepIngr(r, s).length ? `<small>${this.stepIngr(r, s).map(([q, it]) => esc((q ? q + " " : "") + it)).join(" · ")}</small>` : ""}</span><span>${this.timerBtnHtml(s.tm || null)}</span></li>`).join("")}</ol>`).join("")}
       </div></div>`;
   }
   private scheduleHtml(d: string): string {
@@ -544,12 +559,12 @@ export class PikHolidayCard extends LitElement {
   // ---------------------------------------------------------------- events
 
   private onClick = (e: Event): void => {
-    const el = (e.target as HTMLElement).closest("[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-how],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack]") as HTMLElement | null;
+    const el = (e.target as HTMLElement).closest("[data-day],[data-done],[data-timer],[data-recipe],[data-stop],[data-plus],[data-step],[data-finish],[data-close],[data-seg],[data-schedule],[data-plan],[data-turkey],[data-padclose],[data-spot],[data-key],[data-hot],[data-dish],[data-alldishes],[data-alarms],[data-import],[data-export],[data-resetall],[data-ack]") as HTMLElement | null;
     if (!el) return;
     const ds = el.dataset;
     if (ds.ack) { this.ackAlerts(); return; }
     if (ds.day !== undefined) { this.L.day = ds.day || null; this.saveL(); this.requestUpdate(); return; }
-    if (ds.done) { const v = !this.store.isDone(ds.done); this.store.setDone(ds.done, v); if (v && this.L.open === ds.done) this.L.open = null; this.requestUpdate(); return; }
+    if (ds.done) { this.store.setDone(ds.done, !this.store.isDone(ds.done)); this.requestUpdate(); return; }
     if (ds.timer) {
       const [l, m, k] = JSON.parse(ds.timer) as TimerSpec;
       this.unlockAudio();
@@ -558,13 +573,7 @@ export class PikHolidayCard extends LitElement {
     }
     if (ds.stop) { this.store.stopTimer(ds.stop); this.requestUpdate(); return; }
     if (ds.plus) { this.store.plus5(ds.plus); this.flash("5 more minutes."); this.requestUpdate(); return; }
-    if (ds.how) {
-      const t = this.plan.tasks.find((x) => x.id === ds.how)!;
-      this.L.open = this.L.open === t.id ? null : t.id;
-      if (this.L.open) this.store.setStep(t.id, this.stepIdx(t)); // also tells Pik which recipe "next step" means
-      this.saveL(); this.requestUpdate(); return;
-    }
-    if (ds.step) { const [id, i] = ds.step.split(":"); if (Number(i) >= 0) this.store.setStep(id, Number(i)); this.requestUpdate(); return; }
+    if (ds.step) { const [id, i] = ds.step.split(":"); if (Number(i) >= 0) this.store.setStep(id, Number(i)); this.requestUpdate(); return; } // also tells Pik which recipe "next step" means
     if (ds.finish) { this.store.setDone(ds.finish, true); this.L.open = null; this.saveL(); this.flash("Ticked off."); this.requestUpdate(); return; }
     if (ds.plan !== undefined) { this.sheet = { seg: "recipes", recipe: null, day: null }; this.requestUpdate(); return; }
     if (ds.recipe !== undefined) { this.sheet = { seg: "recipes", recipe: ds.recipe || null, day: null }; this.requestUpdate(); return; }
@@ -640,7 +649,7 @@ export class PikHolidayCard extends LitElement {
 <header><div class="hd">
   <div class="clock" id="clock"></div>
   ${a ? html`<div class="ringbar" role="alert"><b>${a.when}</b><span>${a.text}</span>${this.Q.length > 1 ? html`<small>+${this.Q.length - 1} more</small>` : nothing}<button data-ack="1">Got it</button></div>`
-      : html`<div class="ttl"><b>${this.plan.dayNames[d]} · ${this.plan.title}</b><span>${sub}</span></div>`}
+      : html`<div class="ttl"><b>${this.todayKey() ? this.plan.dayNames[d] + " · " + this.plan.title : this.plan.title + " starts " + this.plan.dayNames[Object.keys(this.plan.days)[0]].toLowerCase()}</b><span>${sub}</span></div>`}
   <button class="tkb" data-turkey="1"><span class="dot ${ts.cls}">${ts.sym}</span><span class="t"><b>${ts.head}</b><span>${ts.sub}</span></span></button>
   <button class="ico ${this.store.alarmsOn() ? "" : "off"}" data-alarms="1" title=${this.store.alarmsOn() ? "Echos read tasks out loud. Tap to mute." : "Echos are muted. Tap to turn back on."}>${this.store.alarmsOn() ? "🔊" : "🔇"}</button>
   <button class="ibtn" data-plan="1">Plan &amp; recipes</button>

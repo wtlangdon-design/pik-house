@@ -46,6 +46,20 @@ for (const t of p.tasks) {
   if (t.lane === "oven" && !/off|out of the oven|Oven to/i.test(t.text) && !(p.stations.oven || []).some((s) => within(s, t.day, t.hm))) bad(`${t.id}: an oven task while the oven is off`);
   if (t.lane === "smoker" && t.day === p.hotCheck.day && !(p.stations.smoker || []).some((s) => within(s, t.day, t.hm))) bad(`${t.id}: a smoker task while the smoker is off`);
 }
+// every step's ingredients point at real ingredients, and every ingredient is used by some step
+for (const r of p.recipes) {
+  const used = new Set();
+  r.steps.forEach((s, i) => {
+    if (!Array.isArray(s.ing)) { bad(`recipe ${r.id} step ${i + 1}: no ingredient list`); return; }
+    for (const e of s.ing) {
+      const k = e[0];
+      if (k === -1) { if (!e[2]) bad(`recipe ${r.id} step ${i + 1}: an extra item needs wording`); continue; }
+      if (!r.ingr[k] || r.ingr[k][0] === "—") bad(`recipe ${r.id} step ${i + 1}: ingredient ${k} doesn't exist`);
+      used.add(k);
+    }
+  });
+  r.ingr.forEach((g, k) => { if (g[0] !== "—" && !used.has(k)) bad(`recipe ${r.id}: "${g[1]}" isn't used by any step`); });
+}
 // every recipe step is covered by some task
 for (const r of p.recipes) r.steps.forEach((s, i) => {
   if (!p.tasks.some((t) => (t.steps || []).some(([x, j]) => x === r.id && j === i))) bad(`recipe ${r.id} step ${i + 1} isn't part of any task`);

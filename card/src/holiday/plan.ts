@@ -5,7 +5,8 @@ export type Day = string;
 export type TimerKind = "check" | "done" | "temp";
 export type TimerSpec = [string, number, TimerKind];
 
-export interface Step { d: Day; t: string; tm?: TimerSpec }
+/** ing: what this step uses: [ingredient index] or [index, amount for this step, wording]; index -1 = something made earlier */
+export interface Step { d: Day; t: string; tm?: TimerSpec; ing?: Array<[number, string?, string?]> }
 export interface Recipe {
   id: string; n: number; name: string; tag: string; gf: string; yield: string; active: string; passive: string;
   src?: [string, string] | null; ingr: Array<[string, string, string?]>; equip: string[];

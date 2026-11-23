@@ -106,9 +106,10 @@ After that, use only the hub; the page stays as a backup.
 
 ## How it behaves
 
-- One page, run by the clock: what's on the smoker, oven and each burner; what to do now (tap
-  **How** to walk through that task's recipe steps, with Back and Next); the next few tasks; the
-  timers; and where each of the 12 dishes is. From 3:00 Thursday the dish list becomes the
+- One page, run by the clock: what's on the smoker, oven and each burner; what to do now, each
+  task showing its recipe step and just that step's ingredients (‹ › move through the steps;
+  tap the dish name for the whole recipe); the next few tasks; the timers; and where each of the
+  12 dishes is. From 3:00 Thursday the dish list becomes the
   "keeping hot" check: tap **140°F ✓** for each hot dish at 3:55.
 - Recipes, the full schedule (tick or undo anything), the shopping check, notes and safety are
   one tap away under **Plan & recipes**.
