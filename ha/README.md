@@ -80,9 +80,9 @@ For phone pushes ("the turkey is done"), each of you only needs the Home Assista
 signed in on your phone.
 
 **9. Let Pik help.** Settings → Voice assistants → **Expose** tab → **Expose entities**. Tick
-these eleven, then **Expose**:
+these twelve, then **Expose**:
 
-- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures · Holiday cooking: recipe step · Holiday cooking: put on / take off · Holiday cooking: open or fold a card · Holiday cooking: kitchen controls
+- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures · Holiday cooking: recipe step · Holiday cooking: put on / take off · Holiday cooking: open or fold a card · Holiday cooking: kitchen controls · Holiday cooking: running behind
 - Kitchen timer: start · Kitchen timer: stop or acknowledge · Kitchen timer: add time · Kitchen timers: what's running
 
 Then Settings → Devices & services → **Anthropic** → **Configure** on Pik's conversation
@@ -103,7 +103,9 @@ agent, and add this paragraph to the end of the instructions:
 > if_something_slips, mention it only when asked or when things are going wrong. Use
 > kitchen_timer for every timer, kitchen_timer_stop to stop or silence one, and
 > kitchen_timers_list for "how long on the…". The turkey is done only at 165°F in the breast,
-> thigh and wing; never call it done from the clock. Keep answers short; the cooks' hands are full.
+> thigh and wing; never call it done from the clock. holiday_behind when the kitchen is behind or ahead
+> ("we're 20 minutes behind", "the turkey's running 30 minutes late", "we're back on schedule"); read
+> back its message. Keep answers short; the cooks' hands are full.
 
 **10. On the screens.**
 
@@ -146,6 +148,13 @@ If the hub isn't ready by 7:00, start on the backup page and move your progress 
 
 ## How it behaves
 
+- **Running behind?** Tap **Behind?** at the top (or tell Pik "we're 20 minutes behind" or "the turkey's
+  running 30 minutes late"). Pick how much and what's late: everything, or one dish (dishes that wait on it,
+  like the gravy on the turkey, move with it). Everything still to come moves: the cards, the alarms, the
+  Echo announcements and the dinner countdown. Nothing gets ticked off for you, and the turkey is still done
+  only at 165°F. **Back on schedule** undoes it.
+- **Chimes:** an ordinary task chimes three times and then waits quietly on the bar until **Got it**. A
+  finished timer and anything about the turkey keep chiming until someone taps **Got it**.
 - One page, run by the clock: what's on the smoker, oven and each burner (what's next and when);
   one card per recipe whose part is due now, showing its step and just that step's ingredients
   (‹ › walk through the whole recipe, Tuesday to Thursday, and the time moves with the steps; tick
@@ -167,12 +176,12 @@ If the hub isn't ready by 7:00, start on the backup page and move your progress 
   with Settings (moving progress over, starting over) folded at the bottom.
 
 - Every screen shows the same ticks, timers and turkey readings within a second or two.
-- At each task's time, every screen chimes (and keeps chiming every 30 s until **Got it**),
-  and the Echos read it out. Mute the Echos from the Now tab if it gets too much.
+- At each task's time, every screen chimes (three times for an ordinary task; timers and the turkey keep
+  chiming until **Got it**), and the Echos read it out. Mute the Echos from the Now tab if it gets too much.
 - Timers are shared: start one on the Chromebook, stop it on the Echo Show, or ask Pik.
   "+5" on any screen adds five minutes everywhere.
-- Logging 165°F in the breast, thigh and wing announces "the turkey is done" on the Echos
-  and both phones.
+- Logging 165°F in the breast, thigh and wing announces it on the Echos and both phones, with a reminder
+  to check each spot with the instant-read before it comes off.
 - If the internet goes down, everything above keeps working except the Echo announcements
   and Pik's voice (both need Amazon's and Anthropic's servers).
 

@@ -8,6 +8,7 @@
 //   input_boolean.<prefix>_hot_<dish>     the dish read 140°F or hotter at the final check
 //   input_text.<prefix>_steps             where each recipe-in-progress is: "task:step,task:step"
 //   input_text.<prefix>_focus             the recipe whose steps were last used (Pik's "next step" follows it)
+//   input_text.<prefix>_shift             running behind: "scope,minutes,day,from;…" (scope = all or a recipe id)
 //   input_text.<prefix>_places            what's been put on a burner, in the oven or on the smoker:
 //                                         "run>station@unix seconds,…" (run = index into the plan's runs)
 //   timer.kitchen_<n> + input_text.kitchen_timer_<n>   the shared kitchen timer pool ("kind|label")
@@ -43,6 +44,9 @@ export interface Store {
   setHot(dish: string, v: boolean): void;
   /** The recipe card that's open during a rush (shared, so Pik can open one): a recipe id, or "-" for none. */
   focus(): string;
+  /** Running behind: each entry moves tasks at or after `f` on day `d` (all, or one recipe) by `m` minutes. */
+  shifts(): Shift[];
+  setShifts(list: Shift[]): void;
   setFocus(g: string): void;
   /** When alarms were last acknowledged ("Got it"), on any screen or by voice (ms). */
   ackedAt(): number;
@@ -57,7 +61,10 @@ export interface Store {
 
 // ---------------------------------------------------------------- local
 
-interface LocalState { done: Record<string, boolean>; temps: Reading[]; timers: KTimer[]; alarms: boolean; steps: Record<string, number>; hot: Record<string, boolean>; focus: string; places: Place[] }
+export interface Shift { s: string; m: number; d: string; f: string }
+export const shiftText = (l: Shift[]) => l.map((x) => [x.s, x.m, x.d, x.f].join(",")).join(";");
+export const parseShifts = (v: string): Shift[] => (v || "").split(";").map((x) => x.split(",")).filter((a) => a.length === 4 && /^-?\d+$/.test(a[1]) && /^\d\d:\d\d$/.test(a[3])).map(([s, m, d, f]) => ({ s, m: Number(m), d, f }));
+interface LocalState { done: Record<string, boolean>; temps: Reading[]; timers: KTimer[]; alarms: boolean; steps: Record<string, number>; hot: Record<string, boolean>; focus: string; places: Place[]; shift?: Shift[] }
 
 export class LocalStore implements Store {
   readonly live = false;
@@ -93,6 +100,8 @@ export class LocalStore implements Store {
   isHot(dish: string): boolean { return !!this.s.hot[dish]; }
   setHot(dish: string, v: boolean): void { this.s.hot[dish] = v; this.save(); }
   focus(): string { return this.s.focus || ""; }
+  shifts(): Shift[] { return this.s.shift || []; }
+  setShifts(list: Shift[]): void { this.s.shift = list; this.save(); }
   ackedAt(): number { return (this.s as unknown as { ack?: number }).ack || 0; }
   setAck(ms: number): void { (this.s as unknown as { ack?: number }).ack = ms; this.save(); }
   setFocus(g: string): void { this.s.focus = g; this.save(); }
@@ -109,7 +118,7 @@ export class LocalStore implements Store {
     return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
   resetAll(): void { this.s = { done: {}, temps: [], timers: [], alarms: true, steps: {}, hot: {}, focus: "", places: [] }; this.save(); }
-  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms, this.s.steps, this.s.hot, this.s.places, this.s.focus]); }
+  sig(): string { return JSON.stringify([this.s.done, this.s.temps.length, this.s.timers.map((t) => t.key + t.end), this.s.alarms, this.s.steps, this.s.hot, this.s.places, this.s.focus, this.s.shift || []]); }
 }
 
 // ---------------------------------------------------------------- Home Assistant
@@ -240,6 +249,8 @@ export class HaStore implements Store {
   isHot(dish: string): boolean { const e = this.st("input_boolean." + this.prefix + "_hot_" + dish); return !!e && e.state === "on"; }
   setHot(dish: string, v: boolean): void { this.hass.callService("input_boolean", v ? "turn_on" : "turn_off", {}, { entity_id: "input_boolean." + this.prefix + "_hot_" + dish }); }
   focus(): string { const e = this.st("input_text." + this.prefix + "_focus"); return e ? String(e.state) : ""; }
+  shifts(): Shift[] { const e = this.st("input_text." + this.prefix + "_shift"); return e ? parseShifts(String(e.state)) : []; }
+  setShifts(list: Shift[]): void { this.hass.callService("input_text", "set_value", { value: shiftText(list).slice(0, 255) }, { entity_id: "input_text." + this.prefix + "_shift" }); }
   ackedAt(): number { const e = this.st("input_text." + this.prefix + "_ack"); const v = e ? Number(e.state) : 0; return isNaN(v) ? 0 : v * 1000; }
   setAck(ms: number): void { this.hass.callService("input_text", "set_value", { value: String(Math.round(ms / 1000)) }, { entity_id: "input_text." + this.prefix + "_ack" }); }
   setFocus(g: string): void { this.hass.callService("input_text", "set_value", { value: g }, { entity_id: "input_text." + this.prefix + "_focus" }); }
@@ -260,6 +271,7 @@ export class HaStore implements Store {
     this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_places" });
     this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_focus" });
     this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_steps" });
+    this.hass.callService("input_text", "set_value", { value: "" }, { entity_id: "input_text." + this.prefix + "_shift" });
     SPOTS.forEach((l) => this.hass.callService("input_number", "set_value", { value: 0 }, { entity_id: "input_number." + this.prefix + "_turkey_" + l }));
     this.timers().forEach((t) => this.stopTimer(t.key));
   }
