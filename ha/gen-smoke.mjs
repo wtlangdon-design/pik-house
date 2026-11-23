@@ -83,7 +83,7 @@ const read = `{% set ns = namespace(out=[]) %}
           {% for e in ids %}
             {% set l = expand(e) if e else [] %}{% set s = l[0] if l | count > 0 else none %}
             {% set seen = (s.last_reported if s and s.last_reported is defined else (s.last_updated if s else none)) %}
-            {% set ok = s is not none and s.state | is_number and seen is not none and (now() - seen).total_seconds() < 300 %}
+            {% set ok = s is not none and s.state | is_number and seen is not none and (now() - seen).total_seconds() < 150 %}
             {% set v = s.state | float(0) if ok else 0 %}
             {% if ok and (s.attributes.unit_of_measurement | default('°F')) == '°C' %}{% set v = v * 9 / 5 + 32 %}{% endif %}
             {% set ns.out = ns.out + [(v | round(0) | int) if ok and -40 < v < 1100 else none] %}
@@ -173,13 +173,16 @@ const watch = `{% set m = (now().timestamp() / 60) | int %}
               {% set out.labeled = out.labeled + 1 %}
               {% if not ok %}
                 {% set away = (now() - s.last_changed).total_seconds() if s is not none else 9999 %}
-                {% if away >= 180 %}
+                {% if away >= 120 %}
                   {% set out.gone = out.gone + 1 %}
                   {% if 'l' not in d.v %}{% set out.lost = out.lost + [[i, what]] %}{% set d.v = dict(d.v, l=0) %}{% endif %}
                 {% endif %}
               {% else %}
                 {% set d.v = dict(d.v | items | rejectattr(0, 'eq', 'l') | list) %}
-                {% if kind == 'food' and target > 0 %}
+                {% if kind == 'food' and v > 230 %}
+                  {% if 'x' not in d.v %}{% set out.msgs = out.msgs + ['Probe ' ~ i ~ ' reads ' ~ v ~ '. It may have slipped out of ' ~ what ~ '.'] %}{% set out.phones = true %}{% set d.v = dict(d.v, x=0) %}{% endif %}
+                {% elif kind == 'food' and target > 0 %}
+                  {% set d.v = dict(d.v | items | rejectattr(0, 'eq', 'x') | list) %}
                   {% if v < target - 15 %}
                     {% set d.v = dict(d.v | items | rejectattr(0, 'in', ['n', 'd', 'a', 'r1', 'r2']) | list) %}
                   {% elif v >= target and 'd' not in d.v %}
@@ -210,7 +213,8 @@ const watch = `{% set m = (now().timestamp() / 60) | int %}
                     {% set d.v = dict(d.v, f=0) %}
                   {% elif rate is number and rate > 0 %}{% set d.v = dict(d.v | items | rejectattr(0, 'eq', 'f') | list) %}
                   {% endif %}
-                  {% if target > 0 and (v - target) | abs > 25 %}
+                  {% if target > 0 and (v - target) | abs <= 15 and 'k' not in d.v %}{% set d.v = dict(d.v, k=0) %}{% endif %}
+                  {% if target > 0 and (v - target) | abs > 25 and 'k' in d.v %}
                     {% if 'o' not in d.v %}{% set d.v = dict(d.v, o=m) %}
                     {% elif m - d.v['o'] >= 10 and 'O' not in d.v %}
                       {% set out.msgs = out.msgs + ['The smoker is at ' ~ v ~ ', and it is set for ' ~ target ~ '.'] %}{% set d.v = dict(d.v, O=0) %}
@@ -252,7 +256,7 @@ const clearAll = (sel) => [
 L(`automation:`);
 L(`  - id: smoke_start`);
 L(`    alias: "Smoking: the Inkbird started reading"`);
-L(`    description: "Turns the cook on. If the last cook ended more than 3 hours ago, starts fresh (clears what each probe was in)."`);
+L(`    description: "Turns the cook on. If the last cook ended more than 3 hours ago it's a new cook: probes set up more than 3 hours ago are cleared (ones just set, like Thanksgiving's, stay), and the start time is set."`);
 L(`    mode: single`);
 L(`    triggers:`);
 L(`      - trigger: template`);
@@ -267,7 +271,15 @@ L(`      - variables:`);
 L(`          fresh: "{{ (now() - states.input_boolean.smoke_on.last_changed).total_seconds() > 10800 }}"`);
 L(`      - if: "{{ fresh }}"`);
 L(`        then:`);
-for (const l of clearAll(true)) L("    " + l);
+L(`          - repeat:`);
+L(`              for_each: "{{ range(1, ${N + 1}) | list }}"`);
+L(`              sequence:`);
+L(`                - if: ${J(`{{ (now() - (expand('input_text.smoke_probe_' ~ repeat.item ~ '_food') | first).last_changed).total_seconds() > 10800 }}`)}`);
+L(`                  then:`);
+L(`                    - action: script.smoke_probe`);
+L(`                      data: { probe: "{{ repeat.item }}", food: "" }`);
+L(`      - if: ${J(`{{ fresh or states('input_datetime.smoke_started') in ['unknown', 'unavailable', ''] or (now() - (states('input_datetime.smoke_started') | as_datetime | as_local)).total_seconds() > 43200 }}`)}`);
+L(`        then:`);
 L(`          - action: input_datetime.set_datetime`);
 L(`            target: { entity_id: input_datetime.smoke_started }`);
 L(`            data: { timestamp: "{{ now().timestamp() }}" }`);

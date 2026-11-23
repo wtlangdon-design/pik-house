@@ -22,8 +22,9 @@ Do this on the Chromebook after Home Assistant is set up and you can log in. Ste
 **1. Turn on Advanced mode** (skip if done). Click your name at the bottom left of Home
 Assistant → turn on **Advanced mode**. This shows the Resources menu used in step 6.
 
-**2. Install File editor** (skip if done). Settings → Add-ons → **Add-on store** → search
-"File editor" → **Install** → **Start** → turn on **Show in sidebar**.
+**2. Install File editor** (skip if done). Settings → **Apps** (Home Assistant called these
+"Add-ons" until this year; older guides still say that) → **App store** → search "File editor" →
+**Install** → **Start** → turn on **Show in sidebar**.
 
 **3. Download the four files.** On GitHub, open each file below and click the **Download raw
 file** button (the down arrow at the top right of the file):
@@ -52,8 +53,11 @@ file** button (the down arrow at the top right of the file):
      packages: !include_dir_named packages
    ```
 3. Click the red **Save** icon.
-4. Settings → three dots (top right) → **Restart Home Assistant** → **Restart**. If it says
-   the configuration has a problem, stop and send Claude a screenshot.
+4. Check it first: Settings → **Developer tools** → **YAML** tab → **Check configuration**. It should
+   say the configuration is valid. If it shows an error, stop and send Claude a screenshot.
+5. Settings → three dots (top right) → **Restart Home Assistant** → **Restart**.
+6. Check the time zone: Settings → **System** → **General**. Time zone must be
+   **America/Los_Angeles** (every alarm runs on the hub's clock).
 
 **6. Add the card.** Settings → Dashboards → three dots (top right) → **Resources** →
 **Add resource**. URL: `/local/pik-house-card.js?v=1`. Type: **JavaScript module**. Create.
@@ -117,8 +121,13 @@ After that, use only the hub; the page stays as a backup.
 
 Do this once the steps above are done. Each check takes a minute.
 
-1. **The Echo talks.** Settings → Automations & scenes → Scripts → **Pik: announce** → ⋮ → Run.
-   The Echo Show 15 should say the test message. If it doesn't, the task alarms won't either.
+1. **The Echo and phones talk.** Settings → **Developer tools** → **Actions** → choose
+   **Pik: announce** → type "test" → turn on **Also push to both phones** → **Perform action**.
+   The Echo Show 15 should say it, and both phones should get it (check them locked, too). If the
+   Echo is silent, the task alarms will be too. If a phone gets nothing, send Claude a screenshot
+   of Settings → Devices & services → **Mobile App**.
+   Also set a plain alarm on your phone for **Wednesday 9:00 AM: turkey out of the brine**, as a
+   backup that doesn't depend on the hub.
 2. **The kitchen page is up on both screens.** Chromebook: the Thanksgiving dashboard, full screen.
    Echo Show 15: `/dashboard-thanksgiving/echo`. Tap each screen once so it can make sound.
 3. **They agree.** On the Chromebook, tap **Tue** at the top of "Coming up", then tick the 7:00
@@ -170,12 +179,16 @@ If the hub isn't ready by 7:00, start on the backup page and move your progress 
 ## Smoking with the Inkbird (about 15 minutes, once)
 
 This works for every cook on the smoker, not just Thanksgiving. You need the Inkbird IBT-4XS
-and the TP-Link UB500 Bluetooth stick.
+and a Bluetooth stick that Home Assistant supports. Use the **UGREEN CM109** (Bluetooth 4.0,
+CSR chip; on Home Assistant's list of known working adapters). The TP-Link UB500 is on Home
+Assistant's **unsupported** list ("frequent connection failures with active connections"). The
+Inkbird only needs listening, so the UB500 may still work, but it's the stick most likely to drop out.
 
-**1. Plug the stick into the hub.** Put the TP-Link stick in either USB port on the back of the
+**1. Plug the stick into the hub.** Put the Bluetooth stick in either USB port on the back of the
 Home Assistant Green. Then go to Settings → Devices & services. **Bluetooth** should appear under
 "Discovered" within a minute. Tap **Add**, then **Submit**. If it doesn't appear, restart the hub
-(Settings → three dots → **Restart Home Assistant**) and look again.
+(Settings → three dots → **Restart Home Assistant**) and look again. If the Inkbird later keeps
+dropping out, unplug the stick and plug it back in; some sticks need that after a hiccup.
 
 **2. Turn on the Inkbird.** Charge it, plug in at least one probe, and hold the power button until
 the screen lights up. Within a minute, Settings → Devices & services shows an **INKBIRD** device
@@ -198,7 +211,9 @@ change the end from `?v=1` to `?v=2` (any new number makes the screens load the 
 from scratch**. Title: `Smoking`. Icon: `mdi:grill`. Open it → pencil → three dots → **Raw
 configuration editor** → paste all of `ha/dashboards/smoking.yaml` → **Save**.
 
-**5. Let Pik use it.** Settings → Voice assistants → **Expose** → **Expose entities**. Tick these four:
+**5. Let Pik use it.** Settings → Voice assistants → **Expose** → **Expose entities**. (Or open
+each script under Settings → Automations & scenes → Scripts → ⋮ → Settings → Voice assistants and
+turn exposing on there; it's the same switch.) Tick these four:
 
 - Smoking: set a probe · Smoking: how's it going · Smoking: got it · Smoking: end the cook
 
@@ -227,7 +242,8 @@ done smoking."
 - Pik speaks up on the Echos (and your phones for "done" and problems) when a probe is 10° away,
   when it hits its temperature (then twice more, 10 minutes apart, until you say "got it"), when a
   big cut has sat in the stall for half an hour, when the smoker drops fast or is 25° off its
-  setting for 10 minutes, and when a probe or the whole Inkbird stops reading.
+  setting for 10 minutes (once it has reached its setting), when a probe reads hotter than meat can
+  get (it has slipped out), and when a probe or the whole Inkbird stops reading (within about 5 minutes).
 - The 🔊 button on the Smoking page mutes Pik for this; the screen still shows everything.
 - Turn the Inkbird off when you're done. The cook ends by itself 30 minutes later, or say
   "we're done smoking." The next cook starts fresh.
@@ -240,8 +256,11 @@ the house (it must stay off hot metal; Inkbird says the plastic can't take more 
 
 At 9:30 AM Thursday, when the smoker starts, the hub sets the probes up by itself:
 **probe 1 = breast, 2 = thigh, 3 = wing, 4 = the smoker's air** (clip it to the grate, not
-touching the turkey). Plug the probes into those numbered ports. From then on their readings go
-straight into the turkey log: the turkey screen says "Inkbird · live", the hourly turkey check on
+touching the turkey). Plug the probes into those numbered ports. Probe 4 follows the plan's smoker
+temperature (250°F, then about 340°F from 12:30, then the hot hold). From then on their readings go
+straight into the turkey log once the turkey goes on at 10:15 (readings above 212°F are ignored,
+since that means a probe is out of the meat): the turkey screen says "Inkbird · live", the hourly turkey check on
 the Echo reads the three temperatures out, and "the turkey is done" fires on its own at 165° in all
-three. You can still type or say a reading to correct one.
+three. You can still type or say a reading to correct one. Before the turkey comes off, confirm
+with your instant-read thermometer in each spot.
 
