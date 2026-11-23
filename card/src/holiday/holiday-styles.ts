@@ -289,8 +289,9 @@ td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-
 .stp .ar{width:44px;height:36px;border-radius:18px;border:1px solid var(--line);background:var(--card);font:600 22px/1 'DM Sans',sans-serif;cursor:pointer;color:var(--ink)}
 .stp .ar:disabled{opacity:.3;cursor:default}
 .stp p{margin:6px 0 0;font-size:15.5px;line-height:1.45}
-.stp .si{margin-top:6px;font-size:13.5px;color:#4A3D31;line-height:1.6}
-.stp .si span:not(:last-child)::after{content:"  ·  ";color:var(--line)}
-.stp .si b{font-weight:700;font-variant-numeric:tabular-nums}
+/* the step on the left, this step's ingredients in a column on the right */
+.stp .sb2.two{display:grid;grid-template-columns:1fr 250px;gap:18px;align-items:start}
+.stp .si{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-content:start;font-size:13.5px;line-height:1.35;border-left:1px solid var(--line);padding-left:14px;margin-top:6px}
+.stp .si b{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tc.due .stp p{font-size:16px}
 `;
