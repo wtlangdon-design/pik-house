@@ -3,10 +3,11 @@
 // One page, driven by the clock (design: "Holiday cooking: one page v3" on the design canvas):
 //   header     clock · the alarm when a task's time comes · turkey · Echo mute · Plan & recipes · countdown
 //   stations   smoker · oven · the five burners, now and next
-//   left       what to do now, each with its recipe step and that step's ingredients (‹ › to move), next tasks pinned below
+//   left       one card per recipe whose part is due now: its step and that step's ingredients; ‹ › walk through
+//              every step of the recipe, and the time moves with them. The next few recipes are listed below.
 //   right      timers not already shown on a task · the 12 dishes and where each one is
 //   bottom     the day at a glance (Chromebook only); tap it for the full schedule
-//   one sheet  Plan & recipes: recipes, full schedule with ticks, shopping check, notes & safety
+//   one sheet  Plan & recipes: recipes, full schedule with ticks (settings at the bottom)
 // Ticks, step positions, timers, turkey readings and hot checks live in Home Assistant (store.ts),
 // so every screen agrees and Pik can read and change them.
 //
@@ -24,7 +25,9 @@ import { HaStore, LocalStore, SPOTS, type Hass, type KTimer, type Store } from "
 
 export interface HolidayConfig { type: string; plan?: string; prefix?: string; timers?: number; mock?: boolean; layout?: string }
 
-type Seg = "recipes" | "schedule" | "shop" | "notes";
+type Seg = "recipes" | "schedule";
+/** One place in a recipe's run: a part (task) and, if it has any, one of its recipe steps. */
+interface Entry { t: Task; r?: Recipe; i?: number; s?: Recipe["steps"][number] }
 interface Alert { kind: string; when: string; text: string }
 interface Local { day: string | null; open: string | null; fired: Record<string, number>; rung: Record<string, number>; allDishes: boolean }
 
@@ -60,6 +63,7 @@ export class PikHolidayCard extends LitElement {
   private actx?: AudioContext;
   private wake: { release(): Promise<void> } | null = null;
   private minuteKey = "";
+  private _seq?: Map<string, Entry[]>;
 
   // ---------------------------------------------------------------- HA card API
 
@@ -69,6 +73,7 @@ export class PikHolidayCard extends LitElement {
     if (!plan) throw new Error("pik-holiday-card: unknown plan " + config.plan);
     this.config = config;
     this.plan = plan;
+    this._seq = undefined;
     if (config.layout) this.setAttribute("layout", config.layout); else this.removeAttribute("layout");
     try { const raw = localStorage.getItem(this.localKey()); if (raw) this.L = Object.assign(this.L, JSON.parse(raw)); } catch (e) { /* ignore */ }
     this.pickStore();
@@ -264,29 +269,85 @@ export class PikHolidayCard extends LitElement {
     const x = m ? m[1] : t;
     return x.charAt(0).toUpperCase() + x.slice(1);
   }
-  private stepIdx(t: Task): number { const n = this.stepsOf(t).length; return Math.max(0, Math.min(this.store.getStep(t.id), n - 1)); }
-  /** The timer that goes with where this task is now: the current step's, or the task's own. */
-  private timerFor(t: Task): TimerSpec | null {
-    const st = this.stepsOf(t);
-    if (!st.length) return t.tm;
-    const cur = st[this.stepIdx(t)];
-    if (cur.s.tm) return cur.s.tm;
-    return st.some((x) => x.s.tm) ? null : t.tm;
+  // ---------------------------------------------------------------- one card per recipe
+
+  /** Which card a task belongs to: its recipe, or "kitchen" for jobs that aren't part of a recipe. */
+  private gid(t: Task): string { return t.rid || "kitchen"; }
+  private gname(g: string): string {
+    const d = this.plan.dishes.find((x) => x.id === g);
+    return d ? d.name : g === "kitchen" ? "Kitchen" : (this.recipe(g) || { name: g }).name;
+  }
+  /** Every recipe's run from start to finish: each part in time order, each part's steps in order. */
+  private seqs(): Map<string, Entry[]> {
+    if (this._seq) return this._seq;
+    const m = new Map<string, Entry[]>();
+    const order = Object.keys(this.plan.days);
+    const tasks = this.plan.tasks.slice().sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day) || (a.hm < b.hm ? -1 : a.hm > b.hm ? 1 : 0));
+    tasks.forEach((t) => {
+      const g = this.gid(t);
+      if (!m.has(g)) m.set(g, []);
+      const st = this.stepsOf(t);
+      if (st.length) st.forEach((x) => m.get(g)!.push({ t, r: x.r, i: x.i, s: x.s }));
+      else m.get(g)!.push({ t });
+    });
+    return (this._seq = m);
+  }
+  private parts(g: string): Task[] { return [...new Set((this.seqs().get(g) || []).map((e) => e.t))]; }
+  private ms(t: Task): number { return this.at(t.day, t.hm).getTime(); }
+  private isDue(t: Task, now = Date.now()): boolean { return this.ms(t) <= now + 10 * 60000; }
+  /** The part of a recipe to do now: the first open part that has started. Ticking moves the card on.
+   *  A part left unticked more than 30 minutes behind a newer one, or over an hour old, folds away so the card keeps up.
+   *  Nothing started: the next part. On another day's preview: that day's first open part. */
+  private partOf(g: string, day?: string): { cur: Task; behind: Task[] } | null {
+    const open = this.parts(g).filter((t) => !this.store.isDone(t.id));
+    if (day) { const c = open.find((t) => t.day === day); return c ? { cur: c, behind: [] } : null; }
+    const now = Date.now(), order = Object.keys(this.plan.days), today = this.currentDay();
+    const started = open.filter((t) => this.ms(t) <= now);
+    if (started.length) {
+      const latest = Math.max(...started.map((t) => this.ms(t)));
+      const keep = (t: Task) => this.ms(t) >= latest - 30 * 60000 && this.ms(t) >= now - 60 * 60000 && order.indexOf(t.day) >= order.indexOf(today);
+      const cur = started.find(keep);
+      if (cur) return { cur, behind: started.filter((t) => !keep(t)) };
+      const nxt = open.find((t) => this.ms(t) > now);
+      return { cur: nxt || started[started.length - 1], behind: nxt ? started : started.slice(0, -1) };
+    }
+    return open.length ? { cur: open[0], behind: [] } : null;
+  }
+  /** Where a recipe's card is: never before the part it's on (‹ stops there), never past the end. */
+  private cardIdx(g: string, cur: Task): number {
+    const seq = this.seqs().get(g)!;
+    const start = seq.findIndex((e) => e.t === cur);
+    return Math.max(start, Math.min(this.store.getStep(g), seq.length - 1));
+  }
+  /** The timer that goes with one place in a recipe: the step's own, or the part's if none of its steps has one. */
+  private timerOf(e: Entry): TimerSpec | null {
+    if (e.s && e.s.tm) return e.s.tm;
+    return this.stepsOf(e.t).some((x) => x.s.tm) ? null : e.t.tm;
   }
   private timerByLabel(label: string): KTimer | undefined { return this.store.timers().find((x) => x.label === label); }
   private isToday(): boolean { return !this.L.day || this.L.day === this.currentDay(); }
 
-  private windowTasks() {
+  /** The recipe cards for the left column. */
+  private cards() {
     const d = this.viewDay(), now = Date.now(), order = Object.keys(this.plan.days);
-    const list = this.plan.tasks.filter((t) => t.day === d);
-    const soon = now + 10 * 60000, recent = now - 15 * 60000;
-    if (!this.isToday()) return { list, due: [] as Task[], earlier: [] as Task[], next: list.filter((t) => !this.store.isDone(t.id)) };
-    const pending = list.filter((t) => !this.store.isDone(t.id));
-    const prior = this.plan.tasks.filter((t) => order.indexOf(t.day) < order.indexOf(d) && !this.store.isDone(t.id));
-    const earlier = prior.concat(pending.filter((t) => this.at(t.day, t.hm).getTime() < recent));
-    const due = list.filter((t) => { const x = this.at(t.day, t.hm).getTime(); return x >= recent && x <= soon; });
-    const next = pending.filter((t) => this.at(t.day, t.hm).getTime() > soon);
-    return { list, due, earlier, next };
+    const groups = [...this.seqs().keys()];
+    const byTime = (a: { cur: Task }, b: { cur: Task }) => this.ms(a.cur) - this.ms(b.cur) || this.plan.tasks.indexOf(a.cur) - this.plan.tasks.indexOf(b.cur);
+    if (!this.isToday()) {
+      const list = groups.map((g) => ({ g, p: this.partOf(g, d) })).filter((x) => x.p).map((x) => ({ g: x.g, cur: x.p!.cur })).sort(byTime);
+      return { due: [] as Array<{ g: string; cur: Task }>, done: [] as Array<{ g: string; t: Task; next?: Task }>, next: list, behind: [] as Task[] };
+    }
+    const due: Array<{ g: string; cur: Task }> = [], next: Array<{ g: string; cur: Task }> = [], done: Array<{ g: string; t: Task; next?: Task }> = [];
+    let behind: Task[] = [];
+    groups.forEach((g) => {
+      const p = this.partOf(g);
+      if (p) behind = behind.concat(p.behind);
+      if (p && this.isDue(p.cur, now) && order.indexOf(p.cur.day) >= order.indexOf(d)) { due.push({ g, cur: p.cur }); return; }
+      // Just ticked off: keep it on screen a while (with undo) so ticking doesn't make things jump away.
+      const recent = this.parts(g).filter((t) => this.store.isDone(t.id) && this.ms(t) >= now - 15 * 60000 && this.ms(t) <= now + 10 * 60000).pop();
+      if (recent) done.push({ g, t: recent, next: p ? p.cur : undefined });
+      if (p) next.push({ g, cur: p.cur });
+    });
+    return { due: due.sort(byTime), done, next: next.sort(byTime), behind: behind.sort((a, b) => this.ms(a) - this.ms(b)) };
   }
   private inFinalHour(): boolean {
     const h = this.plan.hotCheck, now = Date.now();
@@ -300,24 +361,24 @@ export class PikHolidayCard extends LitElement {
     const segs = this.plan.stations[name] || [];
     const cur = segs.find(([d, a, b]) => this.plan.days[d] && now >= this.at(d, a).getTime() && now < this.at(d, b).getTime());
     const nxt = segs.find(([d, a, , , w]) => this.plan.days[d] && this.at(d, a).getTime() > now && (!cur || w !== cur[4]));
-    const nextTxt = nxt ? (nxt[0] === this.todayKey() ? fmt12(nxt[1]) : SHORTDAY[nxt[0]] + " " + fmt12(nxt[1])) + " · " + nxt[4] + (nxt[3] && !/^(lowest|high|dropping|off|warm)$/.test(nxt[3]) ? " " + nxt[3] : "") : "";
-    return { cur, nextTxt };
+    const nextWhat = nxt ? nxt[4] : "";
+    const nextWhen = nxt ? (nxt[0] === this.todayKey() ? "" : SHORTDAY[nxt[0]] + " ") + fmt12(nxt[1]) + (nxt[1] >= "12:00" ? " PM" : "") + (nxt[3] && /°F/.test(nxt[3]) ? " · " + nxt[3] : "") : "";
+    return { cur, nextWhat, nextWhen };
   }
   private stationsHtml(): string {
     const big = (name: string, label: string) => {
       const sn = this.segNow(name);
       let cur = sn.cur;
-      const nextTxt = sn.nextTxt;
       // The plan says the turkey is off by 2:45; if the thermometer disagrees, the smoker tile says so.
       if (name === "smoker" && cur && cur[0] === this.plan.hotCheck.day && !this.store.isDone("thu_1445_turkey")) {
         const r = SPOTS.map((k) => this.store.latest(k));
         if (r.some((x) => x) && !r.every((x) => x && x.f >= 165) && cur[2] > "14:45") cur = [cur[0], cur[1], cur[2], "325–350°F", "Turkey · not 165°F yet"];
       }
-      return `<div class="sn ${name}${cur ? "" : " idle"}"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span><b>${esc(cur ? cur[4] : "Off")}</b><i>${esc(nextTxt ? "Next: " + nextTxt : " ")}</i></div>`;
+      return `<div class="sn ${name}${cur ? "" : " idle"}"><span class="eb">${label} ${cur && cur[3] ? `<span class="tp">${esc(cur[3])}</span>` : ""}</span><b>${esc(cur ? cur[4] : "Off")}</b>${sn.nextWhat ? `<i>Next: ${esc(sn.nextWhat)}</i><i>${esc(sn.nextWhen)}</i>` : ""}</div>`;
     };
     const burners = [1, 2, 3, 4, 5].map((n) => {
-      const { cur, nextTxt } = this.segNow("b" + n);
-      return `<div class="bn${cur ? "" : " free"}"><span class="n">${n}</span><div><b>${esc(cur ? cur[4] + (cur[3] ? ", " + cur[3] : "") : "Free")}</b><i>${esc(nextTxt || " ")}</i></div></div>`;
+      const { cur, nextWhat, nextWhen } = this.segNow("b" + n);
+      return `<div class="bn${cur ? "" : " free"}"><span class="n">${n}</span><div><b>${esc(cur ? cur[4] + (cur[3] ? ", " + cur[3] : "") : "Free")}</b>${nextWhat ? `<i>Next: ${esc(nextWhat)}</i><i>${esc(nextWhen)}</i>` : ""}</div></div>`;
     }).join("");
     return `<div class="stn">${big("smoker", "Smoker")}${big("oven", "Oven")}<div class="stovebox"><span class="eb">Stove</span><div class="burners">${burners}</div></div></div>`;
   }
@@ -383,51 +444,59 @@ export class PikHolidayCard extends LitElement {
     if (!tm) return "";
     const k = this.timerByLabel(tm[0]);
     if (k && k.rang) return `<button class="sb rang" data-stop="${esc(k.key)}">Time's up · OK</button>`;
-    const word = tm[2] === "check" ? "Check in " : tm[2] === "temp" ? "Temp check in " : "Done in ";
-    if (k) return `<button class="sb run" data-tid="${esc(k.key)}" data-plus="${esc(k.key)}" title="Tap for 5 more minutes">${word}<span class="tl"></span></button>`;
-    const cls = tm[2] === "check" ? "chk" : tm[2] === "temp" ? "tp" : "dn";
-    return `<button class="sb ${cls}" data-timer='${esc(JSON.stringify(tm))}'>${word}${tm[1] >= 120 ? Math.round(tm[1] / 60) + " h" : tm[1] + " min"}</button>`;
+    if (k) return `<button class="sb run" data-tid="${esc(k.key)}" data-plus="${esc(k.key)}" title="Tap for 5 more minutes"><span class="tl"></span> left</button>`;
+    const len = tm[1] >= 120 ? (Math.round(tm[1] / 6) / 10) + " hr" : tm[1] + " min";
+    return `<button class="sb set" data-timer='${esc(JSON.stringify(tm))}' title="${esc(tm[0])}">Set ${len} timer</button>`;
   }
-  private taskHtml(t: Task, due: boolean): string {
-    const done = this.store.isDone(t.id);
-    const st = this.stepsOf(t), tm = done ? null : this.timerFor(t);
+  private nameHtml(g: string): string {
+    return this.recipe(g) ? `<button class="dlink" data-recipe="${g}" title="The whole recipe">${esc(this.gname(g))}</button>` : `<span class="dlink">${esc(this.gname(g))}</span>`;
+  }
+  private when(t: Task): string { return (t.day !== this.viewDay() ? SHORTDAY[t.day] + " " : "") + fmt12(t.hm); }
+  /** One recipe's card: the part it's on, that part's step and ingredients; ‹ › walk the whole recipe and the time follows. */
+  private cardHtml(g: string, cur: Task, due: boolean): string {
+    const seq = this.seqs().get(g)!, n = seq.length;
+    const start = seq.findIndex((e) => e.t === cur);
+    const idx = this.cardIdx(g, cur), e = seq[idx];
+    const ahead = e.t !== cur;
+    const tm = ahead ? null : this.timerOf(e);
     const k = tm ? this.timerByLabel(tm[0]) : undefined;
-    let step = "";
-    if (!done && st.length) {
-      // The task's recipe step is always shown; ‹ › walk through the task's steps (shared with every screen and Pik).
-      const i = this.stepIdx(t), cur = st[i], n = st.length;
-      const dn = (this.plan.dishes.find((x) => x.id === cur.r.id) || { name: cur.r.name }).name;
-      const ings = this.stepIngr(cur.r, cur.s);
-      step = `<div class="stp">
-        <div class="sh"><button class="dlink" data-recipe="${cur.r.id}" title="The whole recipe">${esc(dn)}</button>${n > 1 ? `<span>· step ${i + 1} of ${n}</span><span class="pips">${st.map((_x, j) => `<i class="${j === i ? "on" : j < i ? "past" : ""}"></i>`).join("")}</span>` : ""}
-          ${n > 1 ? `<span class="arr"><button class="ar" data-step="${t.id}:${i - 1}"${i === 0 ? " disabled" : ""} aria-label="Previous step">‹</button><button class="ar" data-step="${t.id}:${i + 1}"${i === n - 1 ? " disabled" : ""} aria-label="Next step">›</button></span>` : ""}</div>
-        <div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(cur.s.t))}</p>
-        ${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div>
-      </div>`;
-    }
-    return `<div class="tc${done ? " done" : due ? " due" : ""}${k && k.rang ? " ringing" : ""}">
-      <div class="tt">${t.day !== this.viewDay() ? SHORTDAY[t.day] + " " : ""}${fmt12(t.hm)}</div>
-      <div><div class="x">${esc(t.text)}</div><div class="meta">${LANES[t.lane] || ""}</div></div>
-      <div class="acts">${this.timerBtnHtml(tm)}<button class="tick${done ? " on" : ""}" data-done="${t.id}" aria-label="${done ? "Ticked off; tap to undo" : "Tick off"}">${done ? "✓" : ""}</button></div>
-      ${step}</div>`;
+    const ings = e.s && e.r ? this.stepIngr(e.r, e.s) : [];
+    const pips = n > 1 ? `<span class="pips">${seq.map((x, j) => `<i class="${j === idx ? "on" : j < start ? "past" : x.t === e.t ? "part" : ""}"></i>`).join("")}</span>` : "";
+    const arrows = n > 1 ? `<span class="arr"><button class="ar" data-step="${g}:${idx - 1}"${idx <= start ? " disabled" : ""} aria-label="Previous step">‹</button><button class="ar" data-step="${g}:${idx + 1}"${idx >= n - 1 ? " disabled" : ""} aria-label="Next step">›</button></span>` : "";
+    return `<div class="tc rc3${due && !ahead ? " due" : ""}${ahead ? " ahead" : ""}${k && k.rang ? " ringing" : ""}">
+      <div class="tt">${this.when(e.t)}${ahead ? `<small>later</small>` : ""}</div>
+      <div class="hd3"><div class="nm">${this.nameHtml(g)}${n > 1 ? `<span class="sc">step ${idx + 1} of ${n}</span>${pips}` : ""}${arrows}</div><div class="x">${esc(e.t.text)}</div></div>
+      <div class="acts">${ahead ? `<button class="sb" data-step="${g}:${start}">Back to now</button>` : `${this.timerBtnHtml(tm)}<button class="tick" data-done="${e.t.id}" data-g="${g}" aria-label="Tick off this part"></button>`}</div>
+      ${e.s ? `<div class="stp"><div class="sb2${ings.length ? " two" : ""}"><p>${esc(this.stepText(e.s.t))}</p>${ings.length ? `<div class="si">${ings.map(([q, it]) => `<b>${esc(q)}</b><span>${esc(it)}</span>`).join("")}</div>` : ""}</div></div>` : ""}
+    </div>`;
+  }
+  /** A part just ticked off, kept a moment with undo and what's next for that recipe. */
+  private doneHtml(g: string, t: Task, next?: Task): string {
+    return `<div class="tc done"><div class="tt">${this.when(t)}</div>
+      <div><div class="nm">${this.nameHtml(g)}</div><div class="x">${esc(t.text)}</div>${next ? `<div class="nxt">Next: ${esc(this.when(next))} · ${esc(next.text)}</div>` : `<div class="nxt">All done.</div>`}</div>
+      <div class="acts"><button class="tick on" data-done="${t.id}" data-g="${g}" aria-label="Ticked off; tap to undo">✓</button></div></div>`;
+  }
+  private behindHtml(t: Task): string {
+    return `<div class="tc done late"><div class="tt">${this.when(t)}</div><div><div class="nm">${esc(this.gname(this.gid(t)))}</div><div class="x">${esc(t.text)}</div></div>
+      <div class="acts"><button class="tick" data-done="${t.id}" data-g="${this.gid(t)}" aria-label="Tick off"></button></div></div>`;
   }
   private nowHtml(): string {
-    const { due, earlier, next, list } = this.windowTasks();
+    const { due, done, next, behind } = this.cards();
     const d = this.viewDay();
-    const undone = due.filter((t) => !this.store.isDone(t.id));
-    const title = !this.isToday() ? this.plan.dayNames[d] : this.inFinalHour() ? "The final hour" : undone.length ? "Do these now" : next.length ? "Coming up" : "All done for " + this.plan.dayNames[d].toLowerCase();
-    const ordered = undone.concat(due.filter((t) => this.store.isDone(t.id)));
-    const showNextInList = !due.length;
-    const nextList = showNextInList ? next.slice(0, 8) : next.slice(0, 3);
+    const list = this.plan.tasks.filter((t) => t.day === d);
+    const title = !this.isToday() ? this.plan.dayNames[d] : this.inFinalHour() ? "The final hour" : due.length ? "Do these now" : next.length ? "Coming up" : "All done for " + this.plan.dayNames[d].toLowerCase();
+    const listCards = !due.length && !done.length;
+    const shown = listCards ? next.slice(0, this.isToday() ? 6 : 20) : next.filter((x) => !done.some((y) => y.g === x.g)).slice(0, 3);
     return `<div class="lc">
       <div class="nowh"><h2 class="serif">${title}</h2>${!this.isToday() ? `<span class="prev">Previewing · <button class="sb" data-day="">Back to now</button></span>` : `<span class="prev">${list.filter((t) => !this.store.isDone(t.id)).length} of ${list.length} left today</span>`}</div>
       ${this.missingPackage ? `<div class="flag"><b>Not shared yet</b><span>The holiday package isn't installed in Home Assistant, so progress is saved on this screen only.</span></div>` : ""}
       <div class="tlist">
-        ${earlier.length ? `<details class="earl"><summary>${earlier.length} earlier ${earlier.length === 1 ? "task isn't" : "tasks aren't"} ticked off ▸</summary>${earlier.map((t) => this.taskHtml(t, false)).join("")}</details>` : ""}
-        ${ordered.map((t) => this.taskHtml(t, true)).join("")}
-        ${showNextInList ? nextList.map((t) => this.taskHtml(t, false)).join("") : ""}
+        ${behind.length ? `<details class="earl"><summary>${behind.length} earlier ${behind.length === 1 ? "part isn't" : "parts aren't"} ticked off ▸</summary>${behind.map((t) => this.behindHtml(t)).join("")}</details>` : ""}
+        ${due.map((x) => this.cardHtml(x.g, x.cur, true)).join("")}
+        ${done.map((x) => this.doneHtml(x.g, x.t, x.next)).join("")}
+        ${listCards ? shown.map((x) => this.cardHtml(x.g, x.cur, false)).join("") : ""}
       </div>
-      ${!showNextInList && nextList.length ? `<div class="nextbox"><span class="eb">Next</span>${nextList.map((t) => `<div class="nx"><span class="tt">${fmt12(t.hm)}</span><span>${esc(t.text)}</span></div>`).join("")}</div>` : ""}
+      ${!listCards && shown.length ? `<div class="nextbox"><span class="eb">Next</span>${shown.map((x) => `<div class="nx"><span class="tt">${esc(this.when(x.cur))}</span><span><b>${esc(this.gname(x.g))}</b> · ${esc(x.cur.text)}</span></div>`).join("")}</div>` : ""}
     </div>`;
   }
 
@@ -435,12 +504,12 @@ export class PikHolidayCard extends LitElement {
 
   private timersHtml(): string {
     const onTasks = new Set<string>();
-    this.windowTasks().due.forEach((t) => { if (!this.store.isDone(t.id)) { const tm = this.timerFor(t); if (tm) onTasks.add(tm[0]); } });
+    this.cards().due.forEach((x) => { const e = this.seqs().get(x.g)![this.cardIdx(x.g, x.cur)]; const tm = e.t === x.cur ? this.timerOf(e) : null; if (tm) onTasks.add(tm[0]); });
     const all = this.store.timers().sort((a, b) => (a.rang === b.rang ? a.end - b.end : a.rang ? -1 : 1));
     const rest = all.filter((t) => !onTasks.has(t.label) || t.rang);
     if (!rest.length) return "";
     const hidden = all.length - rest.length;
-    return `<div class="rcard2"><span class="eb">Timers · ${all.length} running${hidden ? " · " + hidden + " shown on the tasks" : ""}</span>
+    return `<div class="rcard2"><span class="eb">Timers · ${all.length} running${hidden ? " · " + hidden + " shown on the cards" : ""}</span>
       ${rest.length ? `<div class="tgrid">${rest.map((t) => `<div class="tg${t.rang ? " ring" : ""}" data-tid="${esc(t.key)}"><span class="l"><i class="k ${t.kind}"></i>${esc(t.label)}</span><span class="tl"></span><span class="mini">${t.rang ? "" : `<button data-plus="${esc(t.key)}">+5</button>`}<button data-stop="${esc(t.key)}">${t.rang ? "OK" : "×"}</button></span></div>`).join("")}</div>` : ""}</div>`;
   }
   private ribbonHtml(): string {
@@ -463,16 +532,14 @@ export class PikHolidayCard extends LitElement {
 
   private sheetHtml(): string {
     const sh = this.sheet!;
-    const segs: Array<[Seg, string]> = [["recipes", "Recipes"], ["schedule", "Full schedule"], ["shop", "Shopping check"], ["notes", "Notes & safety"]];
+    const segs: Array<[Seg, string]> = [["recipes", "Recipes"], ["schedule", "Full schedule"]];
     let body = "";
     if (sh.seg === "recipes" && sh.recipe) body = this.recipeHtml(this.recipe(sh.recipe)!);
     else if (sh.seg === "recipes") body = `<div class="rgrid">${this.plan.recipes.map((r) => `<button class="rcard" data-recipe="${r.id}"><span class="n">${r.n}</span><span class="nm">${esc(r.name)}</span><span class="tags"><span class="pill">${esc(r.gf)}</span>${r.tag.indexOf("Family") === 0 ? `<span class="pill ab">Family</span>` : ""}</span></button>`).join("")}</div>`;
-    else if (sh.seg === "schedule") body = this.scheduleHtml(sh.day || this.viewDay());
-    else if (sh.seg === "shop") body = this.shopHtml();
-    else body = this.notesHtml();
+    else body = this.scheduleHtml(sh.day || this.viewDay());
     return `<button class="scrim2" data-close="1" aria-label="Close"></button><div class="psheet">
       <div style="display:flex;align-items:center;gap:12px"><h2 class="serif" style="margin:0;font-size:32px">Plan &amp; recipes</h2><span style="flex:1"></span><button class="btn" data-close="1">Back to the kitchen</button></div>
-      <div class="seg">${segs.map(([k, v]) => `<button class="${sh.seg === k ? "on" : ""}" data-seg="${k}">${v}</button>`).join("")}</div>${body}</div>`;
+      <div class="seg">${segs.map(([k, v]) => `<button class="${sh.seg === k ? "on" : ""}" data-seg="${k}">${v}</button>`).join("")}</div>${body}${this.settingsHtml()}</div>`;
   }
   private recipeHtml(r: Recipe): string {
     const flagHtml = (r.flags || []).map(([k, h, t]) => `<div class="flag ${k === "conf" || k === "jc" ? "conf" : ""}"><b>${esc(h)}</b><span>${esc(t)}</span></div>`).join("");
@@ -501,31 +568,18 @@ export class PikHolidayCard extends LitElement {
       <div class="planhead" style="top:0"><span></span>${lanes.map((l) => `<span class="eb"><span class="lane l-${l}"></span>${LANES[l]}${l === "prep" && hasSmoker ? " · fridge" : ""}</span>`).join("")}</div>
       ${times.map((hm) => `<div class="planrow"><div class="t">${fmt12(hm)}</div>${lanes.map((l) => `<div class="cell">${list.filter((t) => t.hm === hm && laneOf(t) === l).map((t) => `<div class="blk ${t.lane}${this.store.isDone(t.id) ? " done" : ""}">${esc(t.text)}<button class="btick${this.store.isDone(t.id) ? " on" : ""}" data-done="${t.id}">${this.store.isDone(t.id) ? "✓ Done" : "Tick off"}</button></div>`).join("")}</div>`).join("")}</div>`).join("")}`;
   }
-  private shopHtml(): string {
-    const lbl: Record<string, string> = { ok: "OK", chk: "Confirm", miss: "Missing", jc: "Judgment call", no: "Ordered, not used" };
-    return `<div class="card"><table><tr><th>Item</th><th>Needed</th><th>Ordered / on hand</th><th>Status</th><th>Note</th></tr>
-      ${this.plan.shop.map(([a, b, c, s, n]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td>${esc(c)}</td><td><span class="st ${s}">${lbl[s]}</span></td><td class="muted">${esc(n)}</td></tr>`).join("")}</table></div>`;
-  }
-  private notesHtml(): string {
+  /** Rarely needed: moving progress between the backup page and the hub, and starting over. */
+  private settingsHtml(): string {
     const local = this.store as LocalStore;
-    return `<div class="grid2"><div style="display:flex;flex-direction:column;gap:16px">
-      <div class="card"><span class="eb">Screens and Echos</span>
-        <p style="margin-top:8px">${this.store.live ? "Every screen shows the same ticks, steps, timers and turkey readings." : "This screen keeps its own progress."} Echos read each task out loud: <b>${this.store.alarmsOn() ? "on" : "off"}</b>. <button class="btn sm" data-alarms="1">${this.store.alarmsOn() ? "Turn off" : "Turn on"}</button></p>
-        ${this.store.live ? `<p style="margin-top:10px">Started on the Thanksgiving page? There, open Plan &amp; recipes → Notes &amp; safety and tap <b>Copy progress for the hub</b>, then paste it here.</p>
-        <textarea id="imp" rows="3" style="width:100%;border-radius:14px;border:1px solid var(--line);padding:10px;font:13px monospace" placeholder="Paste the progress code"></textarea>
-        <div style="margin-top:8px"><button class="btn sm ink" data-import="1">Bring it over</button></div>`
-        : `<p style="margin-top:10px">Moving to the hub? Copy this code, then paste it into the hub's Plan &amp; recipes → Notes &amp; safety.</p>
-        <textarea id="exp" rows="3" readonly style="width:100%;border-radius:14px;border:1px solid var(--line);padding:10px;font:12px monospace">${esc(local.exportCode ? local.exportCode() : "")}</textarea>
-        <div style="margin-top:8px"><button class="btn sm ink" data-export="1">Copy progress for the hub</button></div>`}
-      </div>
-      <div class="card"><span class="eb">If something slips</span>${this.plan.ifs.map(([h, t]) => `<div class="flag"><b>${esc(h)}</b><span>${esc(t)}</span></div>`).join("")}</div>
-      <div class="card"><span class="eb">Assumptions</span><ul style="margin:10px 0 0;padding-left:18px;line-height:1.55">${this.plan.assume.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
-      <div class="card"><span class="eb">Optional ideas (not in the plan)</span><ul style="margin:10px 0 0;padding-left:18px;line-height:1.55">${this.plan.optional.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
-    </div>
-    <div class="card"><span class="eb">USDA food safety used in this plan</span>
-      ${this.plan.safe.map(([h, t, u]) => `<div class="flag safe"><b>${esc(h)}</b><span>${esc(t)} <a href="${esc(u)}" target="_blank" rel="noopener">USDA</a></span></div>`).join("")}
-      <p class="note">Leftovers: shallow containers, fridge within 2 hours, eat within 3–4 days, reheat to 165°F.</p>
-      <div style="margin-top:12px"><button class="btn sm" data-resetall="1">Reset all progress${this.store.live ? " (every screen)" : " on this screen"}</button></div></div></div>`;
+    return `<details class="settings"><summary>Settings</summary><div class="card">
+      ${this.store.live ? `<p>Started on the backup page? There, open Plan &amp; recipes → Settings and tap <b>Copy progress for the hub</b>, then paste it here.</p>
+        <textarea id="imp" rows="3" placeholder="Paste the progress code"></textarea>
+        <div><button class="btn sm ink" data-import="1">Bring it over</button></div>`
+      : `<p>Moving to the hub? Copy this code, then paste it into the hub's Plan &amp; recipes → Settings.</p>
+        <textarea id="exp" rows="3" readonly>${esc(local.exportCode ? local.exportCode() : "")}</textarea>
+        <div><button class="btn sm ink" data-export="1">Copy progress for the hub</button></div>`}
+      <p style="margin-top:14px">Start over: clears every tick, step, turkey reading and timer${this.store.live ? " on every screen" : " on this screen"}.</p>
+      <div><button class="btn sm" data-resetall="1">Reset all progress</button></div></div></details>`;
   }
 
   // ---------------------------------------------------------------- turkey pad
@@ -533,12 +587,12 @@ export class PikHolidayCard extends LitElement {
   private padHtml(): string {
     const p = this.turkeyPad!;
     const tf = (t: number) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    return `<button class="scrim2" data-padclose="1" aria-label="Close"></button><div class="tpop">
-      <div style="display:flex;align-items:center"><span class="eb">Log a turkey reading · done only at 165°F in all three</span><span style="flex:1"></span><button class="btn sm" data-padclose="1">Done</button></div>
-      <div class="spots">${SPOTS.map((k, i) => { const x = this.store.latest(k); return `<button class="${i === p.spot ? "on" : ""}" data-spot="${i}"><span>${SPOTNAME[k]}</span><b>${x ? x.f + "°" : "—"}</b><span>${x ? "at " + tf(x.t) : "no reading"}</span></button>`; }).join("")}</div>
-      <div class="entry">${p.entry ? esc(p.entry) + "°F" : `<span class="muted" style="font-size:15px;font-weight:500">${SPOTNAME[SPOTS[p.spot]]}: type the reading</span>`}</div>
-      <div class="pad">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"].map((k) => `<button class="${k === "✓" ? "go" : ""}" data-key="${k}">${k}</button>`).join("")}</div>
-      <p class="note">Tap ✓ to log it; it moves to the next spot. Or tell Pik: “the breast is 162.”</p></div>`;
+    return `<button class="scrim2" data-padclose="1" aria-label="Close"></button><div class="tpop" role="dialog" aria-label="Turkey temperature">
+      <div class="tph"><div><h3 class="serif">Turkey temperature</h3><p>It's done when the breast, thigh and wing all read 165°F.</p></div><button class="btn sm" data-padclose="1">Done</button></div>
+      <div class="spots">${SPOTS.map((k, i) => { const x = this.store.latest(k); return `<button class="${i === p.spot ? "on" : ""}${x && x.f >= 165 ? " ok" : ""}" data-spot="${i}"><span class="sp">${SPOTNAME[k]}</span><b>${x ? x.f + "°" : "—"}</b><span>${x ? tf(x.t) : "no reading yet"}</span></button>`; }).join("")}</div>
+      <div class="entry">${p.entry ? esc(p.entry) + "°F" : `<span class="muted">Type the ${SPOTNAME[SPOTS[p.spot]].toLowerCase()} reading</span>`}</div>
+      <div class="pad">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"].map((k) => `<button class="${k === "✓" ? "go" : ""}" data-key="${k}" aria-label="${k === "✓" ? "Save" : k === "⌫" ? "Delete" : k}">${k === "✓" ? "Save" : k}</button>`).join("")}</div>
+      <p class="tpn">Save moves on to the next spot. Or just tell the Echo: “the breast is 162.”</p></div>`;
   }
   private padKey(k: string): void {
     const p = this.turkeyPad!;
@@ -564,7 +618,13 @@ export class PikHolidayCard extends LitElement {
     const ds = el.dataset;
     if (ds.ack) { this.ackAlerts(); return; }
     if (ds.day !== undefined) { this.L.day = ds.day || null; this.saveL(); this.requestUpdate(); return; }
-    if (ds.done) { this.store.setDone(ds.done, !this.store.isDone(ds.done)); this.requestUpdate(); return; }
+    if (ds.done) {
+      // Ticking (or undoing) a part puts that recipe's card back on the part it's now on.
+      const t = this.plan.tasks.find((x) => x.id === ds.done);
+      this.store.setDone(ds.done, !this.store.isDone(ds.done));
+      if (t && this.store.getStep(this.gid(t)) > 0) this.store.setStep(this.gid(t), 0);
+      this.requestUpdate(); return;
+    }
     if (ds.timer) {
       const [l, m, k] = JSON.parse(ds.timer) as TimerSpec;
       this.unlockAudio();
@@ -573,7 +633,7 @@ export class PikHolidayCard extends LitElement {
     }
     if (ds.stop) { this.store.stopTimer(ds.stop); this.requestUpdate(); return; }
     if (ds.plus) { this.store.plus5(ds.plus); this.flash("5 more minutes."); this.requestUpdate(); return; }
-    if (ds.step) { const [id, i] = ds.step.split(":"); if (Number(i) >= 0) this.store.setStep(id, Number(i)); this.requestUpdate(); return; } // also tells Pik which recipe "next step" means
+    if (ds.step) { const [g, i] = ds.step.split(":"); if (Number(i) >= 0) this.store.setStep(g, Number(i)); this.requestUpdate(); return; } // also tells Pik which recipe "next step" means
     if (ds.finish) { this.store.setDone(ds.finish, true); this.L.open = null; this.saveL(); this.flash("Ticked off."); this.requestUpdate(); return; }
     if (ds.plan !== undefined) { this.sheet = { seg: "recipes", recipe: null, day: null }; this.requestUpdate(); return; }
     if (ds.recipe !== undefined) { this.sheet = { seg: "recipes", recipe: ds.recipe || null, day: null }; this.requestUpdate(); return; }
@@ -604,7 +664,7 @@ export class PikHolidayCard extends LitElement {
     let ok = false;
     try { await navigator.clipboard.writeText(ta.value); ok = true; } catch (e) { /* blocked */ }
     if (!ok) { ta.focus(); ta.select(); try { ok = document.execCommand("copy"); } catch (e) { /* ignore */ } }
-    this.flash(ok ? "Copied. Paste it into the hub's Notes & safety." : "Select the code and copy it (Ctrl+C).");
+    this.flash(ok ? "Copied. Paste it into the hub's Plan & recipes → Settings." : "Select the code and copy it (Ctrl+C).");
   }
 
   /** Progress code from the backup page. v1 (old page) and v2 (this card in local mode) both work. */
@@ -617,7 +677,7 @@ export class PikHolidayCard extends LitElement {
     const known = new Set(this.plan.tasks.map((t) => t.id));
     const ids = (data.done || []).filter((i) => known.has(i));
     this.store.setMany(ids, true);
-    Object.keys(data.steps || {}).forEach((k) => { if (known.has(k) && !ids.includes(k)) this.store.setStep(k, data.steps![k]); });
+    Object.keys(data.steps || {}).forEach((k) => { if (this.seqs().has(k)) this.store.setStep(k, data.steps![k]); });
     (data.hot || []).forEach((d) => this.store.setHot(d, true));
     const latest: Record<string, number> = {};
     (data.temps || []).forEach((r) => { latest[r.loc] = r.f; });
@@ -649,7 +709,7 @@ export class PikHolidayCard extends LitElement {
 <header><div class="hd">
   <div class="clock" id="clock"></div>
   ${a ? html`<div class="ringbar" role="alert"><b>${a.when}</b><span>${a.text}</span>${this.Q.length > 1 ? html`<small>+${this.Q.length - 1} more</small>` : nothing}<button data-ack="1">Got it</button></div>`
-      : html`<div class="ttl"><b>${this.todayKey() ? this.plan.dayNames[d] + " · " + this.plan.title : this.plan.title + " starts " + this.plan.dayNames[Object.keys(this.plan.days)[0]].toLowerCase()}</b><span>${sub}</span></div>`}
+      : html`<div class="ttl"><b>${this.todayKey() ? this.plan.dayNames[d] + " · " + this.plan.title : this.plan.title + " prep starts " + this.plan.dayNames[Object.keys(this.plan.days)[0]]}</b><span>${sub}</span></div>`}
   <button class="tkb" data-turkey="1"><span class="dot ${ts.cls}">${ts.sym}</span><span class="t"><b>${ts.head}</b><span>${ts.sub}</span></span></button>
   <button class="ico ${this.store.alarmsOn() ? "" : "off"}" data-alarms="1" title=${this.store.alarmsOn() ? "Echos read tasks out loud. Tap to mute." : "Echos are muted. Tap to turn back on."}>${this.store.alarmsOn() ? "🔊" : "🔇"}</button>
   <button class="ibtn" data-plan="1">Plan &amp; recipes</button>

@@ -85,8 +85,9 @@ agent, and add this paragraph to the end of the instructions:
 > Holiday cooking: while a holiday plan is running, use holiday_whats_next for "what's next",
 > "where are we" and "how's the turkey"; holiday_task_done when someone says a task is done
 > ("the stuffing's in"); holiday_log_turkey for probe readings ("the breast is 158");
-> holiday_step for "next step", "go back", "say that again" and "read me the gravy steps" (read
-> the step out; if it has a timer, offer to start it). Use
+> holiday_step for "next step", "go back", "say that again" and "read me the gravy steps" (it walks
+> one recipe from start to finish, like the cards on the screens; read the step out; if it has a
+> timer, offer to start it; when a part is finished, tick it off with holiday_task_done). Use
 > kitchen_timer for every timer, kitchen_timer_stop to stop or silence one, and
 > kitchen_timers_list for "how long on the…". The turkey is done only at 165°F in the breast,
 > thigh and wing; never call it done from the clock. Keep answers short; the cooks' hands are full.
@@ -99,20 +100,21 @@ agent, and add this paragraph to the end of the instructions:
   `/echo` (for example `http://homeassistant.local:8123/dashboard-thanksgiving/echo`), sign in,
   and tap once.
 
-**11. If you started on the Thanksgiving page.** On the page: **Plan & recipes → Notes & safety →
-Copy progress for the hub**. On the hub: **Plan & recipes → Notes & safety** → paste → **Bring it
+**11. If you started on the Thanksgiving page.** On the page: **Plan & recipes → Settings** (at the
+bottom) **→ Copy progress for the hub**. On the hub: **Plan & recipes → Settings** → paste → **Bring it
 over**. Ticks, recipe steps, running timers (like the brine) and turkey readings come across.
 After that, use only the hub; the page stays as a backup.
 
 ## How it behaves
 
-- One page, run by the clock: what's on the smoker, oven and each burner; what to do now, each
-  task showing its recipe step and just that step's ingredients (‹ › move through the steps;
-  tap the dish name for the whole recipe); the next few tasks; the timers; and where each of the
-  12 dishes is. From 3:00 Thursday the dish list becomes the
+- One page, run by the clock: what's on the smoker, oven and each burner (what's next and when);
+  one card per recipe whose part is due now, showing its step and just that step's ingredients
+  (‹ › walk through the whole recipe, Tuesday to Thursday, and the time moves with the steps; tick
+  a part off and the card moves on; tap the dish name for the whole recipe); the next few recipes;
+  the timers ("Set 5 min timer", then the time left); and where each of the 12 dishes is. From 3:00 Thursday the dish list becomes the
   "keeping hot" check: tap **140°F ✓** for each hot dish at 3:55.
-- Recipes, the full schedule (tick or undo anything), the shopping check, notes and safety are
-  one tap away under **Plan & recipes**.
+- Recipes and the full schedule (tick or undo anything) are one tap away under **Plan & recipes**,
+  with Settings (moving progress over, starting over) folded at the bottom.
 
 - Every screen shows the same ticks, timers and turkey readings within a second or two.
 - At each task's time, every screen chimes (and keeps chiming every 30 s until **Got it**),
