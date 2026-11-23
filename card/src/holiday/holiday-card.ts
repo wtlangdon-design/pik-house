@@ -37,7 +37,7 @@ const SPOTNAME: Record<string, string> = { breast: "Breast", thigh: "Thigh", win
 const SHORTDAY: Record<string, string> = { tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun", mon: "Mon" };
 
 const esc = (s: unknown) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
-function fmt12(hm: string): string { let [h, m] = hm.split(":").map(Number); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; return h + ":" + String(m).padStart(2, "0") + (ap === "PM" ? "" : " AM"); }
+function fmt12(hm: string): string { let [h, m] = hm.split(":").map(Number); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; return h + ":" + String(m).padStart(2, "0") + " " + ap; }
 function fmtDur(ms: number): string { const s = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : String(m)) + ":" + String(x).padStart(2, "0"); }
 function hmNow(): string { const d = new Date(); const h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ":" + String(m).padStart(2, "0") + " " + (h >= 12 ? "PM" : "AM"); }
 // Small station emblems for the "put on" buttons (the burner number sits on the top edge).
@@ -382,7 +382,7 @@ export class PikHolidayCard extends LitElement {
   private whenMs(ms: number): string {
     const d = new Date(ms), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
     const day = Object.keys(this.plan.days).find((k) => this.plan.days[k] === d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
-    return (day && day !== this.todayKey() ? SHORTDAY[day] + " " : "") + fmt12(hm) + (hm >= "12:00" ? " PM" : "");
+    return (day && day !== this.todayKey() ? SHORTDAY[day] + " " : "") + fmt12(hm);
   }
   /** The emblem button on a card: tap to put the dish on its burner / in the oven / on the smoker, tap again to take it off. */
   private placeBtn(i: number, preview = false): string {
@@ -454,7 +454,7 @@ export class PikHolidayCard extends LitElement {
     const cur = segs.find(([d, a, b]) => this.plan.days[d] && now >= this.at(d, a).getTime() && now < this.at(d, b).getTime());
     const nxt = segs.find(([d, a, , , w]) => this.plan.days[d] && this.at(d, a).getTime() > now && (!cur || w !== cur[4]));
     const nextWhat = nxt ? nxt[4] : "";
-    const nextWhen = nxt ? (nxt[0] === this.todayKey() ? "" : SHORTDAY[nxt[0]] + " ") + fmt12(nxt[1]) + (nxt[1] >= "12:00" ? " PM" : "") + (nxt[3] && /°F/.test(nxt[3]) ? " · " + nxt[3] : "") : "";
+    const nextWhen = nxt ? (nxt[0] === this.todayKey() ? "" : SHORTDAY[nxt[0]] + " ") + fmt12(nxt[1]) + (nxt[3] && /°F/.test(nxt[3]) ? " · " + nxt[3] : "") : "";
     return { cur, nextWhat, nextWhen };
   }
   private stationsHtml(): string {
@@ -580,8 +580,7 @@ export class PikHolidayCard extends LitElement {
   }
   /** For a card's time column: the day (if not the day on screen) above the time, and the time never splits. */
   private timeCell(t: Task): string {
-    const fm = fmt12(t.hm);
-    const full = /AM$/.test(fm) ? fm : fm + " PM";
+    const full = fmt12(t.hm);
     return (t.day !== this.viewDay() ? `<span class="dy">${SHORTDAY[t.day]}</span>` : "") + `<span class="hm">${full}</span>`;
   }
   private when(t: Task): string { return (t.day !== this.viewDay() ? SHORTDAY[t.day] + " " : "") + fmt12(t.hm); }
