@@ -749,9 +749,8 @@
    "gf": "Gluten-free",
    "yield": "One large buttered casserole",
    "active": "50 min",
-   "passive": "Bread drying on the counter (≈48 hr); ≈55 min bake",
+   "passive": "Bread drying whole on the counter (≈48 hr); ≈55 min bake",
    "equip": [
-    "2 sheet pans (bread drying)",
     "Large skillet",
     "Very large bowl",
     "Buttered casserole (your own; deep 13×9 or larger)",
@@ -762,7 +761,7 @@
     [
      "2 loaves",
      "Carbonaut white gluten-free bread",
-     "cubed and dried"
+     "dried whole, then broken into pieces Thursday"
     ],
     [
      "2 sticks",
@@ -798,7 +797,7 @@
     ]
    ],
    "done": "Center reads 165°F (USDA) and the top is crisp at the edges.",
-   "ahead": "Bread cubes dry on the counter from Tuesday night to Thursday (about 48 hours). Wednesday: cook the butter, onion, celery and organs (the 'wet' mix) and refrigerate. Combine with bread and broth only right before baking: USDA says never refrigerate mixed, uncooked stuffing.",
+   "ahead": "The loaves dry whole on the counter from Tuesday night to Thursday (about 48 hours), then get broken into pieces. Wednesday: cook the butter, onion, celery and organs (the 'wet' mix) and refrigerate. Combine with bread and broth only right before baking: USDA says never refrigerate mixed, uncooked stuffing.",
    "store": "Leftovers in shallow containers within 2 hours; fridge 3–4 days; reheat to 165°F.",
    "flags": [
     [
@@ -815,8 +814,8 @@
    "steps": [
     {
      "d": "tue",
-     "t": "7:30 PM: cut both loaves into ¾-inch cubes and spread them on sheet pans. Leave them out on the counter, uncovered, to dry until Thursday (about 48 hours).",
-     "min": 20,
+     "t": "7:30 PM: take both loaves out of their bags and leave them out on the counter, uncovered, to dry whole until Thursday (about 48 hours).",
+     "min": 2,
      "ing": [
       [
        0
@@ -862,6 +861,18 @@
     },
     {
      "d": "thu",
+     "t": "1:30 PM: break the dried loaves into bite-size pieces into the big bowl.",
+     "min": 10,
+     "ing": [
+      [
+       0,
+       "2 loaves",
+       "bread, dried whole"
+      ]
+     ]
+    },
+    {
+     "d": "thu",
      "t": "1:30 PM: warm the wet mix gently until the butter melts.",
      "min": 5,
      "ing": []
@@ -873,8 +884,8 @@
      "ing": [
       [
        0,
-       "2 loaves",
-       "bread cubes, dried"
+       "",
+       "the broken bread"
       ],
       [
        6,
@@ -2473,7 +2484,7 @@
    "hm": "19:30",
    "lane": "prep",
    "rid": "stuffing",
-   "text": "Cube both loaves; spread on sheet pans; leave out on the counter to dry until Thursday.",
+   "text": "Bread out of the bags; leave both loaves out on the counter to dry whole until Thursday.",
    "tm": null,
    "steps": [
     [
@@ -2485,7 +2496,7 @@
     [
      "stuffing",
      "wait",
-     "Bread cubes drying"
+     "Loaves drying, counter"
     ]
    ]
   },
@@ -3158,12 +3169,16 @@
    "hm": "13:30",
    "lane": "stove",
    "rid": "stuffing",
-   "text": "Warm the stuffing wet mix until the butter melts.",
+   "text": "Break the dried bread into pieces; warm the wet mix until the butter melts.",
    "tm": null,
    "steps": [
     [
      "stuffing",
      3
+    ],
+    [
+     "stuffing",
+     4
     ]
    ],
    "dish": []
@@ -3201,7 +3216,7 @@
    "steps": [
     [
      "stuffing",
-     4
+     5
     ]
    ],
    "dish": [
@@ -3272,7 +3287,7 @@
    "steps": [
     [
      "stuffing",
-     5
+     6
     ]
    ],
    "dish": [
@@ -3368,7 +3383,7 @@
    "steps": [
     [
      "stuffing",
-     6
+     7
     ]
    ],
    "dish": [
@@ -3558,7 +3573,7 @@
    "steps": [
     [
      "stuffing",
-     7
+     8
     ]
    ],
    "dish": [
