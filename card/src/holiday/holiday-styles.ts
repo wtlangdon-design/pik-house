@@ -355,4 +355,13 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .pl.oven{border-color:var(--oven);color:var(--oven)}.pl.smoker{border-color:var(--smoker);color:var(--smoker)}
 .pl.on.oven,.pl.on.smoker{background:var(--btn);border-color:var(--btn);color:var(--btnInk)}
 .tc.done{align-items:start}.tc.done .tick{margin-top:2px}
+/* polish: badge digits dead-center; card emblems look like the tiles (dashed = not on yet, warm amber = on) */
+.ic .pn{display:flex;align-items:center;justify-content:center;width:17px;min-width:0;height:17px;padding:0;line-height:1;font-size:10.5px;font-variant-numeric:tabular-nums}
+.pl .ic .pn{width:20px;height:20px;line-height:1;font-size:11.5px;top:-14px;right:-16px}
+.pl{border-style:dashed;background:var(--card)}
+.pl.on,.pl.on.oven,.pl.on.smoker{border-style:solid;background:#F8E6CC;border-color:#E3B474;color:#8A5A1C;box-shadow:0 0 0 3px #F6E1C2}
+.pl.on.oven{color:var(--oven)}.pl.on.smoker{color:var(--smoker)}
+.pl.busy{border-style:solid}
+.pl .bang{display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.pl .ic .pn,.pl.on .ic .pn{background:#E5484D}.pl.busy .ic .pn{background:#B9A48A}
 `;
