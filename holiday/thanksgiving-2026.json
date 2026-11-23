@@ -749,7 +749,7 @@
    "gf": "Gluten-free",
    "yield": "One large buttered casserole",
    "active": "50 min",
-   "passive": "Bread drying; ≈55 min bake",
+   "passive": "Bread drying on the counter (≈48 hr); ≈55 min bake",
    "equip": [
     "2 sheet pans (bread drying)",
     "Large skillet",
@@ -798,7 +798,7 @@
     ]
    ],
    "done": "Center reads 165°F (USDA) and the top is crisp at the edges.",
-   "ahead": "Bread cubes dry Tuesday night. Wednesday: cook the butter, onion, celery and organs (the 'wet' mix) and refrigerate. Combine with bread and broth only right before baking: USDA says never refrigerate mixed, uncooked stuffing.",
+   "ahead": "Bread cubes dry on the counter from Tuesday night to Thursday (about 48 hours). Wednesday: cook the butter, onion, celery and organs (the 'wet' mix) and refrigerate. Combine with bread and broth only right before baking: USDA says never refrigerate mixed, uncooked stuffing.",
    "store": "Leftovers in shallow containers within 2 hours; fridge 3–4 days; reheat to 165°F.",
    "flags": [
     [
@@ -815,23 +815,8 @@
    "steps": [
     {
      "d": "tue",
-     "t": "8:30 PM: cut both loaves into ¾-inch cubes, spread on sheet pans, and leave out overnight to dry.",
+     "t": "7:30 PM: cut both loaves into ¾-inch cubes and spread them on sheet pans. Leave them out on the counter, uncovered, to dry until Thursday (about 48 hours).",
      "min": 20,
-     "ing": [
-      [
-       0
-      ]
-     ]
-    },
-    {
-     "d": "wed",
-     "t": "9:00 AM: if the cubes are still soft, dry them in a 250°F oven, stirring once, until crisp-dry. Cool; store in bags.",
-     "min": 5,
-     "tm": [
-      "Bread: dry yet?",
-      30,
-      "check"
-     ],
      "ing": [
       [
        0
@@ -2483,6 +2468,28 @@
    "dish": []
   },
   {
+   "id": "tue_1930_stuffing",
+   "day": "tue",
+   "hm": "19:30",
+   "lane": "prep",
+   "rid": "stuffing",
+   "text": "Cube both loaves; spread on sheet pans; leave out on the counter to dry until Thursday.",
+   "tm": null,
+   "steps": [
+    [
+     "stuffing",
+     0
+    ]
+   ],
+   "dish": [
+    [
+     "stuffing",
+     "wait",
+     "Bread cubes drying"
+    ]
+   ]
+  },
+  {
    "id": "tue_2000_turkey",
    "day": "tue",
    "hm": "20:00",
@@ -2505,28 +2512,6 @@
      "turkey",
      "cold",
      "Brining, fridge"
-    ]
-   ]
-  },
-  {
-   "id": "tue_2030_stuffing",
-   "day": "tue",
-   "hm": "20:30",
-   "lane": "prep",
-   "rid": "stuffing",
-   "text": "Cube both loaves; spread on sheet pans to dry overnight.",
-   "tm": null,
-   "steps": [
-    [
-     "stuffing",
-     0
-    ]
-   ],
-   "dish": [
-    [
-     "stuffing",
-     "wait",
-     "Bread cubes drying"
     ]
    ]
   },
@@ -2560,32 +2545,6 @@
      "turkey",
      "cold",
      "Drying, fridge"
-    ]
-   ]
-  },
-  {
-   "id": "wed_0900_stuffing",
-   "day": "wed",
-   "hm": "09:00",
-   "lane": "oven",
-   "rid": "stuffing",
-   "text": "Oven to 250°F; finish drying bread cubes if still soft. Cool; bag.",
-   "tm": [
-    "Bread: dry yet?",
-    30,
-    "check"
-   ],
-   "steps": [
-    [
-     "stuffing",
-     1
-    ]
-   ],
-   "dish": [
-    [
-     "stuffing",
-     "wait",
-     "Bread dried, bagged"
     ]
    ]
   },
@@ -2698,11 +2657,11 @@
    "steps": [
     [
      "stuffing",
-     2
+     1
     ],
     [
      "stuffing",
-     3
+     2
     ]
    ],
    "dish": [
@@ -3204,7 +3163,7 @@
    "steps": [
     [
      "stuffing",
-     4
+     3
     ]
    ],
    "dish": []
@@ -3242,7 +3201,7 @@
    "steps": [
     [
      "stuffing",
-     5
+     4
     ]
    ],
    "dish": [
@@ -3313,7 +3272,7 @@
    "steps": [
     [
      "stuffing",
-     6
+     5
     ]
    ],
    "dish": [
@@ -3409,7 +3368,7 @@
    "steps": [
     [
      "stuffing",
-     7
+     6
     ]
    ],
    "dish": [
@@ -3599,7 +3558,7 @@
    "steps": [
     [
      "stuffing",
-     8
+     7
     ]
    ],
    "dish": [
@@ -4681,13 +4640,6 @@
   "oven": [
    [
     "wed",
-    "09:00",
-    "10:00",
-    "250°F",
-    "Bread cubes drying"
-   ],
-   [
-    "wed",
     "13:00",
     "13:20",
     "350°F",
@@ -5051,14 +5003,6 @@
    "from": "thu_1540_sprouts",
    "to": "thu_1540_sprouts",
    "until": "15:52"
-  },
-  {
-   "st": "oven",
-   "r": "stuffing",
-   "l": "Bread cubes",
-   "from": "wed_0900_stuffing",
-   "to": "wed_0900_stuffing",
-   "until": "10:00"
   },
   {
    "st": "oven",
