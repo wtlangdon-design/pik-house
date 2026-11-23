@@ -179,10 +179,10 @@ If the hub isn't ready by 7:00, start on the backup page and move your progress 
 ## Smoking with the Inkbird (about 15 minutes, once)
 
 This works for every cook on the smoker, not just Thanksgiving. You need the Inkbird IBT-4XS
-and a Bluetooth stick that Home Assistant supports. Use the **UGREEN CM109** (Bluetooth 4.0,
-CSR chip; on Home Assistant's list of known working adapters). The TP-Link UB500 is on Home
-Assistant's **unsupported** list ("frequent connection failures with active connections"). The
-Inkbird only needs listening, so the UB500 may still work, but it's the stick most likely to drop out.
+and a Bluetooth stick that Home Assistant supports: the **StarTech USBA-BLUETOOTH-V5-C2**
+(Bluetooth 5.0; on Home Assistant's list of known working adapters;
+https://www.amazon.com/dp/B0B2737HPS, with the "Bluetooth 5.0" size selected). The TP-Link UB500 is
+on Home Assistant's **unsupported** list, so don't use it.
 
 **1. Plug the stick into the hub.** Put the Bluetooth stick in either USB port on the back of the
 Home Assistant Green. Then go to Settings → Devices & services. **Bluetooth** should appear under
