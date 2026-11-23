@@ -4868,5 +4868,223 @@
     "Sprouts skillet"
    ]
   ]
- }
+ },
+ "runs": [
+  {
+   "st": "b1",
+   "r": "cran",
+   "l": "Cranberry sauce",
+   "from": "wed_0900_cran",
+   "to": "wed_0900_cran",
+   "until": "09:30"
+  },
+  {
+   "st": "b1",
+   "r": "eggs",
+   "l": "Eggs",
+   "from": "wed_0930_eggs",
+   "to": "wed_0930_eggs",
+   "until": "10:00"
+  },
+  {
+   "st": "b1",
+   "r": "mac",
+   "l": "Lobster tails",
+   "from": "wed_1030_mac",
+   "to": "wed_1030_mac",
+   "until": "10:45"
+  },
+  {
+   "st": "b1",
+   "r": "stuffing",
+   "l": "Stuffing wet mix",
+   "from": "wed_1100_stuffing",
+   "to": "wed_1100_stuffing",
+   "until": "11:30"
+  },
+  {
+   "st": "b1",
+   "r": "gbc",
+   "l": "Green bean water",
+   "from": "wed_1200_gbc",
+   "to": "wed_1200_gbc",
+   "until": "12:40"
+  },
+  {
+   "st": "b2",
+   "r": "gbc",
+   "l": "Mushroom sauce",
+   "from": "wed_1200_gbc",
+   "to": "wed_1200_gbc",
+   "until": "12:45"
+  },
+  {
+   "st": "b2",
+   "r": "sprouts",
+   "l": "Rice crisps",
+   "from": "wed_1530_sprouts",
+   "to": "wed_1530_sprouts",
+   "until": "15:45"
+  },
+  {
+   "st": "b2",
+   "r": "mac",
+   "l": "Panko topping",
+   "from": "wed_1545_mac",
+   "to": "wed_1545_mac",
+   "until": "16:00"
+  },
+  {
+   "st": "b1",
+   "r": "eggs",
+   "l": "Prosciutto",
+   "from": "thu_0900_eggs",
+   "to": "thu_0900_eggs",
+   "until": "09:15"
+  },
+  {
+   "st": "b1",
+   "r": "sprouts",
+   "l": "Sprouts",
+   "from": "thu_1200_sprouts",
+   "to": "thu_1200_sprouts",
+   "until": "12:20"
+  },
+  {
+   "st": "b1",
+   "r": "stuffing",
+   "l": "Stuffing wet mix",
+   "from": "thu_1330_stuffing",
+   "to": "thu_1330_stuffing",
+   "until": "13:45"
+  },
+  {
+   "st": "b1",
+   "r": "mash",
+   "l": "Potatoes",
+   "from": "thu_1440_mash",
+   "to": "thu_1600_x",
+   "until": "16:00"
+  },
+  {
+   "st": "b2",
+   "r": "mac",
+   "l": "Pasta",
+   "from": "thu_1440_mac",
+   "to": "thu_1500_mac",
+   "until": "15:08"
+  },
+  {
+   "st": "b3",
+   "r": "mac",
+   "l": "Mac sauce",
+   "from": "thu_1445_mac",
+   "to": "thu_1508_mac",
+   "until": "15:08"
+  },
+  {
+   "st": "b4",
+   "r": "gravy",
+   "l": "Gravy",
+   "from": "thu_1450_gravy",
+   "to": "thu_1550_gravy",
+   "until": "16:00"
+  },
+  {
+   "st": "b3",
+   "r": "mash",
+   "l": "Brown butter",
+   "from": "thu_1515_mash",
+   "to": "thu_1515_mash",
+   "until": "15:20"
+  },
+  {
+   "st": "b5",
+   "r": "sprouts",
+   "l": "Sprouts",
+   "from": "thu_1540_sprouts",
+   "to": "thu_1540_sprouts",
+   "until": "15:52"
+  },
+  {
+   "st": "oven",
+   "r": "stuffing",
+   "l": "Bread cubes",
+   "from": "wed_0900_stuffing",
+   "to": "wed_0900_stuffing",
+   "until": "10:00"
+  },
+  {
+   "st": "oven",
+   "r": "cake",
+   "l": "Gooey butter cake",
+   "from": "wed_1300_cake",
+   "to": "wed_1300_cake",
+   "until": "14:15"
+  },
+  {
+   "st": "oven",
+   "r": "stuffing",
+   "l": "Stuffing",
+   "from": "thu_1405_stuffing",
+   "to": "thu_1500_stuffing",
+   "until": "15:00"
+  },
+  {
+   "st": "oven",
+   "r": "gbc",
+   "l": "Green beans",
+   "from": "thu_1430_gbc",
+   "to": "thu_1500_gbc",
+   "until": "15:00"
+  },
+  {
+   "st": "oven",
+   "r": "mac",
+   "l": "Lobster mac",
+   "from": "thu_1512_mac",
+   "to": "thu_1535_mac",
+   "until": "15:35"
+  },
+  {
+   "st": "oven",
+   "r": "gbc",
+   "l": "Green beans",
+   "from": "thu_1540_gbc",
+   "to": "thu_1550_gbc",
+   "until": "15:50"
+  },
+  {
+   "st": "smoker",
+   "r": "turkey",
+   "l": "Turkey",
+   "from": "thu_1015_turkey",
+   "to": "thu_1445_turkey",
+   "until": "14:45"
+  },
+  {
+   "st": "smoker",
+   "r": "stuffing",
+   "l": "Stuffing",
+   "from": "thu_1500_stuffing",
+   "to": "thu_1600_x",
+   "until": "16:15"
+  },
+  {
+   "st": "smoker",
+   "r": "gbc",
+   "l": "Green beans",
+   "from": "thu_1500_gbc",
+   "to": "thu_1540_gbc",
+   "until": "15:40"
+  },
+  {
+   "st": "smoker",
+   "r": "turkey",
+   "l": "Carved turkey",
+   "from": "thu_1520_turkey",
+   "to": "thu_1600_x",
+   "until": "16:15"
+  }
+ ]
 }

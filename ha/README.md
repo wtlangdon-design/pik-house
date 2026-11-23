@@ -74,9 +74,9 @@ For phone pushes ("the turkey is done"), each of you only needs the Home Assista
 signed in on your phone.
 
 **9. Let Pik help.** Settings → Voice assistants → **Expose** tab → **Expose entities**. Tick
-these eight, then **Expose**:
+these nine, then **Expose**:
 
-- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures · Holiday cooking: recipe step
+- Holiday cooking: what's next · Holiday cooking: tick a task off · Holiday cooking: log turkey temperatures · Holiday cooking: recipe step · Holiday cooking: put on / take off
 - Kitchen timer: start · Kitchen timer: stop or acknowledge · Kitchen timer: add time · Kitchen timers: what's running
 
 Then Settings → Devices & services → **Anthropic** → **Configure** on Pik's conversation
@@ -87,7 +87,9 @@ agent, and add this paragraph to the end of the instructions:
 > ("the stuffing's in"); holiday_log_turkey for probe readings ("the breast is 158");
 > holiday_step for "next step", "go back", "say that again" and "read me the gravy steps" (it walks
 > one recipe from start to finish, like the cards on the screens; read the step out; if it has a
-> timer, offer to start it; when a part is finished, tick it off with holiday_task_done). Use
+> timer, offer to start it; when a part is finished, tick it off with holiday_task_done);
+> holiday_place when something goes on a burner, in the oven or on the smoker, or comes off ("the
+> cranberry sauce is on", "put the gravy on burner 3", "take the potatoes off"). Use
 > kitchen_timer for every timer, kitchen_timer_stop to stop or silence one, and
 > kitchen_timers_list for "how long on the…". The turkey is done only at 165°F in the breast,
 > thigh and wing; never call it done from the clock. Keep answers short; the cooks' hands are full.
@@ -111,7 +113,12 @@ After that, use only the hub; the page stays as a backup.
   one card per recipe whose part is due now, showing its step and just that step's ingredients
   (‹ › walk through the whole recipe, Tuesday to Thursday, and the time moves with the steps; tick
   a part off and the card moves on; tap the dish name for the whole recipe); the next few recipes;
-  the timers ("Set 5 min timer", then the time left); and where each of the 12 dishes is. From 3:00 Thursday the dish list becomes the
+  the timers ("Set 5 min timer", then the time left); and where each of the 12 dishes is.
+- Burner, oven and smoker emblems on the cards (the burner number on top): tap one when the dish
+  goes on and the tile at the top shows it, with how long it's been on. Tap it again to take it off;
+  ticking off the part that ends it frees the burner by itself. A dish the plan expects but nobody
+  has put on shows faded on its tile; if its burner is taken, the emblem turns red and offers the
+  free burners. From 3:00 Thursday the dish list becomes the
   "keeping hot" check: tap **140°F ✓** for each hot dish at 3:55.
 - Recipes and the full schedule (tick or undo anything) are one tap away under **Plan & recipes**,
   with Settings (moving progress over, starting over) folded at the bottom.

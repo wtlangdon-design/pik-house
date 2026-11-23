@@ -81,4 +81,15 @@ for (const d of p.dishes) {
   if (d.hot && !eff.some((e) => e[1] === "hot")) bad(`hot dish ${d.id} is never marked hot`);
 }
 if (problems.length) { console.error("Plan problems:\n- " + problems.join("\n- ")); process.exit(1); }
-console.log(`Plan OK: ${p.tasks.length} tasks, ${p.recipes.reduce((a, r) => a + r.steps.length, 0)} recipe steps, ${Object.keys(p.stations).length} stations, ${p.dishes.length} dishes.`);
+// "Put on" runs: what goes on which burner, in the oven or on the smoker, from which part until which part is ticked.
+for (const [i, u] of (p.runs || []).entries()) {
+  const from = p.tasks.find((t) => t.id === u.from), to = p.tasks.find((t) => t.id === u.to);
+  if (!from || !to) { bad(`run ${i} (${u.l}): unknown part ${u.from} or ${u.to}`); continue; }
+  if (from.rid !== u.r) bad(`run ${i} (${u.l}): starts on ${u.from}, which isn't a ${u.r} part`);
+  if (!/^(b[1-5]|oven|smoker)$/.test(u.st)) bad(`run ${i} (${u.l}): unknown station ${u.st}`);
+  if (/^b/.test(u.st)) for (const [j, v] of p.runs.entries()) if (j > i && v.st === u.st && from.day === p.tasks.find((t) => t.id === v.from).day) {
+    const a1 = from.hm, a2 = u.until, b1 = p.tasks.find((t) => t.id === v.from).hm, b2 = v.until;
+    if (a1 < b2 && b1 < a2) bad(`runs ${i} (${u.l}) and ${j} (${v.l}) both want ${u.st} at the same time`);
+  }
+}
+console.log(`Plan OK: ${p.tasks.length} tasks, ${p.recipes.reduce((a, r) => a + r.steps.length, 0)} recipe steps, ${Object.keys(p.stations).length} stations, ${(p.runs || []).length} put-on runs, ${p.dishes.length} dishes.`);

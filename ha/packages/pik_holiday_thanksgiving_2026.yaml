@@ -5,11 +5,12 @@
 #   input_boolean.tg26_<task>      one per planned task: on = ticked off
 #   input_boolean.tg26_hot_<dish>  the dish read 140°F or hotter at the final check
 #   input_text.tg26_steps / _focus where each recipe-in-progress is, and the one "next step" means
+#   input_text.tg26_places         what's been put on a burner / in the oven / on the smoker ("run>station@seconds")
 #   input_boolean.tg26_quiet       on = don't read tasks out on the Echos (off by default)
 #   input_boolean.tg26_push        on = also push each task to both phones (off by default)
 #   input_number.tg26_turkey_*     latest probe reading for breast, thigh, wing (history = the log)
 #   automations: read each task out at its time; announce "turkey is done" at 165°F everywhere
-#   scripts for Pik: holiday_whats_next, holiday_task_done, holiday_log_turkey, holiday_step
+#   scripts for Pik: holiday_whats_next, holiday_task_done, holiday_log_turkey, holiday_step, holiday_place
 # Needs pik_kitchen.yaml (timers and script.pik_announce).
 
 input_boolean:
@@ -101,6 +102,7 @@ input_boolean:
 input_text:
   tg26_steps: { name: "Thanksgiving: recipe steps in progress", max: 255 }
   tg26_focus: { name: "Thanksgiving: recipe Pik's next step follows", max: 255 }
+  tg26_places: { name: "Thanksgiving: what's on the burners, in the oven, on the smoker", max: 255 }
 
 input_number:
   tg26_turkey_breast: { name: "Turkey breast", min: 0, max: 250, step: 1, mode: box, unit_of_measurement: "°F", icon: "mdi:thermometer" }
@@ -347,4 +349,64 @@ script:
             last_step: "{{ (new | int) == (n | int) - 1 }}"
             note: "{{ 'Already on the step it is up to.' if act == 'back' and cur == (start | int) else ('That is the last step of this part; when it is done, tick it off with holiday_task_done (task_id ' ~ s.k ~ ').' if part_end else '') }}"
       - stop: "Step"
+        response_variable: result
+  holiday_place:
+    alias: "Holiday cooking: put on / take off"
+    description: >-
+      Thanksgiving: put a dish on a burner, in the oven or on the smoker, or take it off, so the kitchen screens show what's
+      really on the stove. dish: a few words ("cranberry sauce", "pasta", "turkey"). where: optional "burner 2", "oven" or
+      "smoker" (default: where the plan puts it). action: on (default) or off. Use for "the cranberry sauce is on",
+      "put the gravy on burner 3", "the stuffing's in the oven", "take the potatoes off". Ticking off the part that ends
+      it frees the burner by itself. If the burner is taken, say what's on it and ask which burner to use.
+    mode: queued
+    fields:
+      dish: { description: "A few words for the dish", required: true, selector: { text: null } }
+      where: { description: "Optional: burner 1-5, oven or smoker", selector: { text: null } }
+      action: { description: "on or off", default: "on", selector: { select: { options: ["on", "off"] } } }
+    sequence:
+      - variables:
+          runs: [{"i":0,"st":"b1","r":"cran","n":"Cranberry sauce Cranberry sauce","l":"Cranberry sauce","from":"wed_0900_cran","to":"wed_0900_cran","at":"2026-11-25 09:00"},{"i":1,"st":"b1","r":"eggs","n":"Deviled eggs Eggs","l":"Eggs","from":"wed_0930_eggs","to":"wed_0930_eggs","at":"2026-11-25 09:30"},{"i":2,"st":"b1","r":"mac","n":"Lobster mac Lobster tails","l":"Lobster tails","from":"wed_1030_mac","to":"wed_1030_mac","at":"2026-11-25 10:30"},{"i":3,"st":"b1","r":"stuffing","n":"Stuffing Stuffing wet mix","l":"Stuffing wet mix","from":"wed_1100_stuffing","to":"wed_1100_stuffing","at":"2026-11-25 11:00"},{"i":4,"st":"b1","r":"gbc","n":"Green bean casserole Green bean water","l":"Green bean water","from":"wed_1200_gbc","to":"wed_1200_gbc","at":"2026-11-25 12:00"},{"i":5,"st":"b2","r":"gbc","n":"Green bean casserole Mushroom sauce","l":"Mushroom sauce","from":"wed_1200_gbc","to":"wed_1200_gbc","at":"2026-11-25 12:00"},{"i":6,"st":"b2","r":"sprouts","n":"Brussels sprouts Rice crisps","l":"Rice crisps","from":"wed_1530_sprouts","to":"wed_1530_sprouts","at":"2026-11-25 15:30"},{"i":7,"st":"b2","r":"mac","n":"Lobster mac Panko topping","l":"Panko topping","from":"wed_1545_mac","to":"wed_1545_mac","at":"2026-11-25 15:45"},{"i":8,"st":"b1","r":"eggs","n":"Deviled eggs Prosciutto","l":"Prosciutto","from":"thu_0900_eggs","to":"thu_0900_eggs","at":"2026-11-26 09:00"},{"i":9,"st":"b1","r":"sprouts","n":"Brussels sprouts Sprouts","l":"Sprouts","from":"thu_1200_sprouts","to":"thu_1200_sprouts","at":"2026-11-26 12:00"},{"i":10,"st":"b1","r":"stuffing","n":"Stuffing Stuffing wet mix","l":"Stuffing wet mix","from":"thu_1330_stuffing","to":"thu_1330_stuffing","at":"2026-11-26 13:30"},{"i":11,"st":"b1","r":"mash","n":"Mashed potatoes Potatoes","l":"Potatoes","from":"thu_1440_mash","to":"thu_1600_x","at":"2026-11-26 14:40"},{"i":12,"st":"b2","r":"mac","n":"Lobster mac Pasta","l":"Pasta","from":"thu_1440_mac","to":"thu_1500_mac","at":"2026-11-26 14:40"},{"i":13,"st":"b3","r":"mac","n":"Lobster mac Mac sauce","l":"Mac sauce","from":"thu_1445_mac","to":"thu_1508_mac","at":"2026-11-26 14:45"},{"i":14,"st":"b4","r":"gravy","n":"Gravy Gravy","l":"Gravy","from":"thu_1450_gravy","to":"thu_1550_gravy","at":"2026-11-26 14:50"},{"i":15,"st":"b3","r":"mash","n":"Mashed potatoes Brown butter","l":"Brown butter","from":"thu_1515_mash","to":"thu_1515_mash","at":"2026-11-26 15:15"},{"i":16,"st":"b5","r":"sprouts","n":"Brussels sprouts Sprouts","l":"Sprouts","from":"thu_1540_sprouts","to":"thu_1540_sprouts","at":"2026-11-26 15:40"},{"i":17,"st":"oven","r":"stuffing","n":"Stuffing Bread cubes","l":"Bread cubes","from":"wed_0900_stuffing","to":"wed_0900_stuffing","at":"2026-11-25 09:00"},{"i":18,"st":"oven","r":"cake","n":"Gooey butter cake Gooey butter cake","l":"Gooey butter cake","from":"wed_1300_cake","to":"wed_1300_cake","at":"2026-11-25 13:00"},{"i":19,"st":"oven","r":"stuffing","n":"Stuffing Stuffing","l":"Stuffing","from":"thu_1405_stuffing","to":"thu_1500_stuffing","at":"2026-11-26 14:05"},{"i":20,"st":"oven","r":"gbc","n":"Green bean casserole Green beans","l":"Green beans","from":"thu_1430_gbc","to":"thu_1500_gbc","at":"2026-11-26 14:30"},{"i":21,"st":"oven","r":"mac","n":"Lobster mac Lobster mac","l":"Lobster mac","from":"thu_1512_mac","to":"thu_1535_mac","at":"2026-11-26 15:12"},{"i":22,"st":"oven","r":"gbc","n":"Green bean casserole Green beans","l":"Green beans","from":"thu_1540_gbc","to":"thu_1550_gbc","at":"2026-11-26 15:40"},{"i":23,"st":"smoker","r":"turkey","n":"Turkey Turkey","l":"Turkey","from":"thu_1015_turkey","to":"thu_1445_turkey","at":"2026-11-26 10:15"},{"i":24,"st":"smoker","r":"stuffing","n":"Stuffing Stuffing","l":"Stuffing","from":"thu_1500_stuffing","to":"thu_1600_x","at":"2026-11-26 15:00"},{"i":25,"st":"smoker","r":"gbc","n":"Green bean casserole Green beans","l":"Green beans","from":"thu_1500_gbc","to":"thu_1540_gbc","at":"2026-11-26 15:00"},{"i":26,"st":"smoker","r":"turkey","n":"Turkey Carved turkey","l":"Carved turkey","from":"thu_1520_turkey","to":"thu_1600_x","at":"2026-11-26 15:20"}]
+          act: "{{ action | default('on') }}"
+          words: "{{ (dish | default('')) | lower | regex_findall('[a-z0-9]+') }}"
+          live: >-
+            {% set ns = namespace(out=[]) %}
+            {% for kv in states('input_text.tg26_places').split(',') if kv | regex_match('^[0-9]+>(b[1-5]|oven|smoker)@[0-9]+$') %}
+              {% set i = kv.split('>')[0] | int %}{% set st = kv.split('>')[1].split('@')[0] %}
+              {% if i < runs | count and not is_state('input_boolean.tg26_' ~ runs[i].to, 'on') %}{% set ns.out = ns.out + [{'i': i, 'st': st, 't': kv.split('@')[1] | int}] %}{% endif %}
+            {% endfor %}{{ ns.out }}
+          want: >-
+            {% set w = (where | default('')) | lower %}
+            {% set d = w | regex_findall('[1-5]') %}
+            {{ 'oven' if 'oven' in w else ('smoker' if 'smoker' in w or 'grill' in w else ('b' ~ d[0] if d else '')) }}
+          pick: >-
+            {% set ns = namespace(i=-1, gap=10**12) %}
+            {% for u in runs if words | count > 0 and words | select('in', u.n | lower | regex_findall('[a-z0-9]+')) | list | count == words | count and not is_state('input_boolean.tg26_' ~ u.to, 'on') %}
+              {% set on = live | selectattr('i', 'eq', u.i) | list | count > 0 %}
+              {% if (act == 'off') == on %}{% set gap = (as_timestamp(u.at) - as_timestamp(now())) | abs %}{% if gap < ns.gap %}{% set ns.i = u.i %}{% set ns.gap = gap %}{% endif %}{% endif %}
+            {% endfor %}{{ ns.i }}
+      - if: "{{ pick | int < 0 }}"
+        then:
+          - variables: { result: { ok: false, message: "{{ 'Nothing like that is on right now.' if act == 'off' else 'No dish like that is waiting to go on. Name the dish, like cranberry sauce or pasta.' }}" } }
+          - stop: "No match"
+            response_variable: result
+      - variables:
+          u: "{{ runs[pick | int] }}"
+          st: "{{ want if want else u.st }}"
+          taken: "{{ (live | selectattr('st', 'eq', st) | rejectattr('i', 'eq', u.i) | list | first) if act == 'on' and st.startswith('b') else none }}"
+      - if: "{{ taken is not none and taken != '' }}"
+        then:
+          - variables: { result: { ok: false, message: "{{ 'Burner ' ~ st[1:] ~ ' has the ' ~ runs[taken.i].l | lower ~ ' on it. Which burner should the ' ~ u.l | lower ~ ' go on?' }}" } }
+          - stop: "Taken"
+            response_variable: result
+      - variables:
+          txt: >-
+            {% set ns = namespace(out=[]) %}{% for p in live if p.i != u.i %}{% set ns.out = ns.out + [p.i ~ '>' ~ p.st ~ '@' ~ p.t] %}{% endfor %}
+            {% if act == 'on' %}{% set ns.out = ns.out + [u.i ~ '>' ~ st ~ '@' ~ (as_timestamp(now()) | int)] %}{% endif %}{{ ns.out | join(',') }}
+      - action: input_text.set_value
+        target: { entity_id: input_text.tg26_places }
+        data: { value: "{{ txt[-250:] if txt | length <= 250 else txt[txt.find(',', txt | length - 250) + 1:] }}" }
+      - variables:
+          where_words: "{{ 'in the oven' if st == 'oven' else ('on the smoker' if st == 'smoker' else 'on burner ' ~ st[1:]) }}"
+          result: { ok: true, dish: "{{ u.l }}", station: "{{ st }}", message: "{{ u.l ~ (' is ' ~ where_words if act == 'on' else ' is off ' ~ where_words[3:] if st != 'oven' else ' is out of the oven') }}." }
+      - stop: "Done"
         response_variable: result

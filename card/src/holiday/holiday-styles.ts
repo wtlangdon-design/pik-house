@@ -324,4 +324,21 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .tc .tt small.now{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:10px;background:var(--btn);color:var(--btnInk);letter-spacing:.08em}
 .tc .nm .est,.steps .est{font:600 12px 'DM Sans',sans-serif;font-style:normal;color:#6B5A48;background:var(--soft);border-radius:10px;padding:3px 9px;white-space:nowrap}
 .tc.rem{padding-top:9px;padding-bottom:9px;align-items:center}.tc.rem .x{font-size:16.5px}
+/* put on a burner / in the oven / on the smoker */
+.pl{position:relative;width:46px;height:42px;border-radius:14px;border:1.5px solid var(--stove);background:var(--card);color:#8A5A1C;cursor:pointer;display:grid;place-items:center;padding:0;flex:none}
+.pl svg{width:24px;height:24px}
+.pl .pn{position:absolute;top:-8px;left:50%;transform:translateX(-50%);min-width:18px;height:18px;border-radius:9px;background:var(--stove);color:#fff;font:700 11px/18px 'DM Sans',sans-serif;text-align:center;padding:0 4px;border:2px solid var(--card)}
+.pl.on{background:var(--btn);border-color:var(--btn);color:var(--btnInk)}.pl.on .pn{background:#C9822F}
+.pl.busy{border-color:var(--urg);color:var(--urg);background:#FFF1EC}.pl.busy .pn{background:#B9A48A}
+.pl .bang{position:absolute;bottom:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--urg);color:#fff;font:800 12px/18px 'DM Sans',sans-serif;text-align:center;border:2px solid var(--card)}
+.bn.plan{background:transparent;border:1px dashed var(--stove);opacity:.75}.bn.plan b{font-style:italic;font-weight:600}
+.bn.on{background:#F8E6CC}.bn.on .n{box-shadow:0 0 0 3px #F1C98F}
+.bn.clash{background:#FDE4DA;border:1px solid var(--urg)}.bn i.w{color:var(--urg);font-weight:700}
+.sn b.pl8{font-style:italic;opacity:.65}
+.bpick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.bpick button{position:relative;height:96px;border-radius:14px;border:1px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:14px 4px 6px}
+.bpick button:disabled{opacity:.55;cursor:default;background:var(--soft)}
+.bpick .pn{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:var(--stove);color:#fff;font:700 12px/22px 'DM Sans',sans-serif;text-align:center}
+.bpick b{font-size:14px}.bpick span{font-size:11.5px;color:var(--muted);text-align:center}
+.tpop.pick{width:min(560px,calc(100% - 40px))}
 `;
