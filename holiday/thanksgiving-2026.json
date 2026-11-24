@@ -320,7 +320,7 @@
    "name": "Smoked spatchcock turkey with garlic-herb butter",
    "tag": "smoking-meat.com, adapted",
    "gf": "Gluten-free",
-   "yield": "16-lb bird (planned), dinner for 7 plus leftovers",
+   "yield": "17.6-lb bird, dinner for 7 plus leftovers",
    "active": "1 hr 30 min over 3 days",
    "passive": "≈13 hr brine, overnight drying, ≈3½–4½ hr smoke, 30–45 min rest",
    "src": [
@@ -340,7 +340,7 @@
    "ingr": [
     [
      "—",
-     "Brine, per gallon (make enough to cover; likely 2 gallons)"
+     "Brine, per gallon (make enough to cover: about 2 gallons spatchcocked, 3 if it goes in whole)"
     ],
     [
      "1 gal",
@@ -466,7 +466,7 @@
     },
     {
      "d": "wed",
-     "t": "9:00 AM: lift the turkey out and discard the brine. Pat completely dry, including under the wings. Set skin-up on the rack over the sheet and refrigerate uncovered until Thursday morning.",
+     "t": "9:00 AM: lift the turkey out and discard the brine. If it went into the brine whole, spatchcock it now. Feel the cavity and thighs for ice; a little is fine, it has a full day in the fridge to finish thawing. Pat completely dry, including under the wings. Set skin-up on the rack over the sheet and refrigerate uncovered until Thursday morning.",
      "min": 10,
      "ing": []
     },
@@ -520,7 +520,7 @@
     },
     {
      "d": "thu",
-     "t": "9:30 AM: fill the pellet hopper and start the smoker at 250°F. Load the turkey only once the smoker reads 250°F.",
+     "t": "9:15 AM: fill the pellet hopper and start the smoker at 250°F. Feel inside the cavity and the thickest part of the thighs: any ice left means a longer cook, so put it on as soon as the smoker reads 250°F. Load the turkey only once the smoker reads 250°F.",
      "min": 5,
      "tm": [
       "Smoker at 250°F?",
@@ -531,7 +531,7 @@
     },
     {
      "d": "thu",
-     "t": "9:40 AM: loosen the skin over breast, thighs and legs with your fingers. Push all the herb butter under the skin and spread it flat. Dust the outside lightly with the remaining rub.",
+     "t": "9:25 AM: loosen the skin over breast, thighs and legs with your fingers. Push all the herb butter under the skin and spread it flat. Dust the outside lightly with the remaining rub.",
      "min": 15,
      "ing": [
       [
@@ -548,7 +548,7 @@
     },
     {
      "d": "thu",
-     "t": "10:15 AM: turkey on the grate skin-side up, drip pan underneath. Probe in the innermost thigh, not touching bone.",
+     "t": "10:00 AM: turkey on the grate skin-side up, drip pan underneath. Probe in the innermost thigh, not touching bone.",
      "min": 5,
      "tm": [
       "Turkey: first temperature check",
@@ -2489,8 +2489,8 @@
    "dish": [],
    "tips": [
     [
-     "Still icy inside?",
-     "Cold-water thaw: keep it in its wrapper, breast down in a cooler or sink of cold water, and change the water every 30 minutes (about 30 minutes per pound, so a 16 lb bird takes about 8 hours). Never warm water or the counter. Once it's thawed and still cold, brine it for 10 to 13 hours; if that pushes the brine past Wednesday morning, move Wednesday's turkey steps later by the same amount."
+     "Still partly icy?",
+     "Normal for a fresh bird kept near 26°F. Loosen stuck giblets with a minute of cold tap water in the cavity, then brine as planned in the fridge or an iced cooler at 40°F or colder: the cold brine finishes the thaw. Don't thaw it in a sink of water; USDA says a cold-water-thawed turkey must be cooked right away. Frozen hard all the way through? Stop and ask Claude: the plan changes."
     ]
    ]
   },
@@ -2524,7 +2524,13 @@
      2
     ]
    ],
-   "dish": []
+   "dish": [],
+   "tips": [
+    [
+     "Backbone too stiff to cut?",
+     "Don't force the shears. Brine it whole tonight (mix 3 gallons instead of 2, same strength) and spatchcock it Wednesday at 9:00 when it comes out of the brine. Lay it on the clean smoker grate once, whenever you spatchcock, to check it fits."
+    ]
+   ]
   },
   {
    "id": "tue_1930_stuffing",
@@ -3014,9 +3020,9 @@
    "dish": []
   },
   {
-   "id": "thu_0930_turkey",
+   "id": "thu_0915_turkey",
    "day": "thu",
-   "hm": "09:30",
+   "hm": "09:15",
    "lane": "smoker",
    "rid": "turkey",
    "text": "Fill hopper; smoker to 250°F.",
@@ -3034,9 +3040,9 @@
    "dish": []
   },
   {
-   "id": "thu_0940_turkey",
+   "id": "thu_0925_turkey",
    "day": "thu",
-   "hm": "09:40",
+   "hm": "09:25",
    "lane": "prep",
    "rid": "turkey",
    "text": "Herb butter under the skin; rub lightly outside.",
@@ -3050,9 +3056,9 @@
    "dish": []
   },
   {
-   "id": "thu_1015_turkey",
+   "id": "thu_1000_turkey",
    "day": "thu",
-   "hm": "10:15",
+   "hm": "10:00",
    "lane": "smoker",
    "rid": "turkey",
    "text": "Turkey on, skin up, drip pan below, probe in the thigh.",
@@ -4477,10 +4483,10 @@
   ],
   [
    "Turkey",
-   "16 lb planned",
+   "17.6 lb",
    "Sprouts, 16–20 lb range",
    "jc",
-   "Weight, fresh vs. thawed and label unconfirmed until it arrives."
+   "Arrived Tuesday: fresh (no salt solution on the label), partly icy from shipping."
   ],
   [
    "Almond milk, bottled OJ",
@@ -4491,7 +4497,7 @@
   ]
  ],
  "assume": [
-  "Turkey arrives Monday or Tuesday, about 16 lb, fresh, with no added salt solution. Everything turkey-related is provisional until it's weighed and the label is checked.",
+  "Turkey arrived Tuesday: 17.6 lb, fresh, no added salt solution, partly icy from shipping (the fridge and the cold brine finish the thaw). Thursday it goes on at 10:00, 15 minutes earlier than planned for a 16 lb bird.",
   "Two cooks: A runs the turkey, oven and gravy; B runs the potatoes, pasta, mac sauce, sprouts and cold dishes. Burners (5-burner stove): 1 potatoes · 2 pasta, then free as a spare · 3 mac sauce, then brown butter · 4 gravy · 5 sprouts skillet.",
   "Appetizers at 2:30 PM and dessert around 5:15 PM are proposed defaults.",
   "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), 13 hours: in at 8 PM Tuesday, out at 9 AM Wednesday (the recipe says 10, so expect a slightly saltier bird and drippings). Your first salt brine (last year was buttermilk), so the strength is the recipe's.",
@@ -4646,14 +4652,14 @@
    ],
    [
     "thu",
-    "09:30",
-    "10:15",
+    "09:15",
+    "10:00",
     "250°F",
     "Heating"
    ],
    [
     "thu",
-    "10:15",
+    "10:00",
     "12:30",
     "250°F",
     "Turkey"
@@ -5106,7 +5112,7 @@
    "st": "smoker",
    "r": "turkey",
    "l": "Turkey",
-   "from": "thu_1015_turkey",
+   "from": "thu_1000_turkey",
    "to": "thu_1445_turkey",
    "until": "14:45"
   },
@@ -5138,9 +5144,9 @@
    "st": "smoker",
    "r": "turkey",
    "l": "Heating up",
-   "from": "thu_0930_turkey",
-   "to": "thu_1015_turkey",
-   "until": "10:15"
+   "from": "thu_0915_turkey",
+   "to": "thu_1000_turkey",
+   "until": "10:00"
   },
   {
    "st": "oven",

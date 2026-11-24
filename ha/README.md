@@ -263,11 +263,11 @@ the house (it must stay off hot metal; Inkbird says the plastic can't take more 
 
 ### Thanksgiving with the Inkbird
 
-At 9:30 AM Thursday, when the smoker starts, the hub sets the probes up by itself:
+At 9:15 AM Thursday, when the smoker starts, the hub sets the probes up by itself:
 **probe 1 = breast, 2 = thigh, 3 = wing, 4 = the smoker's air** (clip it to the grate, not
 touching the turkey). Plug the probes into those numbered ports. Probe 4 follows the plan's smoker
 temperature (250°F, then about 340°F from 12:30, then the hot hold). From then on their readings go
-straight into the turkey log once the turkey goes on at 10:15 (readings above 212°F are ignored,
+straight into the turkey log once the turkey goes on at 10:00 (readings above 212°F are ignored,
 since that means a probe is out of the meat): the turkey screen says "Inkbird · live", the hourly turkey check on
 the Echo reads the three temperatures out, and "the turkey is done" fires on its own at 165° in all
 three. You can still type or say a reading to correct one. Before the turkey comes off, confirm
