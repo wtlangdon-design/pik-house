@@ -231,8 +231,7 @@ td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-
 .earl summary{font-size:13px;color:var(--muted);cursor:pointer;padding:0 2px}
 .rcard2{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:13px 16px}
 .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-.qts{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}.qts span{font:700 11px 'DM Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
-.qt{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:5px 10px;font:700 13px 'DM Sans',sans-serif;cursor:pointer}.qt:hover{border-color:var(--ink)}
+.tnone{margin:6px 0 0;font:500 13px 'DM Sans',sans-serif;color:var(--muted)}
 .tg{display:grid;grid-template-columns:1fr auto;gap:2px 6px;align-items:center;padding:6px 8px 6px 10px;border-radius:12px;background:#F6EEE2;min-width:0}
 .tg.ring{background:var(--urg);color:#fff}
 .tg .l{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1 / 3}
