@@ -12,6 +12,7 @@ import { pikArt } from "./pik-art";
 import "./holiday/holiday-card";
 import "./smoke/smoke-card";
 import "./plants/plants-card";
+import "./cellar/cellar-card";
 import { energySheet, plantsSheet, homeSheet } from "./views";
 import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type Group, type PikState } from "./mock-data";
 import { condWord, liveGroups, localStamp, num, parseDesc, parseQuiet, plantTotal, poolTimers, today, writeQuiet, type Hass, type LiveConfig, type TodoItem } from "./live";
