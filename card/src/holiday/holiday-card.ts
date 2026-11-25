@@ -809,10 +809,13 @@ export class PikHolidayCard extends LitElement {
     this.cards().due.forEach((x) => { const e = this.seqs().get(x.g)![this.cardIdx(x.g, x.cur)]; const tm = e.t === x.cur ? this.timerOf(e) : null; if (tm) onTasks.add(tm[0]); });
     const all = this.store.timers().sort((a, b) => (a.rang === b.rang ? a.end - b.end : a.rang ? -1 : 1));
     const rest = all.filter((t) => !onTasks.has(t.label) || t.rang);
-    if (!rest.length) return "";
     const hidden = all.length - rest.length;
-    return `<div class="rcard2"><span class="eb">Timers · ${all.length} running${hidden ? " · " + hidden + " shown on the cards" : ""}</span>
-      ${rest.length ? `<div class="tgrid">${rest.map((t) => `<div class="tg${t.rang ? " ring" : ""}" data-tid="${esc(t.key)}"><span class="l"><i class="k ${t.kind}"></i>${esc(t.label)}</span><span class="tl"></span><span class="mini">${t.rang ? "" : `<button data-plus="${esc(t.key)}">+5</button>`}<button data-stop="${esc(t.key)}">${t.rang ? "OK" : "×"}</button></span></div>`).join("")}</div>` : ""}</div>`;
+    // Always here, even with nothing running: quick kitchen timers for anything the plan didn't time.
+    const quick = [5, 10, 15, 30].map((m) => `<button class="qt" data-timer='${esc(JSON.stringify(["Kitchen timer · " + m + " min", m, "check"]))}'>${m} min</button>`).join("");
+    const head = all.length ? `Timers · ${all.length} running${hidden ? " · " + hidden + " on the cards" : ""}` : "Timers · none running";
+    return `<div class="rcard2"><span class="eb">${head}</span>
+      ${rest.length ? `<div class="tgrid">${rest.map((t) => `<div class="tg${t.rang ? " ring" : ""}" data-tid="${esc(t.key)}"><span class="l"><i class="k ${t.kind}"></i>${esc(t.label)}</span><span class="tl"></span><span class="mini">${t.rang ? "" : `<button data-plus="${esc(t.key)}">+5</button>`}<button data-stop="${esc(t.key)}">${t.rang ? "OK" : "×"}</button></span></div>`).join("")}</div>` : ""}
+      <div class="qts"><span>New timer</span>${quick}</div></div>`;
   }
   private ribbonHtml(): string {
     if (this.echo) return "";
