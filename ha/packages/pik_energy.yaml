@@ -88,7 +88,7 @@ automation:
       - action: script.feed_post
         data:
           id: free-power
-          title: "Free power for the next {{ hrs }} hours"
+          title: "Free power for the next {{ hrs }} hour{{ '' if hrs | int == 1 else 's' }}"
           category: energy
           label: "Energy · the Powerwall is full"
           detail: >-
