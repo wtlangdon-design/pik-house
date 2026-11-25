@@ -141,13 +141,22 @@ export class PikHolidayCard extends LitElement {
     document.addEventListener("pointerdown", this.onPointer, true);
     document.addEventListener("keydown", this.onPointer, true);
     document.addEventListener("visibilitychange", this.onVis);
+    window.addEventListener("resize", this.fit);
     window.setTimeout(() => this.unlockAudio(), 0);
   }
+  /** Size the page to the space actually left under the browser's and Home Assistant's bars (the Echo Show's
+   *  Silk bar makes 100vh too tall). --u is 1% of that height; the far view sizes everything with it. */
+  private fit = (): void => {
+    const top = Math.max(0, this.getBoundingClientRect().top);
+    const h = Math.max(320, Math.floor(window.innerHeight - top));
+    if (this.style.height !== h + "px") { this.style.height = h + "px"; this.style.setProperty("--u", h / 100 + "px"); }
+  };
   disconnectedCallback(): void {
     super.disconnectedCallback();
     clearInterval(this._sec);
     document.removeEventListener("pointerdown", this.onPointer, true);
     document.removeEventListener("keydown", this.onPointer, true);
+    window.removeEventListener("resize", this.fit);
     document.removeEventListener("visibilitychange", this.onVis);
     if (this.wake) { this.wake.release().catch(() => undefined); this.wake = null; }
   }
@@ -1060,6 +1069,7 @@ ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : noth
     const r = this.renderRoot as ShadowRoot;
     for (const sel of Object.keys(this.keep.scroll)) { const el = r.querySelector<HTMLElement>(sel); if (el && el.scrollTop !== this.keep.scroll[sel]) el.scrollTop = this.keep.scroll[sel]; }
     this.updateCountdowns();
+    this.fit();
     document.title = this.Q.length ? "⏰ " + this.Q[this.Q.length - 1].text.slice(0, 40) : this.plan.title + " · Pik House";
   }
 }
