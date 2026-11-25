@@ -1,0 +1,19 @@
+# The Plants dashboard: the plant catalog (photos, groups, rooms, history) with each group's soil reading.
+# Data lives in the "Plants" Local To-do list (todo.plants); photos in Home Assistant's image store.
+# Soil sensors are the Ecowitt GW1200's channels 1-7, one per watering group, in its indicator plant.
+title: Plants
+views:
+  - title: Plants
+    path: plants
+    panel: true
+    cards:
+      - type: custom:pik-plants-card
+        entity: todo.plants
+        groups:
+          - { name: Kitchen, sensor: sensor.gw1200b_soil_moisture_1, dry: 30 }
+          - { name: Big aroids, sensor: sensor.gw1200b_soil_moisture_2, dry: 28 }
+          - { name: Bedroom & office, sensor: sensor.gw1200b_soil_moisture_3, dry: 28 }
+          - { name: Trees & palms, sensor: sensor.gw1200b_soil_moisture_4, dry: 25 }
+          - { name: Tough guys, sensor: sensor.gw1200b_soil_moisture_5, dry: 12 }
+          - { name: Jungle cacti, sensor: sensor.gw1200b_soil_moisture_6, dry: 20 }
+          - { name: Desert cacti, sensor: sensor.gw1200b_soil_moisture_7, dry: 8 }

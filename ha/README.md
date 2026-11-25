@@ -8,6 +8,7 @@ Everything here goes onto the Home Assistant Green. Nothing in this folder runs 
 | `packages/pik_holiday_thanksgiving_2026.yaml` | Holiday cooking mode for Thanksgiving. **Generated** from `holiday/thanksgiving-2026.json` by `node holiday/gen-ha.mjs thanksgiving-2026 tg26`; don't edit it by hand. `node holiday/check-plan.mjs` cross-checks the plan (it also runs on every card build). |
 | `packages/pik_smoke.yaml` | Smoking with the Inkbird: finds its four probes by itself, watches them every minute, and has Pik speak up (almost there, done, the stall, the smoker dropping, a probe lost). **Generated** by `node ha/gen-smoke.mjs`. |
 | `dashboards/smoking.yaml` | The Smoking dashboard: the four probes on one page. |
+| `dashboards/plants.yaml` | The Plants dashboard: the plant catalog (photo, group, room, spot, pot and history for every plant) with each watering group's soil reading. Plants live in the **Plants** to-do list (Local To-do); photos in Home Assistant's own image store. **Replace with a new plant** keeps the spot, pot and group and moves the old plant into that spot's history. |
 | `dashboards/thanksgiving.yaml` | The Thanksgiving dashboard: one page for the Chromebook (`/kitchen`) and one for the Echo Show 15 (`/echo`). |
 | `../card/dist/pik-house-card.js` | The card file. It contains both the house feed and the holiday card. |
 
