@@ -125,7 +125,9 @@ script:
         data: { status: needs_action }
         response_variable: got
       - variables:
-          matches: "{{ got['todo.wine_cellar']['items'] | selectattr('summary', 'search', '(?i)^' ~ (name | regex_escape) ~ '$') | list }}"
+          matches: >-
+            {% set ns = namespace(m=[]) %}
+            {% for it in got['todo.wine_cellar']['items'] if it.summary | lower | trim == name | lower | trim %}{% set ns.m = ns.m + [it] %}{% endfor %}{{ ns.m }}
       - if: "{{ matches | count == 0 }}"
         then:
           - stop: "No wine by that name is in the cellar."
