@@ -35,22 +35,22 @@ export const ICON: Record<string, string> = {
   water: "M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z",
 };
 
-// Tyler's real watering groups (Nov 21), in route order. Moisture values are sample data.
-// Starting thresholds (%) come from SPEC.md; in live mode they come from input_number helpers.
+// Tyler's real watering groups, sensor plants and plant counts (hub catalog, Nov 24). Moisture values are sample data.
+// In live mode the thresholds come from the input_number.pik_dry_* helpers and the counts from the plant catalog.
 export const GROUPS: Group[] = [
   { id: "kitchen", room: "Kitchen", ind: "nerve plant", plants: 14, thr: 30, m: 36 },
-  { id: "aroids", room: "Big aroids", ind: "monstera by the shoe rack", plants: 11, thr: 28, m: 41 },
+  { id: "aroids", room: "Big aroids", ind: "entry monstera", plants: 14, thr: 28, m: 41 },
   { id: "bedroom", room: "Bedroom & office", ind: "spider plant", plants: 8, thr: 28, m: 19 },
   { id: "trees", room: "Trees & palms", ind: "bedroom fiddle leaf fig", plants: 12, thr: 25, m: 21 },
-  { id: "tough", room: "Tough guys", ind: "big ZZ in the yellow pot", plants: 9, thr: 12, m: 30 },
-  { id: "jungle", room: "Jungle cacti", ind: "blooming Christmas cactus", plants: 10, thr: 20, m: 33 },
-  { id: "desert", room: "Desert cacti", ind: "middle succulent trough", plants: 18, thr: 8, m: 14 },
+  { id: "tough", room: "Tough guys", ind: "big ZZ in the yellow pot", plants: 12, thr: 12, m: 30 },
+  { id: "jungle", room: "Jungle cacti", ind: "blooming Christmas cactus", plants: 9, thr: 20, m: 33 },
+  { id: "desert", room: "Desert cacti", ind: "tall euphorbia in the dining room", plants: 19, thr: 8, m: 14 },
 ];
 
-// Plants outside the groups, with no sensor: the pitcher plant (weekly reminder card instead).
+// Plants outside the groups, with no sensor (the "No sensor" group in the catalog).
 export const UNGROUPED_PLANTS = 1;
 
-/** All of Tyler's plants: 82 in the seven groups plus the pitcher plant = 83, as in SPEC.md. */
+/** All of Tyler's current plants: 88 in the seven groups plus 1 with no sensor = 89. */
 export const PLANT_TOTAL = GROUPS.reduce((a, g) => a + g.plants, 0) + UNGROUPED_PLANTS;
 
 export const ALL: Record<string, FeedCard> = {
@@ -84,4 +84,4 @@ export const PAUSE = "M7 5h4v14H7zM13 5h4v14h-4z";
 
 export type PikState = "rest" | "listen" | "think" | "speak" | "muted" | "alert";
 export const LABELS: Record<PikState, string> = { rest: "Resting", listen: "Listening", think: "Thinking", speak: "Speaking", muted: "Mic off", alert: "Heads up" };
-export const CAP = 13.5; // Powerwall 2 usable kWh
+export const CAP = 13.5; // Powerwall 3 usable kWh

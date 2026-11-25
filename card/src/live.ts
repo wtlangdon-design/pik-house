@@ -18,7 +18,7 @@ export interface LiveConfig {
   feed_list?: string;
   plants_list?: string;
   plants_quiet?: string; // input_text holding "group:until-epoch,…" (Watered / Snooze)
-  plant_groups?: Array<{ name: string; indicator?: string; sensor?: string; dry?: number }>;
+  plant_groups?: Array<{ name: string; indicator?: string; sensor?: string; dry?: number; dry_entity?: string }>;
   lights?: Array<{ name: string; entities: string[] }>;
   watering?: { yard?: { name?: string; standby: string }; garden?: { name?: string; standby: string } };
   doorbell?: { camera?: string; name?: string };
@@ -62,7 +62,8 @@ export function liveGroups(cfg: LiveConfig, hass: Hass, plants: TodoItem[]): Arr
   });
   return (cfg.plant_groups || []).filter((g) => g.sensor).map((g) => {
     const m = num(hass.states[g.sensor!]);
-    return { id: slug(g.name), room: g.name, ind: g.indicator || "sensor plant", plants: counts[g.name] || 0, thr: g.dry ?? 25, m: m === null ? -1 : Math.round(m), sensor: g.sensor, live: m !== null };
+    const line = g.dry_entity ? num(hass.states[g.dry_entity]) : null;
+    return { id: slug(g.name), room: g.name, ind: g.indicator || "sensor plant", plants: counts[g.name] || 0, thr: line ?? g.dry ?? 25, m: m === null ? -1 : Math.round(m), sensor: g.sensor, live: m !== null };
   });
 }
 

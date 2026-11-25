@@ -190,15 +190,18 @@ script:
       - variables:
           # The Echos chosen in "Pik: Echos that announce"; if none are set, every real Echo
           # (Fire TVs and speaker groups left out, so nothing interrupts the TV or is said twice).
+          # During the house's quiet hours (11 PM to 7 AM) Echos in a bedroom stay silent.
           echos: >-
             {% set all = integration_entities('alexa_devices') | select('match', '^notify\\..*_announce$') | list %}
             {% set picked = states('input_text.pik_announce_echos') | replace(' ', '') | lower %}
             {% set picked = [] if picked in ['', 'unknown', 'unavailable'] else picked.split(',') | select | list %}
-            {% if picked %}{{ all | select('in', picked) | list }}
-            {% else %}{% set ns = namespace(e=[]) %}
-              {%- for x in all if (device_attr(x, 'model') or '') is search('(?i)echo') %}{% set ns.e = ns.e + [x] %}{% endfor %}
-              {{- ns.e }}
+            {% set ns = namespace(e=[], out=[]) %}
+            {% if picked %}{% set ns.e = all | select('in', picked) | list %}
+            {% else %}{%- for x in all if (device_attr(x, 'model') or '') is search('(?i)echo') %}{% set ns.e = ns.e + [x] %}{% endfor %}
             {% endif %}
+            {% set night = now().hour >= 23 or now().hour < 7 %}
+            {%- for x in ns.e if not (night and (area_id(x) or '') is search('bedroom')) %}{% set ns.out = ns.out + [x] %}{% endfor %}
+            {{- ns.out }}
           # Phones with the Home Assistant app: notify.mobile_app_<device name>.
           apps: >-
             {{ integration_entities('mobile_app') | map('device_id') | reject('none') | unique

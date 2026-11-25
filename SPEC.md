@@ -32,7 +32,7 @@ These are settled. Claude Code should not revisit them without asking Tyler.
 | Plants | 83 plants in 7 watering groups, one Ecowitt WH51 soil sensor per group in its indicator plant (full list: Pik House Plants sheet). The pitcher plant has no sensor: a weekly reminder card instead | Ecowitt (GW1200 gateway) |
 | Air | Ecowitt WH41 PM2.5, outdoors under cover | Ecowitt |
 | Thermostat | Ecobee | Ecobee |
-| Energy | Tesla Powerwall 2 + solar | Tesla Powerwall (local) |
+| Energy | Tesla Powerwall 3 + solar | Tesla Powerwall (local; Powerwall 3 has a smaller local API) |
 | Doorbell | Ring | Ring |
 | Yard watering | Rachio | Rachio (needs Cloud for webhooks) |
 | Garden watering | B-Hyve | B-Hyve (HACS) |
@@ -105,62 +105,51 @@ One card, `custom:pik-house-card`, fills a panel-view dashboard at 1280×800. Ma
 
 ## Entity map
 
-The card hard-codes no entity IDs. Everything comes from the card's YAML config, so swapping a device means editing config, not code. The IDs below are examples; the real ones are read off Home Assistant once each integration is added.
+The card hard-codes no entity IDs. Everything comes from the card's YAML config, so swapping a device means editing config, not code. These are the real IDs on Tyler's hub (Nov 24, 2026); the live copy is `ha/dashboards/house.yaml`.
 
 ```yaml
 type: custom:pik-house-card
-mock: false
-quiet_hours: { start: "23:00", end: "07:00" }
-weather: weather.home
-air_pm25: sensor.wh41_pm2_5
-thermostat: climate.ecobee
+weather: weather.hallway_thermostat      # the Ecobee's forecast (more accurate here than Met.no)
 sun: sun.sun
-satellite: assist_satellite.kitchen_chromebook
+thermostat: climate.hallway_thermostat
 feed_list: todo.house_feed
-energy:
-  solar_power: sensor.powerwall_solar_power
-  load_power: sensor.powerwall_load_power
-  battery_power: sensor.powerwall_battery_power
-  grid_power: sensor.powerwall_site_power
-  battery_level: sensor.powerwall_charge
-  grid_status: binary_sensor.grid_status
-  essentials_script: script.essentials_only
-plant_groups:            # route order. Tyler's real groups; sensor entity IDs come from the Ecowitt setup
-  - { name: Kitchen, indicator: nerve plant, plants: 14,
-      moisture: sensor.soil_moisture_1, threshold: input_number.thirst_kitchen }
-  - { name: Big aroids, indicator: monstera by the shoe rack, plants: 11,
-      moisture: sensor.soil_moisture_2, threshold: input_number.thirst_aroids }
-  - { name: Bedroom & office, indicator: spider plant, plants: 8,
-      moisture: sensor.soil_moisture_3, threshold: input_number.thirst_bedroom }
-  - { name: Trees & palms, indicator: bedroom fiddle leaf fig, plants: 12,
-      moisture: sensor.soil_moisture_4, threshold: input_number.thirst_trees }
-  - { name: Tough guys, indicator: big ZZ in the yellow pot, plants: 9,
-      moisture: sensor.soil_moisture_5, threshold: input_number.thirst_tough }
-  - { name: Jungle cacti, indicator: blooming Christmas cactus, plants: 10,
-      moisture: sensor.soil_moisture_6, threshold: input_number.thirst_jungle }
-  - { name: Desert cacti, indicator: middle succulent trough, plants: 18,
-      moisture: sensor.soil_moisture_7, threshold: input_number.thirst_desert }
-  # Starting thresholds (%): kitchen 30, aroids 28, bedroom 28, trees 25, jungle 20, tough 12, desert 8.
-  # Up to 16 groups: the GW1200 takes 16 sensors, and adding a group is config only.
-lights:
-  - { name: Living room, entity: switch.wemo_living_room }
-  - { name: Porch, entity: light.leviton_porch }
-  - { name: Kitchen, entity: light.leviton_kitchen }
+plants_list: todo.plants                  # the plant catalog: counts per group
+plants_quiet: input_text.pik_plants_quiet # Watered / Snooze on the plant card
+timers: 12                                # the shared kitchen timer pool
+plant_groups:                             # route order; GW1200B channels 1-7 in each group's sensor plant
+  - { name: Kitchen, indicator: nerve plant, sensor: sensor.gw1200b_soil_moisture_1, dry: 30, dry_entity: input_number.pik_dry_kitchen }
+  - { name: Big aroids, indicator: entry monstera, sensor: sensor.gw1200b_soil_moisture_2, dry: 28, dry_entity: input_number.pik_dry_big_aroids }
+  - { name: Bedroom & office, indicator: spider plant, sensor: sensor.gw1200b_soil_moisture_3, dry: 28, dry_entity: input_number.pik_dry_bedroom_office }
+  - { name: Trees & palms, indicator: bedroom fiddle leaf fig, sensor: sensor.gw1200b_soil_moisture_4, dry: 25, dry_entity: input_number.pik_dry_trees_palms }
+  - { name: Tough guys, indicator: big ZZ in the yellow pot, sensor: sensor.gw1200b_soil_moisture_5, dry: 12, dry_entity: input_number.pik_dry_tough_guys }
+  - { name: Jungle cacti, indicator: blooming Christmas cactus, sensor: sensor.gw1200b_soil_moisture_6, dry: 20, dry_entity: input_number.pik_dry_jungle_cacti }
+  - { name: Desert cacti, indicator: tall euphorbia, sensor: sensor.gw1200b_soil_moisture_7, dry: 8, dry_entity: input_number.pik_dry_desert_cacti }
+lights:                                   # all 17 Leviton lights plus the Wemo nightstand lamps, by room
+  - { name: Kitchen, entities: [light.kitchen_cans, light.kitchen_chandelier, light.bar] }
+  - { name: Living room, entities: [light.living_room_chandelier, light.living_room_cans] }
+  - { name: Dining room, entities: [light.dining_room_chandelier, light.dining_room_cans] }
+  - { name: Bedroom, entities: [light.master_bedroom, light.master_closet, switch.nightstand1, switch.nightstand2] }
+  - { name: Master bath, entities: [light.bathroom, light.vanity, light.shower] }
+  - { name: Office, entities: [light.office, light.office_cans] }
+  - { name: Entry & hall, entities: [light.entryway, light.hallway] }
+  - { name: Front door, entities: [light.front_door] }
 watering:
-  yard: { name: Rachio, entity: switch.rachio_standby }
-  garden: { name: B-Hyve, entity: switch.bhyve_garden }
-doorbell:
-  camera: camera.front_door
-  ding: event.front_door_ding
-echo:
-  media_player: media_player.kitchen_echo_show
-  device_id: <alexa_devices device id>
+  yard: { name: Rachio, standby: switch.outside_home_controller_standby }
+  # garden: { name: B-Hyve, standby: … }  once B-Hyve is connected
+doorbell: { name: Gate, camera: camera.outside_gate_live_view }   # ding: event.outside_gate_ding (used by the feed automation)
+echo: { media_player: media_player.tyler_s_echo_show_15 }
+holiday:
+  - { name: Thanksgiving, path: /dashboard-thanksgiving/kitchen, from: "2026-11-24", to: "2026-11-26" }
+# Not yet on the hub (the tile hides until added):
+# air_pm25: the Ecowitt air quality monitor
+# energy: { solar_power, load_power, battery_power, grid_power, battery_level, grid_status, capacity_kwh: 13.5 }  Powerwall 3 at 192.168.1.145
+# satellite: the Chromebook's voice satellite (Pik's face follows it)
 ```
 
 Rules:
 
 - **Missing entity = hidden tile, never an error.** If `air_pm25` is absent, the air text disappears; if `echo` is absent, there's no Now playing pebble.
-- **Thresholds live in Home Assistant** as `input_number` helpers (0–100%), so Tyler can tune a thirsty line without touching the card.
+- **Thresholds live in Home Assistant** as `input_number.pik_dry_<group>` helpers (1–60%), shared by the Plants page and the house screen. The Plants page has − / + next to each group's "Water at" line.
 - **Watering is detected automatically.** When a group's sensor rises by at least its jump size within 30 minutes, the whole group counts as watered: its plant card or route stop clears, and the house history gets "Kitchen group watered" with the before and after readings. Jump sizes live in `input_number.water_jump_<group>` (start at 12 points; 5 for Desert cacti and Tough guys, which get little water). If a combined card covered several groups, only the detected ones clear.
 - A quiet confirmation card follows ("Saw the Bedroom & office group get watered"), with "That wasn't the whole group," which puts the group back on the list until its next jump or a manual tap, and brings the plant card back to the feed if it had cleared.
 - The **Watered** buttons stay as a backup for out-of-order days. Tip for Tyler and Charlie: water each group's sensor plant last.
