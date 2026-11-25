@@ -1,0 +1,258 @@
+# Pik together: the plans either of you sends Pik land on both calendars, and the hub gives both phones
+# a heads-up the day of and before it's time to leave.
+#
+#   script.calendar_add_both   Pik calls it with an event from a pasted text or screenshot
+#   script.pik_push            a notification to every phone with the Home Assistant app (not the Echos)
+#   automation "Pik: today's plans"   8 AM: today's events with a place, to both phones and the house feed
+#   automation "Pik: time to leave"   every 5 min: live Google Maps drive time; 30 min before you need to
+#                                     leave, both phones get "Leave by …"
+#
+# Settings (helpers):
+#   input_text.pik_calendars   the calendars to write to and watch, comma-separated
+#                              (e.g. calendar.tyler, calendar.charlie)
+#   input_text.pik_maps_entry  the Google Maps Travel Time config entry id
+#   input_text.pik_leave_sent  which events already got their leave alert (kept short)
+#
+# The shared notebook is two Local To-do lists that both Piks read and write: todo.house_notes
+# (likes, dislikes, facts about the house and the two of you) and todo.places (where you've been,
+# what you thought, what to order).
+
+input_text:
+  pik_calendars: { name: "Pik: calendars for both of you", max: 255 }
+  pik_maps_entry: { name: "Pik: Google Maps travel time entry", max: 64 }
+  pik_leave_sent: { name: "Pik: leave alerts sent", max: 255 }
+
+script:
+  pik_push:
+    alias: "Pik: push to both phones"
+    description: >-
+      Sends a notification to Tyler's and Charlie's phones (the Home Assistant app). Nothing is said
+      on the Echos. Use for heads-ups either of them should see.
+    mode: queued
+    max: 20
+    fields:
+      title:
+        description: Short title
+        selector:
+          text:
+      message:
+        description: The notification text
+        required: true
+        selector:
+          text:
+            multiline: true
+    sequence:
+      - variables:
+          apps: >-
+            {{ integration_entities('mobile_app') | map('device_id') | reject('none') | unique
+               | map('device_attr', 'name') | reject('none') | map('slugify') | map('regex_replace', '^', 'mobile_app_') | list }}
+      - repeat:
+          for_each: "{{ apps }}"
+          sequence:
+            - action: "notify.{{ repeat.item }}"
+              data:
+                title: "{{ title | default('Pik', true) }}"
+                message: "{{ message }}"
+              continue_on_error: true
+
+  calendar_add_both:
+    alias: "Calendar: add to both of our calendars"
+    description: >-
+      Puts an event on Tyler's and Charlie's Google Calendars. Use it for any plan either of them sends
+      Pik (a pasted text, a screenshot, "dinner with Sam on the 8th"). Times are local, like
+      2026-12-08 19:00:00; give start_date (and end_date, the day after) instead for an all-day event.
+      Put the place's name and street address in location so the drive-time alert works. Put who it's
+      with and Pik's suggestion ("Pik's pick: the burrata") in description; the morning heads-up reads it.
+    mode: queued
+    max: 10
+    fields:
+      summary:
+        description: "Event title, e.g. Drinks with Sam & Alex at Cafe Lynn"
+        required: true
+        selector:
+          text:
+      start_date_time:
+        description: "Start, local time: 2026-12-08 19:00:00"
+        selector:
+          text:
+      end_date_time:
+        description: "End, local time (default: 2 hours after the start)"
+        selector:
+          text:
+      start_date:
+        description: "All-day event: the date, 2026-12-08"
+        selector:
+          text:
+      end_date:
+        description: "All-day event: the day after the last day"
+        selector:
+          text:
+      location:
+        description: "Place name and street address"
+        selector:
+          text:
+      description:
+        description: "Who it's with, notes, and Pik's pick"
+        selector:
+          text:
+            multiline: true
+    sequence:
+      - variables:
+          cals: >-
+            {{ (states('input_text.pik_calendars') | replace(' ', '') | lower).split(',') | select('match', '^calendar\.') | list }}
+          all_day: "{{ start_date | default('', true) != '' and start_date_time | default('', true) == '' }}"
+          end_dt: >-
+            {% if end_date_time | default('', true) %}{{ end_date_time }}
+            {% elif start_date_time | default('', true) %}{{ (as_datetime(start_date_time) + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
+          end_d: "{{ end_date | default('', true) or ((as_datetime(start_date) + timedelta(days=1)).strftime('%Y-%m-%d') if start_date | default('', true) else '') }}"
+      - if: "{{ cals | count == 0 }}"
+        then:
+          - stop: "No calendars are set up yet (input_text.pik_calendars is empty)."
+            error: true
+      - repeat:
+          for_each: "{{ cals }}"
+          sequence:
+            - if: "{{ all_day }}"
+              then:
+                - action: calendar.create_event
+                  target: { entity_id: "{{ repeat.item }}" }
+                  data:
+                    summary: "{{ summary }}"
+                    start_date: "{{ start_date }}"
+                    end_date: "{{ end_d }}"
+                    location: "{{ location | default('', true) }}"
+                    description: "{{ description | default('', true) }}"
+              else:
+                - action: calendar.create_event
+                  target: { entity_id: "{{ repeat.item }}" }
+                  data:
+                    summary: "{{ summary }}"
+                    start_date_time: "{{ start_date_time }}"
+                    end_date_time: "{{ end_dt | trim }}"
+                    location: "{{ location | default('', true) }}"
+                    description: "{{ description | default('', true) }}"
+      - action: script.feed_post
+        data:
+          id: "cal-{{ summary | slugify }}"
+          title: "On both calendars: {{ summary }}"
+          category: reminder
+          label: "Calendar · from Pik"
+          detail: >-
+            {{ (as_datetime(start_date_time).strftime('%a %b %-d, %-I:%M %p') if not all_day else as_datetime(start_date).strftime('%a %b %-d') ~ ' (all day)') }}{{ ' · ' ~ location if location | default('', true) else '' }}
+          primary_label: Nice
+          expires_hours: 24
+
+automation:
+  - id: pik_today_plans
+    alias: "Pik: today's plans"
+    mode: single
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+    actions:
+      - variables:
+          cals: >-
+            {{ (states('input_text.pik_calendars') | replace(' ', '') | lower).split(',') | select('match', '^calendar\.') | list }}
+      - condition: "{{ cals | count > 0 }}"
+      - action: calendar.get_events
+        target: { entity_id: "{{ cals }}" }
+        data:
+          start_date_time: "{{ today_at('00:00') }}"
+          end_date_time: "{{ today_at('00:00') + timedelta(days=1) }}"
+        response_variable: got
+      - variables:
+          plans: >-
+            {% set ns = namespace(seen=[], out=[]) %}
+            {% for cal in got %}{% for e in got[cal].events %}
+              {% set key = (e.summary ~ e.start) | lower %}
+              {% if key not in ns.seen and (e.location | default('', true) or 'T' in e.start) %}
+                {% set ns.seen = ns.seen + [key] %}
+                {% set when = as_datetime(e.start).strftime('%-I:%M %p') if 'T' in e.start else 'All day' %}
+                {% set pick = (e.description | default('', true) | regex_findall("(?i)pik'?s pick:\s*([^\n]+)") | first) | default('') %}
+                {% set ns.out = ns.out + [when ~ ' · ' ~ e.summary ~ ((' · ' ~ e.location.split(',')[0]) if e.location | default('', true) else '') ~ ((' · Pik\'s pick: ' ~ pick) if pick else '')] %}
+              {% endif %}
+            {% endfor %}{% endfor %}{{ ns.out }}
+      - condition: "{{ plans | count > 0 }}"
+      - action: script.pik_push
+        data:
+          title: "Today"
+          message: "{{ plans | join('\n') }}"
+      - action: script.feed_post
+        data:
+          id: today-plans
+          title: "{{ 'Today: ' ~ plans[0].split(' · ')[1] if plans | count == 1 else plans | count ~ ' plans today' }}"
+          category: reminder
+          label: "Calendar · today"
+          detail: "{{ plans | join(' / ') }}"
+          primary_label: Got it
+          expires_hours: 16
+
+  - id: pik_time_to_leave
+    alias: "Pik: time to leave"
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+    conditions:
+      - "{{ states('input_text.pik_maps_entry') not in ['', 'unknown', 'unavailable'] }}"
+      - "{{ states('input_text.pik_calendars') not in ['', 'unknown', 'unavailable'] }}"
+    actions:
+      - variables:
+          cals: >-
+            {{ (states('input_text.pik_calendars') | replace(' ', '') | lower).split(',') | select('match', '^calendar\.') | list }}
+      - action: calendar.get_events
+        target: { entity_id: "{{ cals }}" }
+        data:
+          start_date_time: "{{ now() }}"
+          end_date_time: "{{ now() + timedelta(hours=4) }}"
+        response_variable: got
+      - variables:
+          sent: "{{ states('input_text.pik_leave_sent').split(',') }}"
+          todo_events: >-
+            {% set ns = namespace(seen=[], out=[]) %}
+            {% for cal in got %}{% for e in got[cal].events if 'T' in e.start and e.location | default('', true) %}
+              {% set key = as_datetime(e.start).strftime('%m%d%H%M') ~ (e.summary | slugify)[:12] %}
+              {% if key not in ns.seen and key not in sent and as_datetime(e.start) > now() %}
+                {% set ns.seen = ns.seen + [key] %}
+                {% set ns.out = ns.out + [{'key': key, 'summary': e.summary, 'start': e.start, 'location': e.location}] %}
+              {% endif %}
+            {% endfor %}{% endfor %}{{ ns.out }}
+      - repeat:
+          for_each: "{{ todo_events }}"
+          sequence:
+            - action: google_travel_time.get_travel_times
+              data:
+                config_entry_id: "{{ states('input_text.pik_maps_entry') }}"
+                origin: zone.home
+                destination: "{{ repeat.item.location }}"
+                mode: driving
+                units: imperial
+              response_variable: trip
+              continue_on_error: true
+            - variables:
+                secs: "{{ ((trip | default({})).routes | default([{}]))[0].duration | default(0) | int }}"
+                leave_at: "{{ (as_datetime(repeat.item.start) - timedelta(seconds=secs | int)).isoformat() }}"
+            - if: "{{ secs | int > 0 and now() >= as_datetime(leave_at) - timedelta(minutes=30) }}"
+              then:
+                - variables:
+                    drive: "{{ trip.routes[0].duration_text }}"
+                    msg: >-
+                      Leave by {{ as_datetime(leave_at).strftime('%-I:%M') }} for {{ repeat.item.summary }}.
+                      It's {{ drive }} with traffic.
+                - action: script.pik_push
+                  data:
+                    title: "Time to get ready"
+                    message: "{{ msg }}"
+                - action: script.feed_post
+                  data:
+                    id: "leave-{{ repeat.item.key }}"
+                    title: "Leave by {{ as_datetime(leave_at).strftime('%-I:%M %p') }}"
+                    category: reminder
+                    label: "Drive time · Google Maps"
+                    detail: "{{ repeat.item.summary }}. It's {{ drive }} with traffic right now."
+                    primary_label: On our way
+                    expires_hours: 2
+                - action: input_text.set_value
+                  target: { entity_id: input_text.pik_leave_sent }
+                  data:
+                    value: "{{ (states('input_text.pik_leave_sent').split(',') | select | list + [repeat.item.key])[-8:] | join(',') }}"
