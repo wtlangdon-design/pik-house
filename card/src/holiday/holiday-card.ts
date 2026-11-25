@@ -808,8 +808,10 @@ export class PikHolidayCard extends LitElement {
     const onTasks = new Set<string>();
     this.cards().due.forEach((x) => { const e = this.seqs().get(x.g)![this.cardIdx(x.g, x.cur)]; const tm = e.t === x.cur ? this.timerOf(e) : null; if (tm) onTasks.add(tm[0]); });
     const all = this.store.timers().sort((a, b) => (a.rang === b.rang ? a.end - b.end : a.rang ? -1 : 1));
-    const rest = all.filter((t) => !onTasks.has(t.label) || t.rang);
-    const hidden = all.length - rest.length;
+    // Every running timer is listed here, including ones that also show on their step's card.
+    const rest = all;
+    const hidden = 0;
+    void onTasks;
     // Always here, even with nothing running: quick kitchen timers for anything the plan didn't time.
     const quick = [5, 10, 15, 30].map((m) => `<button class="qt" data-timer='${esc(JSON.stringify(["Kitchen timer · " + m + " min", m, "check"]))}'>${m} min</button>`).join("");
     const head = all.length ? `Timers · ${all.length} running${hidden ? " · " + hidden + " on the cards" : ""}` : "Timers · none running";
