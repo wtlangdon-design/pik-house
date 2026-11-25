@@ -28,12 +28,12 @@ views:
             - { name: Short-Term, entity: sensor.rno_parking_short_term_garage }
         plant_groups:
           - { name: Kitchen, indicator: nerve plant, sensor: sensor.gw1200b_soil_moisture_1, dry: 30, dry_entity: input_number.pik_dry_kitchen }
-          - { name: Big aroids, indicator: entry monstera, sensor: sensor.gw1200b_soil_moisture_2, dry: 28, dry_entity: input_number.pik_dry_big_aroids }
-          - { name: Bedroom & office, indicator: spider plant, sensor: sensor.gw1200b_soil_moisture_3, dry: 28, dry_entity: input_number.pik_dry_bedroom_office }
-          - { name: Trees & palms, indicator: bedroom fiddle leaf fig, sensor: sensor.gw1200b_soil_moisture_4, dry: 25, dry_entity: input_number.pik_dry_trees_palms }
-          - { name: Tough guys, indicator: big ZZ in the yellow pot, sensor: sensor.gw1200b_soil_moisture_5, dry: 12, dry_entity: input_number.pik_dry_tough_guys }
-          - { name: Jungle cacti, indicator: blooming Christmas cactus, sensor: sensor.gw1200b_soil_moisture_6, dry: 20, dry_entity: input_number.pik_dry_jungle_cacti }
-          - { name: Desert cacti, indicator: tall euphorbia, sensor: sensor.gw1200b_soil_moisture_7, dry: 8, dry_entity: input_number.pik_dry_desert_cacti }
+          - { name: Big aroids, indicator: entry monstera, sensor: sensor.gw1200b_soil_moisture_2, dry: 25, dry_entity: input_number.pik_dry_big_aroids }
+          - { name: Bedroom & office, indicator: spider plant, sensor: sensor.gw1200b_soil_moisture_3, dry: 25, dry_entity: input_number.pik_dry_bedroom_office }
+          - { name: Trees & palms, indicator: bedroom fiddle leaf fig, sensor: sensor.gw1200b_soil_moisture_4, dry: 22, dry_entity: input_number.pik_dry_trees_palms }
+          - { name: Tough guys, indicator: big ZZ in the yellow pot, sensor: sensor.gw1200b_soil_moisture_5, dry: 10, dry_entity: input_number.pik_dry_tough_guys }
+          - { name: Jungle cacti, indicator: blooming Christmas cactus, sensor: sensor.gw1200b_soil_moisture_6, dry: 18, dry_entity: input_number.pik_dry_jungle_cacti }
+          - { name: Desert cacti, indicator: tall euphorbia, sensor: sensor.gw1200b_soil_moisture_7, dry: 5, dry_entity: input_number.pik_dry_desert_cacti }
         lights:   # every Leviton light plus the Wemo nightstand lamps, by room (the tile counts single lights)
           - { name: Kitchen, entities: [light.kitchen_cans, light.kitchen_chandelier, light.bar] }
           - { name: Living room, entities: [light.living_room_chandelier, light.living_room_cans] }
