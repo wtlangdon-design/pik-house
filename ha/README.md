@@ -286,7 +286,8 @@ with your instant-read thermometer in each spot.
 `dashboards/house.yaml` puts Pik's house feed on its own dashboard (`/dashboard-house/house`), wired to the real devices:
 weather, the Ecobee, the Leviton lights, Rachio, the Ring gate camera, the Echo Show 15, the shared kitchen timers, the
 seven soil sensors and the plant catalog. Tiles with nothing behind them hide (the Energy tile appears once the
-Powerwall is connected and `energy:` is added to the card).
+Powerwall is connected and `energy:` is added to the card). The Powerwall 3 comes in through the Teslemetry integration
+(a $30/year cloud service): Tesla removed the Powerwall 3's local API, so the built-in Powerwall integration can't read it.
 
 `packages/pik_house.yaml` adds the feed itself: the **House feed** Local To-do list holds the cards, `script.feed_post`
 posts or updates one, and automations post the doorbell (urgent), trash (Tuesdays 8 AM) and freeze (3 PM when tonight's

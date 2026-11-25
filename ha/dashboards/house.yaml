@@ -2,7 +2,8 @@
 # Data: the House feed list (todo.house_feed, filled by script.feed_post), the plant catalog and soil sensors,
 # the Ecobee, Leviton lights, Rachio, Ring, the Echo Show, the shared kitchen timers, the wine cellar
 # (todo.wine_cellar) and RNO's live parking counts; an active Instacart/Grubhub/DoorDash delivery takes the parking tile's place.
-# A tile with nothing behind it hides (no Powerwall yet = no Energy tile).
+# The Energy tile reads the Powerwall 3 through Teslemetry (cloud; Tesla shut off the Powerwall 3's local API).
+# A tile with nothing behind it hides.
 title: House
 views:
   - title: House
@@ -47,5 +48,13 @@ views:
           yard: { name: Rachio, standby: switch.outside_home_controller_standby }
         doorbell: { name: Gate, camera: camera.outside_gate_live_view }
         echo: { media_player: media_player.tyler_s_echo_show_15 }
+        energy:   # Teslemetry: battery > 0 = discharging, grid > 0 = importing (the card flips them)
+          solar_power: sensor.home_solar_power
+          load_power: sensor.home_load_power
+          battery_power: sensor.home_battery_power
+          grid_power: sensor.home_grid_power
+          battery_level: sensor.home_percentage_charged
+          grid_status: binary_sensor.home_grid_status
+          capacity_kwh: 13.5
         holiday:
           - { name: Thanksgiving, path: /dashboard-thanksgiving/kitchen, from: "2026-11-24", to: "2026-11-26" }
