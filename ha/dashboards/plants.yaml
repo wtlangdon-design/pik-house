@@ -17,3 +17,4 @@ views:
           - { name: Tough guys, sensor: sensor.gw1200b_soil_moisture_5, dry: 12 }
           - { name: Jungle cacti, sensor: sensor.gw1200b_soil_moisture_6, dry: 20 }
           - { name: Desert cacti, sensor: sensor.gw1200b_soil_moisture_7, dry: 8 }
+          - { name: No sensor }
