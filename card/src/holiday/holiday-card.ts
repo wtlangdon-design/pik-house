@@ -768,8 +768,10 @@ export class PikHolidayCard extends LitElement {
         (due.length > room ? `<div class="fmore">+${due.length - room} more now · on the Chromebook</div>` : "")
       : next.length ? line(next[0].g, next[0].cur, "Next · " + this.when(next[0].cur), false)
       : `<div class="fitem"><div class="fl"><b>All done for today</b></div></div>`;
-    const then = (due.length ? next : next.slice(1)).slice(0, 2);
-    return `${bar}<div class="fhead"><div class="fclock" id="clock"></div>${count ? `<div class="fcd"><span>Dinner in</span><b>${count}</b></div>` : ""}</div>
+    // A timer or turkey alarm bar on top takes room: the clock shrinks and "Then" waits until it's cleared.
+    const tight = !!bar && (timers.length > 0 || turkeyOn);
+    const then = tight ? [] : (due.length ? next : next.slice(1)).slice(0, 2);
+    return `${bar}<div class="fhead${bar ? " sm" : ""}"><div class="fclock" id="clock"></div>${count ? `<div class="fcd"><span>Dinner in</span><b>${count}</b></div>` : ""}</div>
       <div class="fmain${due.length > 1 && room > 1 ? " two" : ""}">${nowPart}</div>
       ${then.length ? `<div class="fthen"><span class="eb2">Then</span>${then.map((x) => `<span><b>${esc(this.when(x.cur))}</b> ${esc(this.gname(x.g) || x.cur.text)}</span>`).join("")}</div>` : ""}
       ${timers.length || turkeyOn ? `<div class="fbot">

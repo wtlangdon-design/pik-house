@@ -513,7 +513,8 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .far .fcd{text-align:right;display:flex;flex-direction:column}
 .far .fcd span{font:700 calc(3*var(--u,1vh)) 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .far .fcd b{font:400 calc(8*var(--u,1vh))/1 'Instrument Serif',Georgia,serif}
-.far .fmain{flex:1;min-height:0;display:flex;flex-direction:column;gap:calc(2.5*var(--u,1vh));justify-content:center;overflow:hidden}
+.far .fmain{flex:1;min-height:0;display:flex;flex-direction:column;gap:calc(2.5*var(--u,1vh));justify-content:safe center;overflow:hidden}
+.far .fhead.sm .fclock{font-size:calc(9*var(--u,1vh))}.far .fhead.sm .fcd b{font-size:calc(6*var(--u,1vh))}
 .far .fmain.two{gap:calc(2*var(--u,1vh))}.far .fmain.two .fitem{padding:calc(1.8*var(--u,1vh)) 3vw}.far .fmain.two .fl b{font-size:calc(7*var(--u,1vh))}.far .fmain.two .ft{font-size:calc(4.4*var(--u,1vh));-webkit-line-clamp:2}.far .fmain.two .fdone{height:calc(11*var(--u,1vh))}
 .far .fitem{display:flex;align-items:center;gap:3vw;background:var(--card);border:2px solid var(--line);border-radius:calc(3*var(--u,1vh));padding:calc(2.5*var(--u,1vh)) 3vw}
 .far .fl{flex:1;min-width:0;display:flex;flex-direction:column;gap:calc(1*var(--u,1vh))}
