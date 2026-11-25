@@ -1,0 +1,10 @@
+# The Cellar dashboard: our wines, what they're worth, and the ones we drank (with stars).
+# Data lives in the "Wine cellar" Local To-do list (todo.wine_cellar); Pik adds bottles with script.wine_add.
+title: Cellar
+views:
+  - title: Cellar
+    path: cellar
+    panel: true
+    cards:
+      - type: custom:pik-cellar-card
+        entity: todo.wine_cellar
