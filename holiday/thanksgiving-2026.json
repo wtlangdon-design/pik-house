@@ -472,7 +472,7 @@
     },
     {
      "d": "wed",
-     "t": "2:30 PM: make the rub. Mash the butter with parsley, thyme, chives, sage, onion, garlic and 2 tbsp rub. Cover and refrigerate.",
+     "t": "4:00 PM: make the rub. Mash the butter with parsley, thyme, chives, sage, onion, garlic and 2 tbsp rub. Cover and refrigerate.",
      "min": 15,
      "ing": [
       [
@@ -666,7 +666,7 @@
    "steps": [
     {
      "d": "wed",
-     "t": "4:00 PM (burner 4): melt the butter over medium, whisk in the gluten-free flour, and cook 1 minute.",
+     "t": "5:30 PM (burner 4): melt the butter over medium, whisk in the gluten-free flour, and cook 1 minute.",
      "min": 3,
      "tm": [
       "Gravy base: roux 1 minute",
@@ -1063,7 +1063,7 @@
    "steps": [
     {
      "d": "wed",
-     "t": "12:00 PM: big pot of salted water to a boil (it takes longer at Reno's elevation).",
+     "t": "1:30 PM: big pot of salted water to a boil (it takes longer at Reno's elevation).",
      "min": 2,
      "tm": [
       "Bean water boiling?",
@@ -1317,7 +1317,7 @@
    "steps": [
     {
      "d": "wed",
-     "t": "3:30 PM: mix fish sauce, water, sugar, rice vinegar, lime juice, garlic and chile until the sugar dissolves. Refrigerate (no herbs yet).",
+     "t": "5:00 PM: mix fish sauce, water, sugar, rice vinegar, lime juice, garlic and chile until the sugar dissolves. Refrigerate (no herbs yet).",
      "min": 10,
      "ing": [
       [
@@ -1799,7 +1799,7 @@
     },
     {
      "d": "wed",
-     "t": "3:45 PM: topping. Sauté shallot, garlic and thyme in butter and oil, add the GF panko and toast until golden. Cool; store airtight.",
+     "t": "5:15 PM: topping. Sauté shallot, garlic and thyme in butter and oil, add the GF panko and toast until golden. Cool; store airtight.",
      "min": 8,
      "tm": [
       "Panko: golden?",
@@ -2209,7 +2209,7 @@
    "steps": [
     {
      "d": "wed",
-     "t": "3:30 PM: rinse the chopped shallot in a strainer; drain.",
+     "t": "5:00 PM: rinse the chopped shallot in a strainer; drain.",
      "min": 2,
      "ing": [
       [
@@ -2389,7 +2389,7 @@
    "steps": [
     {
      "d": "wed",
-     "t": "12:55 PM: heat the oven to 350°F. Grease the 13×9. Start the crust while it heats.",
+     "t": "2:25 PM: heat the oven to 350°F. Grease the 13×9. Start the crust while it heats.",
      "min": 5,
      "tm": [
       "Oven at 350°F?",
@@ -2447,7 +2447,7 @@
     },
     {
      "d": "wed",
-     "t": "1:20 PM: spread the filling over the crust and bake.",
+     "t": "2:50 PM: spread the filling over the crust and bake.",
      "min": 5,
      "tm": [
       "Cake: first doneness check",
@@ -2740,7 +2740,7 @@
   {
    "id": "wed_1200_gbc",
    "day": "wed",
-   "hm": "12:00",
+   "hm": "13:30",
    "lane": "stove",
    "rid": "gbc",
    "text": "Green bean casserole: boil water, blanch, sauce, assemble; cool 30 min; fridge.",
@@ -2782,10 +2782,10 @@
   {
    "id": "wed_1255_cake",
    "day": "wed",
-   "hm": "12:55",
+   "hm": "14:25",
    "lane": "oven",
    "rid": "cake",
-   "text": "Oven to 350°F; gooey butter cake in at 1:20; check at 2:00; cool; fridge.",
+   "text": "Oven to 350°F; gooey butter cake in at 2:50; check at 3:30; cool; fridge.",
    "tm": [
     "Cake: first doneness check",
     40,
@@ -2824,7 +2824,7 @@
   {
    "id": "wed_1430_turkey",
    "day": "wed",
-   "hm": "14:30",
+   "hm": "16:00",
    "lane": "prep",
    "rid": "turkey",
    "text": "Salt-free rub; one-stick garlic-herb butter; fridge.",
@@ -2840,7 +2840,7 @@
   {
    "id": "wed_1530_salad",
    "day": "wed",
-   "hm": "15:30",
+   "hm": "17:00",
    "lane": "prep",
    "rid": "salad",
    "text": "Sherry vinaigrette; fridge.",
@@ -2866,7 +2866,7 @@
   {
    "id": "wed_1530_sprouts",
    "day": "wed",
-   "hm": "15:30",
+   "hm": "17:00",
    "lane": "stove",
    "rid": "sprouts",
    "text": "Sprouts dressing base (no herbs); toast rice crisps with cayenne; cool; airtight.",
@@ -2892,7 +2892,7 @@
   {
    "id": "wed_1545_mac",
    "day": "wed",
-   "hm": "15:45",
+   "hm": "17:15",
    "lane": "stove",
    "rid": "mac",
    "text": "GF panko topping; cool; airtight.",
@@ -2914,7 +2914,7 @@
   {
    "id": "wed_1600_gravy",
    "day": "wed",
-   "hm": "16:00",
+   "hm": "17:30",
    "lane": "stove",
    "rid": "gravy",
    "text": "Burner 4: gravy base (roux, broth, herbs; no drippings, no salt); cool; fridge.",
@@ -2952,7 +2952,7 @@
   {
    "id": "wed_1630_turkey",
    "day": "wed",
-   "hm": "16:30",
+   "hm": "18:00",
    "lane": "smoker",
    "rid": "turkey",
    "text": "Pellets: full hopper plus a spare bag for Thursday's smoke and 200°F hot hold.",
@@ -2963,7 +2963,7 @@
   {
    "id": "wed_1730_x",
    "day": "wed",
-   "hm": "17:30",
+   "hm": "19:00",
    "lane": "fridge",
    "rid": null,
    "text": "Fridge plan for Thursday; label each dish with its pull time.",
@@ -4409,7 +4409,7 @@
    "16 oz (cake)",
    "On a grocery order",
    "chk",
-   "Needed by Wednesday 12:55 PM for the cake. Tick it off when it arrives; check it wasn't substituted."
+   "Needed by Wednesday 2:25 PM for the cake. Tick it off when it arrives; check it wasn't substituted."
   ],
   [
    "Fresh oranges",
@@ -4645,8 +4645,8 @@
   "smoker": [
    [
     "wed",
-    "16:30",
-    "16:45",
+    "18:00",
+    "18:15",
     "",
     "Pellet check"
    ],
@@ -4689,15 +4689,15 @@
   "oven": [
    [
     "wed",
-    "12:55",
-    "13:20",
+    "14:25",
+    "14:50",
     "350°F",
     "Preheating for the cake"
    ],
    [
     "wed",
-    "13:20",
-    "14:15",
+    "14:50",
+    "15:45",
     "350°F",
     "Gooey butter cake"
    ],
@@ -4789,8 +4789,8 @@
    ],
    [
     "wed",
-    "12:00",
-    "12:40",
+    "13:30",
+    "14:10",
     "",
     "Green bean water"
    ],
@@ -4840,22 +4840,22 @@
   "b2": [
    [
     "wed",
-    "12:15",
-    "12:45",
+    "13:45",
+    "14:15",
     "",
     "Mushroom sauce"
    ],
    [
     "wed",
-    "15:30",
-    "15:45",
+    "17:00",
+    "17:15",
     "",
     "Rice crisps"
    ],
    [
     "wed",
-    "15:45",
-    "16:00",
+    "17:15",
+    "17:30",
     "",
     "Panko topping"
    ],
@@ -4893,8 +4893,8 @@
   "b4": [
    [
     "wed",
-    "16:00",
-    "16:20",
+    "17:30",
+    "17:50",
     "",
     "Gravy base"
    ],
@@ -4962,7 +4962,7 @@
    "l": "Green bean water",
    "from": "wed_1200_gbc",
    "to": "wed_1200_gbc",
-   "until": "12:40"
+   "until": "14:10"
   },
   {
    "st": "b2",
@@ -4970,7 +4970,7 @@
    "l": "Mushroom sauce",
    "from": "wed_1200_gbc",
    "to": "wed_1200_gbc",
-   "until": "12:45"
+   "until": "14:15"
   },
   {
    "st": "b2",
@@ -4978,7 +4978,7 @@
    "l": "Rice crisps",
    "from": "wed_1530_sprouts",
    "to": "wed_1530_sprouts",
-   "until": "15:45"
+   "until": "17:15"
   },
   {
    "st": "b2",
@@ -4986,7 +4986,7 @@
    "l": "Panko topping",
    "from": "wed_1545_mac",
    "to": "wed_1545_mac",
-   "until": "16:00"
+   "until": "17:30"
   },
   {
    "st": "b1",
@@ -5066,7 +5066,7 @@
    "l": "Gooey butter cake",
    "from": "wed_1255_cake",
    "to": "wed_1255_cake",
-   "until": "14:15"
+   "until": "15:45"
   },
   {
    "st": "b4",
@@ -5074,7 +5074,7 @@
    "l": "Gravy base",
    "from": "wed_1600_gravy",
    "to": "wed_1600_gravy",
-   "until": "16:20"
+   "until": "17:50"
   },
   {
    "st": "oven",
