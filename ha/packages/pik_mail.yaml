@@ -1,0 +1,95 @@
+# Reservations and flights from Gmail, onto the shared calendar.
+#
+# The IMAP integration (Tyler's Gmail, app password) watches the last day of mail from the delivery apps,
+# OpenTable, Resy and the airlines, and fires imap_content for each new message. For the OpenTable, Resy
+# and airline ones, Claude (ai_task.claude_ai_task, Haiku) reads the email and says whether it's a booking
+# confirmation, a change, a cancellation or just marketing. Confirmed bookings go on calendar.tyler_charlie
+# (unless an event with the same title is already there that day) with the place as the location, so the
+# usual leave-time alerts work. A card on the house screen says what was added. Cancellations get a card
+# (the hub can't delete Google events), and marketing mail is ignored.
+
+automation:
+  - id: pik_mail_bookings
+    alias: "Mail: reservations and flights go on the calendar"
+    mode: queued
+    max: 10
+    triggers:
+      - trigger: event
+        event_type: imap_content
+    conditions:
+      - "{{ trigger.event.data.sender | default('') | lower is search('opentable|resy\\.com|alaskaair|southwest|united\\.com|aa\\.com|delta\\.com|aeromexico|volaris') }}"
+    actions:
+      - action: ai_task.generate_data
+        response_variable: got
+        data:
+          entity_id: ai_task.claude_ai_task
+          task_name: "Read a booking email"
+          instructions: >-
+            This email was sent to Tyler (Reno, Nevada; times are Pacific unless the email says otherwise).
+            Decide what it is. kind is "reservation" for a confirmed restaurant booking, "flight" for a confirmed
+            flight booking or itinerary (use the first flight that hasn't happened yet), "changed" for an updated
+            time of an existing booking (treat it like a new booking with the new time), "cancelled" for a
+            cancellation, and "other" for anything else (marketing, receipts, reviews, check-in reminders for a
+            booking you can't date). For a reservation: title like "Dinner at Bar Moderno (4 people)", start is the
+            reservation time, end is 2 hours later, location is the restaurant's street address. For a flight:
+            title like "Flight AS 1234 RNO → SEA", start is departure, end is arrival, location is the departure
+            airport's name and city, detail has the confirmation code. Times are ISO 8601 with the UTC offset.
+            Leave fields empty when the email doesn't say.
+
+            From: {{ trigger.event.data.sender }}
+            Subject: {{ trigger.event.data.subject }}
+            Sent: {{ trigger.event.data.date }}
+
+            {{ (trigger.event.data.text | default(''))[:20000] }}
+          structure:
+            kind:
+              selector: { select: { options: [reservation, flight, changed, cancelled, other] } }
+              required: true
+            title: { selector: { text: } }
+            start: { selector: { text: } }
+            end: { selector: { text: } }
+            location: { selector: { text: } }
+            detail: { selector: { text: } }
+      - variables:
+          d: "{{ got.data }}"
+          start: "{{ as_datetime(d.start) if d.start | default('') else none }}"
+      - choose:
+          - conditions: "{{ d.kind in ['reservation', 'flight', 'changed'] and start is not none and start > now() }}"
+            sequence:
+              - action: calendar.get_events
+                target: { entity_id: calendar.tyler_charlie }
+                data:
+                  start_date_time: "{{ (as_local(start).replace(hour=0, minute=0, second=0)).isoformat() }}"
+                  end_date_time: "{{ (as_local(start).replace(hour=23, minute=59, second=0)).isoformat() }}"
+                response_variable: day
+              - condition: "{{ day['calendar.tyler_charlie'].events | selectattr('summary', 'eq', d.title) | list | count == 0 }}"
+              - action: calendar.create_event
+                target: { entity_id: calendar.tyler_charlie }
+                data:
+                  summary: "{{ d.title }}"
+                  start_date_time: "{{ as_local(start).isoformat() }}"
+                  end_date_time: "{{ as_local(as_datetime(d.end)).isoformat() if d.end | default('') else (as_local(start) + timedelta(hours=2)).isoformat() }}"
+                  location: "{{ d.location | default('', true) }}"
+                  description: "{{ (d.detail | default('', true)) ~ '\n(Added by Pik from ' ~ trigger.event.data.sender ~ ')' }}"
+              - action: script.feed_post
+                data:
+                  id: "booking-{{ d.title | slugify }}"
+                  title: "On the calendar: {{ d.title }}"
+                  category: reminder
+                  label: "{{ 'Flight' if d.kind == 'flight' else 'Reservation' }} · from your email"
+                  detail: >-
+                    {{ as_local(start).strftime('%A, %B %-d at %-I:%M %p') }}{{ ' · ' ~ d.location if d.location | default('') else '' }}.
+                    You'll both get a leave-time alert.
+                  primary_label: Got it
+                  expires_hours: 24
+          - conditions: "{{ d.kind == 'cancelled' }}"
+            sequence:
+              - action: script.feed_post
+                data:
+                  id: "booking-cancelled-{{ (d.title | default(trigger.event.data.subject, true)) | slugify }}"
+                  title: "Cancelled: {{ d.title | default(trigger.event.data.subject, true) }}"
+                  category: reminder
+                  label: "Reservations · from your email"
+                  detail: "If it's on the shared calendar, delete it there so the leave-time alert doesn't go off."
+                  primary_label: Got it
+                  expires_hours: 48
