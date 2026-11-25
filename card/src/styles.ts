@@ -265,6 +265,64 @@ export const hostStyles = css`
 // 2. Reduced motion means no shimmer (SPEC.md rule 7). The prototype's reduced-motion
 //    rules stop packets, pulsing and Pik's bob but miss the battery bar's shimmer.
 export const adjustStyles = css`
+/* Phone layouts ("flow"): the same parts stacked so they fit a narrower screen.
+   mid = an unfolded Galaxy Z Fold or a small tablet; narrow = a phone, or the Fold's cover screen. */
+:host([flow]){width:100%;height:auto}
+.app.flow{width:100%;height:auto;min-height:calc(100vh - 64px);box-sizing:border-box;padding:18px 18px 28px;display:flex;flex-direction:column;gap:18px;overflow:visible}
+.flow .top{position:static;height:auto;flex-wrap:wrap;gap:8px 18px;pointer-events:auto}
+.flow .clock{font-size:46px}
+.flow .wx b{font-size:28px}
+.flow .stage{position:static;height:auto;gap:18px}
+.flow .bubble{min-width:0;height:auto;min-height:280px;padding:22px 24px 22px}
+.flow .btitle{font-size:36px}
+.flow .bdetail{font-size:17px}
+.flow .acts{flex-wrap:wrap;margin-top:22px}
+.flow .peek{display:none}
+.flow .pebs{position:static;height:auto;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,minmax(0,1fr))}
+.flow .peb{min-height:140px;min-width:0;overflow:hidden}
+.flow .npc{flex-wrap:wrap}
+.flow .pv{font-size:42px}
+.flow .scrim{position:fixed}
+.flow .sheet{position:fixed;left:0;right:0;bottom:0;height:auto;max-height:90vh;overflow-y:auto;padding:12px 18px 28px;border-radius:26px 26px 0 0}
+.flow .stitle{font-size:34px}
+.flow .sbody{grid-template-columns:1fr}
+.flow .emap{width:100%;height:auto}
+.flow .ewin{padding:10px}
+.flow .prow{padding:10px 0;grid-template-columns:30px 1fr 120px 52px 92px;column-gap:10px}
+.flow .prow .pst{display:none}
+.flow .rcol .note{margin-top:12px}
+.flow .thermo{margin:18px 0}
+.flow .lights.many .lp{height:54px}
+.flow .cam{margin-top:16px}
+.flow .toast{position:fixed;top:18px;white-space:normal;max-width:86vw;text-align:center}
+/* mid: Pik beside the bubble, three tiles across */
+.mid .pikcol{width:200px}
+.mid .pikbtn,.mid .tmode .pikbtn{width:180px;height:180px}
+.mid .pikbtn svg,.mid .tmode .pikbtn svg{width:180px;height:180px}
+.mid .hsb{grid-template-columns:1fr 1fr}
+.mid .hsb .hpanel:last-child{grid-column:1 / -1}
+/* narrow: one column, Pik small beside its name, two tiles across */
+.narrow .stage{flex-direction:column;align-items:stretch}
+.narrow .pikcol{width:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.narrow .pikbtn,.narrow .tmode .pikbtn{width:92px;height:92px}
+.narrow .pikbtn svg,.narrow .tmode .pikbtn svg{width:92px;height:92px}
+.narrow .pikname{margin-top:0}
+.narrow .timers{margin-top:0;flex:1 1 100%}
+.narrow .bubble::before{display:none}
+.narrow .bubble{min-height:240px;padding:20px}
+.narrow .btitle{font-size:32px}
+.narrow .nav .nbtn{width:40px;height:40px}
+.narrow .pbtn,.narrow .sbtn{height:52px;padding:0 20px}
+.narrow .pebs{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.narrow .np{grid-column:1 / -1}
+.narrow .peb{min-height:124px;padding:14px 16px}
+.narrow .pv{font-size:36px}
+.narrow .clock{font-size:40px}
+.narrow .sep{display:none}
+.narrow .prow{grid-template-columns:28px 1fr 44px 84px}
+.narrow .prow .meter{display:none}
+.narrow .lights.many{grid-template-columns:1fr}
+
 .scrim,.dark .scrim{background:transparent;animation:none}
 .top{z-index:22;pointer-events:none}
 .top .demo{pointer-events:auto}

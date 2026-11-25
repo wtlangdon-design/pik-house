@@ -21,6 +21,8 @@ const FONTS = "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;
 export interface PikHouseCardConfig extends LiveConfig {
   type: string;
   mock?: boolean;
+  /** auto (default): wide on the Chromebook, "mid" on an unfolded phone or tablet, "narrow" on a phone. */
+  layout?: "auto" | "wide" | "mid" | "narrow";
 }
 
 interface NowPlaying { kind: string; title: string; sub: string; playing: boolean }
@@ -96,6 +98,16 @@ export class PikHouseCard extends LitElement {
   private unsubs: Array<() => void> = [];
   private subscribing = false;
   private rangSeen = new Set<string>();
+  private size: "wide" | "mid" | "narrow" = "wide";
+  private onResize = () => this.measure();
+
+  /** Which layout fits the screen: the fixed 1280×800 kitchen design, or one that flows for a phone. */
+  private measure(): void {
+    const forced = this.config.layout && this.config.layout !== "auto" ? this.config.layout : null;
+    const w = window.innerWidth;
+    const next = forced || (w >= 1150 ? "wide" : w >= 600 ? "mid" : "narrow");
+    if (next !== this.size) { this.size = next; this.toggleAttribute("flow", next !== "wide"); this.requestUpdate(); }
+  }
   private _ac?: AudioContext;
   private _last?: { count: number; curIdx: number; urgent: boolean };
 
@@ -104,6 +116,7 @@ export class PikHouseCard extends LitElement {
   setConfig(config: PikHouseCardConfig): void {
     if (!config) throw new Error("pik-house-card: missing config");
     this.config = config;
+    if (this.isConnected) this.measure();
     this.requestUpdate();
   }
 
@@ -158,6 +171,8 @@ export class PikHouseCard extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     loadFonts();
+    this.measure();
+    window.addEventListener("resize", this.onResize);
     this._tick = window.setInterval(() => this.setState({ now: Date.now() }), 30000);
     // When nothing is urgent, Pik moves to the next item every 25 seconds (paused for a minute after you page by hand).
     this._cycle = window.setInterval(() => this.autoAdvance(), 25000);
@@ -166,6 +181,7 @@ export class PikHouseCard extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    window.removeEventListener("resize", this.onResize);
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
     clearInterval(this._tick);
@@ -833,7 +849,7 @@ export class PikHouseCard extends LitElement {
   render() {
     const v = this.renderVals();
     const cur = v.cur;
-    return html`<div class="app ${v.appCls} ${v.themeCls}">
+    return html`<div class="app ${v.appCls} ${v.themeCls}${this.size === "wide" ? "" : " flow " + this.size}">
 <header class="top">
 <div class="clock">${v.clock}<span>${v.ampm}</span></div>
 <div class="date">${v.dayName}<br>${v.monthDay}</div>
