@@ -9,6 +9,11 @@
 #   - a push to the other phone, and an urgent card, when an airline says a flight is delayed,
 #     cancelled or has a gate change
 #
+# Live driver map: Instacart, DoorDash and Grubhub put a "track your order" link in their order emails.
+# With the IMAP integration reading only mail from those senders (Gmail app password, entered by Tyler),
+# the hub pulls that link out and the delivery card and tile get a "Live map" button. The link opens the
+# company's own tracking page, the same map their app shows.
+#
 # RNO parking: the airport's own live parking file (the numbers on renoairport.com/parking),
 # checked every 10 minutes. The leave-for-the-airport alert includes it.
 #
@@ -21,7 +26,7 @@ input_text:
   pik_delivery_apps:
     name: "Pik: delivery apps"
     max: 255
-    initial: "com.instacart.client,com.grubhub.android"
+    initial: "com.instacart.client,com.grubhub.android,com.dd.doordash"
   pik_airline_apps:
     name: "Pik: airline apps"
     max: 255
@@ -77,6 +82,24 @@ rest:
           {{ (t[0] ~ z[:3] ~ ':' ~ z[3:]) | as_datetime if t else none }}
 
 template:
+  - triggers:
+      - trigger: event
+        event_type: imap_content
+    conditions:
+      - "{{ (trigger.event.data.sender ~ ' ' ~ trigger.event.data.subject) is search('(?i)instacart|doordash|grubhub') }}"
+    sensor:
+      - name: "Pik delivery map link"
+        unique_id: pik_delivery_map_link
+        state: >-
+          {% set f = (trigger.event.data.sender ~ ' ' ~ trigger.event.data.subject) | lower %}
+          {{ 'DoorDash' if 'doordash' in f else 'Grubhub' if 'grubhub' in f else 'Instacart' }}
+        attributes:
+          url: >-
+            {% set urls = trigger.event.data.text | default('', true) | regex_findall('https://[^\\s"\'<>)\\]]+') %}
+            {% set t = urls | select('search', '(?i)track|status|order|delivery') | list %}
+            {{ (t or urls) | first | default('') }}
+          at: "{{ now().isoformat() }}"
+          subject: "{{ trigger.event.data.subject | default('') | truncate(120) }}"
   - sensor:
       - name: "RNO parking summary"
         unique_id: rno_parking_summary
@@ -89,6 +112,30 @@ template:
           {% endfor %}{{ ns.out | join(', ') if ns.out else 'unknown' }}
 
 automation:
+  - id: pik_delivery_map
+    alias: "Pik: live delivery map link from order email"
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: sensor.pik_delivery_map_link
+        attribute: at
+    conditions:
+      - "{{ state_attr('sensor.pik_delivery_map_link', 'url') | default('', true) | length > 10 }}"
+    actions:
+      - variables:
+          app: "{{ states('sensor.pik_delivery_map_link') }}"
+      - action: script.feed_post
+        data:
+          id: "delivery-{{ app | slugify }}"
+          title: "{{ app }}: order on the way"
+          category: door
+          label: "{{ app }} · order"
+          detail: "{{ state_attr('sensor.pik_delivery_map_link', 'subject') }}"
+          primary_label: Live map
+          primary_open: "{{ state_attr('sensor.pik_delivery_map_link', 'url') }}"
+          secondary_label: Dismiss
+          expires_hours: 3
+
   - id: pik_phone_notices
     alias: "Pik: deliveries and flights from phone notifications"
     mode: queued
@@ -109,7 +156,7 @@ automation:
           title: "{{ a['android.title'] | default('', true) }}"
           text: "{{ a['android.bigText'] | default(a['android.text'], true) | default(trigger.to_state.state, true) | string | truncate(220) }}"
           app: >-
-            {{ {'com.instacart.client': 'Instacart', 'com.grubhub.android': 'Grubhub', 'com.alaskaairlines.android': 'Alaska',
+            {{ {'com.instacart.client': 'Instacart', 'com.grubhub.android': 'Grubhub', 'com.dd.doordash': 'DoorDash', 'com.alaskaairlines.android': 'Alaska',
                 'com.southwestairlines.mobile': 'Southwest', 'com.united.mobile.android': 'United', 'com.aa.android': 'American',
                 'com.delta.mobile.android': 'Delta', 'com.aeromexico.app': 'Aeroméxico', 'com.volaris.android': 'Volaris'}.get(pkg, pkg.split('.')[1] | title) }}
       - condition: "{{ pkg in deliveries or pkg in airlines or pkg is search('tonal') }}"
@@ -143,6 +190,9 @@ automation:
                     {% set m = (title ~ ' ' ~ text) | regex_findall('(?i)(\d{1,3})\s?(?:-|–|to)?\s?(\d{1,3})?\s?min') %}
                     {% if t %}{{ t[0] | upper }}{% elif m %}{{ (now() + timedelta(minutes=(m[0][1] or m[0][0]) | int)).strftime('%-I:%M %p') }}{% endif %}
                   done: "{{ (title ~ ' ' ~ text) is search('(?i)delivered|dropped off|left at|enjoy your') }}"
+                  map: >-
+                    {% set l = 'sensor.pik_delivery_map_link' %}
+                    {% if states(l) == app and state_attr(l, 'at') and (now() - as_datetime(state_attr(l, 'at'))).total_seconds() < 10800 %}{{ state_attr(l, 'url') }}{% endif %}
               - action: script.feed_post
                 data:
                   id: "delivery-{{ app | slugify }}"
@@ -151,7 +201,8 @@ automation:
                   category: door
                   label: "{{ app }} · order"
                   detail: "{{ text }}"
-                  primary_label: "{{ 'Got it' if done else 'OK' }}"
+                  primary_label: "{{ 'Got it' if done or not map else 'Live map' }}"
+                  primary_open: "{{ '' if done else map }}"
                   expires_hours: "{{ 1 if done else 3 }}"
           # An airline: delays, cancellations, gate changes
           - conditions: "{{ pkg in airlines and (title ~ ' ' ~ text) is search('(?i)delay|cancel|new (departure|time)|gate change|now depart|rebook|diverted') }}"
