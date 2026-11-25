@@ -17,7 +17,7 @@ input_text:
 
 # Each watering group's thirst line (%): its sensor plant reading at or below this means water the group.
 # The Plants page and the house screen both read these; adjust with − / + on the Plants page.
-# Starting values: Kitchen 30, Big aroids 28, Bedroom & office 28, Trees & palms 25, Tough guys 12,
+# Starting values: Kitchen 15 (its sensor reads only ~23% two days after a full watering), Big aroids 28, Bedroom & office 28, Trees & palms 25, Tough guys 12,
 # Jungle cacti 20, Desert cacti 8.
 input_number:
   pik_dry_kitchen: { name: "Plants: Kitchen thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
