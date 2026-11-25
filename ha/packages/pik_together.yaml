@@ -41,11 +41,16 @@ script:
         selector:
           text:
             multiline: true
+      skip:
+        description: "A phone to leave out, e.g. mobile_app_home_assistant_hub (it already showed this)"
+        selector:
+          text:
     sequence:
       - variables:
           apps: >-
             {{ integration_entities('mobile_app') | map('device_id') | reject('none') | unique
-               | map('device_attr', 'name') | reject('none') | map('slugify') | map('regex_replace', '^', 'mobile_app_') | list }}
+               | map('device_attr', 'name') | reject('none') | map('slugify') | map('regex_replace', '^', 'mobile_app_')
+               | reject('eq', skip | default('', true)) | list }}
       - repeat:
           for_each: "{{ apps }}"
           sequence:
@@ -231,14 +236,18 @@ automation:
               continue_on_error: true
             - variables:
                 secs: "{{ ((trip | default({})).routes | default([{}]))[0].duration | default(0) | int }}"
-                leave_at: "{{ (as_datetime(repeat.item.start) - timedelta(seconds=secs | int)).isoformat() }}"
+                flight: "{{ repeat.item.summary is search('(?i)\\bflight\\b') }}"
+                early: "{{ 120 if flight else 0 }}"
+                leave_at: "{{ (as_datetime(repeat.item.start) - timedelta(seconds=secs | int, minutes=early | int)).isoformat() }}"
             - if: "{{ secs | int > 0 and now() >= as_datetime(leave_at) - timedelta(minutes=30) }}"
               then:
                 - variables:
                     drive: "{{ trip.routes[0].duration_text }}"
+                    parking: >-
+                      {% if flight and states('sensor.rno_parking_summary') not in ['unknown', 'unavailable'] %} RNO parking right now: {{ states('sensor.rno_parking_summary') }}.{% endif %}
                     msg: >-
-                      Leave by {{ as_datetime(leave_at).strftime('%-I:%M') }} for {{ repeat.item.summary }}.
-                      It's {{ drive }} with traffic.
+                      Leave by {{ as_datetime(leave_at).strftime('%-I:%M') }} for {{ repeat.item.summary }}{{ ' (2 hours early for the airport)' if flight else '' }}.
+                      It's {{ drive }} with traffic.{{ parking }}
                 - action: script.pik_push
                   data:
                     title: "Time to get ready"
@@ -249,7 +258,7 @@ automation:
                     title: "Leave by {{ as_datetime(leave_at).strftime('%-I:%M %p') }}"
                     category: reminder
                     label: "Drive time · Google Maps"
-                    detail: "{{ repeat.item.summary }}. It's {{ drive }} with traffic right now."
+                    detail: "{{ repeat.item.summary }}. It's {{ drive }} with traffic right now.{{ parking }}"
                     primary_label: On our way
                     expires_hours: 2
                 - action: input_text.set_value

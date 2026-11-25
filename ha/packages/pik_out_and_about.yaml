@@ -1,0 +1,185 @@
+# Deliveries, flights, Tonal reminders and airport parking.
+#
+# Instacart, Grubhub and the airlines have no way for the hub to log in and watch an order or a
+# booking. What they do have is the notifications they already send to your phones. The Home
+# Assistant app's "Last notification" sensor passes those notifications to the hub (only from the
+# apps you allow), and this package turns them into:
+#   - a delivery card on the house screen that updates in place: status and arrival time
+#   - a push to the other phone, and an urgent card, when the shopper or driver sends a message
+#   - a push to the other phone, and an urgent card, when an airline says a flight is delayed,
+#     cancelled or has a gate change
+#
+# RNO parking: the airport's own live parking file (the numbers on renoairport.com/parking),
+# checked every 10 minutes. The leave-for-the-airport alert includes it.
+#
+# Settings:
+#   input_text.pik_notice_sensors   which phones' "last notification" sensors to watch
+#   input_text.pik_delivery_apps    Android app ids for deliveries
+#   input_text.pik_airline_apps     Android app ids for airlines
+
+input_text:
+  pik_delivery_apps:
+    name: "Pik: delivery apps"
+    max: 255
+    initial: "com.instacart.client,com.grubhub.android"
+  pik_airline_apps:
+    name: "Pik: airline apps"
+    max: 255
+    initial: "com.alaskaairlines.android,com.southwestairlines.mobile,com.united.mobile.android,com.aa.android,com.delta.mobile.android,com.aeromexico.app,com.volaris.android"
+
+rest:
+  - resource: https://www.renoairport.com/wp-content/uploads/data/parking/PLS.014
+    scan_interval: 600
+    timeout: 20
+    sensor:
+      - name: "RNO parking: Short-Term Garage"
+        unique_id: rno_parking_short_term
+        unit_of_measurement: spots
+        value_template: >-
+          {% set ns = namespace(n=0) %}
+          {% for code in ['-ST-'] %}
+            {% set m = value | regex_findall('<Name>' ~ code ~ '</Name>\\s*<Status>(\\w+)</Status>\\s*<Free>(\\d+)</Free>') %}
+            {% if m and m[0][0] == 'Open' %}{% set ns.n = ns.n + m[0][1] | int %}{% endif %}
+          {% endfor %}{{ ns.n }}
+      - name: "RNO parking: Long-Term Garage"
+        unique_id: rno_parking_long_term_garage
+        unit_of_measurement: spots
+        value_template: >-
+          {% set ns = namespace(n=0) %}
+          {% for code in ['GAL2', 'GAL3'] %}
+            {% set m = value | regex_findall('<Name>' ~ code ~ '</Name>\\s*<Status>(\\w+)</Status>\\s*<Free>(\\d+)</Free>') %}
+            {% if m and m[0][0] == 'Open' %}{% set ns.n = ns.n + m[0][1] | int %}{% endif %}
+          {% endfor %}{{ ns.n }}
+      - name: "RNO parking: Long-Term Surface"
+        unique_id: rno_parking_long_term_surface
+        unit_of_measurement: spots
+        value_template: >-
+          {% set ns = namespace(n=0) %}
+          {% for code in ['-LT-'] %}
+            {% set m = value | regex_findall('<Name>' ~ code ~ '</Name>\\s*<Status>(\\w+)</Status>\\s*<Free>(\\d+)</Free>') %}
+            {% if m and m[0][0] == 'Open' %}{% set ns.n = ns.n + m[0][1] | int %}{% endif %}
+          {% endfor %}{{ ns.n }}
+      - name: "RNO parking: Park & Walk"
+        unique_id: rno_parking_park_walk
+        unit_of_measurement: spots
+        value_template: >-
+          {% set ns = namespace(n=0) %}
+          {% for code in ['-PU-'] %}
+            {% set m = value | regex_findall('<Name>' ~ code ~ '</Name>\\s*<Status>(\\w+)</Status>\\s*<Free>(\\d+)</Free>') %}
+            {% if m and m[0][0] == 'Open' %}{% set ns.n = ns.n + m[0][1] | int %}{% endif %}
+          {% endfor %}{{ ns.n }}
+      - name: "RNO parking updated"
+        unique_id: rno_parking_updated
+        device_class: timestamp
+        value_template: >-
+          {% set t = value | regex_findall('<DateTime>([^<]+)</DateTime>') %}
+          {% set z = now().strftime('%z') %}
+          {{ (t[0] ~ z[:3] ~ ':' ~ z[3:]) | as_datetime if t else none }}
+
+template:
+  - sensor:
+      - name: "RNO parking summary"
+        unique_id: rno_parking_summary
+        state: >-
+          {% set lots = [('Short-Term Garage', 'sensor.rno_parking_short_term_garage'), ('Long-Term Garage', 'sensor.rno_parking_long_term_garage'),
+                         ('Long-Term Surface', 'sensor.rno_parking_long_term_surface'), ('Park & Walk', 'sensor.rno_parking_park_walk')] %}
+          {% set ns = namespace(out=[]) %}
+          {% for name, e in lots if states(e) | is_number %}
+            {% set ns.out = ns.out + [name ~ ' ' ~ ('full' if states(e) | int == 0 else states(e))] %}
+          {% endfor %}{{ ns.out | join(', ') if ns.out else 'unknown' }}
+
+automation:
+  - id: pik_phone_notices
+    alias: "Pik: deliveries and flights from phone notifications"
+    mode: queued
+    max: 20
+    triggers:
+      - trigger: state
+        entity_id:
+          - sensor.home_assistant_hub_last_notification
+    conditions:
+      - "{{ trigger.to_state is not none and trigger.to_state.attributes.package is defined }}"
+    actions:
+      - variables:
+          a: "{{ trigger.to_state.attributes }}"
+          pkg: "{{ a.package }}"
+          deliveries: "{{ states('input_text.pik_delivery_apps').replace(' ', '').split(',') }}"
+          airlines: "{{ states('input_text.pik_airline_apps').replace(' ', '').split(',') }}"
+          phone: "mobile_app_{{ device_attr(device_id(trigger.entity_id), 'name') | slugify }}"
+          title: "{{ a['android.title'] | default('', true) }}"
+          text: "{{ a['android.bigText'] | default(a['android.text'], true) | default(trigger.to_state.state, true) | string | truncate(220) }}"
+          app: >-
+            {{ {'com.instacart.client': 'Instacart', 'com.grubhub.android': 'Grubhub', 'com.alaskaairlines.android': 'Alaska',
+                'com.southwestairlines.mobile': 'Southwest', 'com.united.mobile.android': 'United', 'com.aa.android': 'American',
+                'com.delta.mobile.android': 'Delta', 'com.aeromexico.app': 'Aeroméxico', 'com.volaris.android': 'Volaris'}.get(pkg, pkg.split('.')[1] | title) }}
+      - condition: "{{ pkg in deliveries or pkg in airlines or pkg is search('tonal') }}"
+      - choose:
+          # A message from the shopper or driver
+          - conditions: >-
+              {{ pkg in deliveries and (a.category | default('') == 'msg'
+                 or (title ~ ' ' ~ text) is search('(?i)message|sent you|says|replied|question|reply|chat|text(ed)? you')) }}
+            sequence:
+              - action: script.pik_push
+                data:
+                  title: "{{ app }}: {{ title or 'message' }}"
+                  message: "{{ text }}"
+                  skip: "{{ phone }}"
+              - action: script.feed_post
+                data:
+                  id: "delivery-msg-{{ app | slugify }}"
+                  title: "{{ app }}: {{ title or 'a message from your order' }}"
+                  category: door
+                  label: "{{ app }} · message"
+                  detail: "{{ text }} Reply in the {{ app }} app."
+                  urgent: true
+                  primary_label: Got it
+                  expires_hours: 1
+          # Order status: shopping, on the way, arriving, delivered
+          - conditions: "{{ pkg in deliveries }}"
+            sequence:
+              - variables:
+                  eta: >-
+                    {% set t = (title ~ ' ' ~ text) | regex_findall('(?i)(\d{1,2}:\d{2}\s?(?:[ap]\.?m\.?)?(?:\s?[-–]\s?\d{1,2}:\d{2}\s?(?:[ap]\.?m\.?)?)?)') %}
+                    {% set m = (title ~ ' ' ~ text) | regex_findall('(?i)(\d{1,3})\s?(?:-|–|to)?\s?(\d{1,3})?\s?min') %}
+                    {% if t %}{{ t[0] | upper }}{% elif m %}{{ (now() + timedelta(minutes=(m[0][1] or m[0][0]) | int)).strftime('%-I:%M %p') }}{% endif %}
+                  done: "{{ (title ~ ' ' ~ text) is search('(?i)delivered|dropped off|left at|enjoy your') }}"
+              - action: script.feed_post
+                data:
+                  id: "delivery-{{ app | slugify }}"
+                  title: >-
+                    {{ app ~ (': delivered' if done else (': arriving ' ~ eta if eta else ': ' ~ (title or 'order update'))) }}
+                  category: door
+                  label: "{{ app }} · order"
+                  detail: "{{ text }}"
+                  primary_label: "{{ 'Got it' if done else 'OK' }}"
+                  expires_hours: "{{ 1 if done else 3 }}"
+          # An airline: delays, cancellations, gate changes
+          - conditions: "{{ pkg in airlines and (title ~ ' ' ~ text) is search('(?i)delay|cancel|new (departure|time)|gate change|now depart|rebook|diverted') }}"
+            sequence:
+              - action: script.pik_push
+                data:
+                  title: "Flight: {{ title or app }}"
+                  message: "{{ text }}"
+                  skip: "{{ phone }}"
+              - action: script.feed_post
+                data:
+                  id: "flight-{{ app | slugify }}"
+                  title: "Flight change: {{ title or app }}"
+                  category: reminder
+                  label: "{{ app }}"
+                  detail: "{{ text }}"
+                  urgent: true
+                  primary_label: Got it
+                  expires_hours: 12
+          # Tonal: the workout reminders the Tonal app sends (today's program workout)
+          - conditions: "{{ pkg is search('tonal') }}"
+            sequence:
+              - action: script.feed_post
+                data:
+                  id: tonal-today
+                  title: "Tonal: {{ title or 'workout' }}"
+                  category: reminder
+                  label: "Tonal · from {{ device_attr(device_id(trigger.entity_id), 'name') }}"
+                  detail: "{{ text }}"
+                  primary_label: Got it
+                  expires_hours: "{{ ((today_at('23:59') - now()).total_seconds() / 3600) | round(1) }}"
