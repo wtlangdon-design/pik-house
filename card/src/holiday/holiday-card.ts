@@ -604,10 +604,12 @@ export class PikHolidayCard extends LitElement {
     const hotWin = this.isToday() && this.currentDay() === hc.day && now >= this.at(hc.day, hc.from).getTime() && now < this.at(hc.day, hc.to).getTime();
     const involves = (t: Task, d: string) => t.rid === d || (t.steps || []).some(([r]) => r === d) || (t.dish || []).some((e) => e[0] === d);
     const readings = SPOTS.map((k) => this.store.latest(k));
+    const dueNow = this.isToday() ? this.cards().due.map((x) => x.cur) : [];
     return this.plan.dishes.map((dish) => {
       let state = "wait", words = "";
       this.plan.tasks.forEach((t) => { if (this.store.isDone(t.id)) (t.dish || []).forEach((e) => { if (e[0] === dish.id) { state = e[1]; words = e[2]; } }); });
-      const active = this.plan.tasks.find((t) => involves(t, dish.id) && !this.store.isDone(t.id) && this.ms(t) <= now && this.ms(t) >= recent);
+      // In progress = it's in "Do these now" (due and not ticked off), however long ago it came due.
+      const active = dueNow.find((t) => involves(t, dish.id)) || this.plan.tasks.find((t) => involves(t, dish.id) && !this.store.isDone(t.id) && this.ms(t) <= now && this.ms(t) >= recent);
       if (active) { state = state === "hot" ? "hot" : "act"; words = "In progress"; }
       if (!words) {
         const nx = this.plan.tasks.find((t) => involves(t, dish.id) && !this.store.isDone(t.id));
