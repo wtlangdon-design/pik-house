@@ -16,6 +16,7 @@
 //   prefix: tg26
 //   timers: 12
 //   layout: echo        # optional: the Echo Show 15 (no day strip)
+//   layout: far         # optional: big type to read from across the kitchen (now, next, timers, turkey, alarms)
 //   mock: false         # true = keep everything in this browser only
 import { LitElement, html, nothing } from "lit";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -111,7 +112,8 @@ export class PikHolidayCard extends LitElement {
   private entPrefix(): string { return this.config.prefix || "tg26"; }
   private localKey(): string { return "pik-holiday-ui-" + this.plan.id; }
   private saveL(): void { try { localStorage.setItem(this.localKey(), JSON.stringify(this.L)); } catch (e) { /* ignore */ } }
-  private get echo(): boolean { return this.config.layout === "echo"; }
+  private get echo(): boolean { return this.config.layout === "echo" || this.config.layout === "far"; }
+  private get far(): boolean { return this.config.layout === "far"; }
 
   /** Live when Home Assistant is connected and the holiday package is installed; otherwise this browser only. */
   private pickStore(): void {
@@ -733,6 +735,39 @@ export class PikHolidayCard extends LitElement {
     return `<div class="tc done late"><div class="tt">${this.timeCell(t)}</div><div>${t.rid ? `<div class="nm">${esc(this.gname(t.rid))}</div>` : ""}<div class="x">${esc(t.text)}</div></div>
       <div class="acts"><button class="dbtn" data-done="${t.id}" data-g="${this.gid(t)}" title="${this.pieLabel(this.gid(t))}" aria-label="Done">${this.pieHtml(this.gid(t))}Done</button></div></div>`;
   }
+  /** The far view: only what you need from across the kitchen, in big type. Ticks and timers are shared with the other screens. */
+  private farHtml(): string {
+    const a = this.Q[this.Q.length - 1];
+    if (a) {
+      return `<div class="fring" role="alert"><div class="fw">${esc(a.when)}${this.Q.length > 1 ? ` · ${this.Q.length - 1} more` : ""}</div>
+        <div class="fx">${esc(a.text)}</div><button class="fgot" data-ack="1">Got it</button></div>`;
+    }
+    const now = new Date(), left = this.dinnerMs() - now.getTime();
+    const hrs = Math.floor((left % 86400000) / 3600000), mins = Math.floor((left % 3600000) / 60000);
+    const count = left > 86400000 ? Math.floor(left / 86400000) + "d " + hrs + "h" : left > 3600000 ? hrs + "h " + String(mins).padStart(2, "0") + "m" : left > 0 ? mins + " min" : "";
+    const { due, next } = this.cards();
+    const timers = this.store.timers().sort((x, y) => (x.rang === y.rang ? x.end - y.end : x.rang ? -1 : 1)).slice(0, 3);
+    const L = SPOTS.map((k) => this.store.latest(k));
+    const turkeyOn = L.some((x) => x);
+    // With timers or the turkey showing at the bottom, one thing at a time stays big enough to read.
+    const room = timers.length || turkeyOn ? 1 : 2;
+    const line = (g: string, t: Task, label: string, done: boolean) => `<div class="fitem">
+        <div class="fl"><span class="flab">${label}</span><b>${esc(this.gname(g) || "")}</b><span class="ft">${esc(t.text)}</span></div>
+        ${done ? `<button class="fdone" data-done="${t.id}" data-g="${g}">Done</button>` : ""}</div>`;
+    const nowPart = due.length
+      ? due.slice(0, room).map((x) => line(x.g, x.cur, this.ms(x.cur) <= Date.now() ? "Now" : "In " + Math.ceil((this.ms(x.cur) - Date.now()) / 60000) + " min", true)).join("") +
+        (due.length > room ? `<div class="fmore">+${due.length - room} more now · on the Chromebook</div>` : "")
+      : next.length ? line(next[0].g, next[0].cur, "Next · " + this.when(next[0].cur), false)
+      : `<div class="fitem"><div class="fl"><b>All done for today</b></div></div>`;
+    const then = (due.length ? next : next.slice(1)).slice(0, 2);
+    return `<div class="fhead"><div class="fclock" id="clock"></div>${count ? `<div class="fcd"><span>Dinner in</span><b>${count}</b></div>` : ""}</div>
+      <div class="fmain${due.length > 1 && room > 1 ? " two" : ""}">${nowPart}</div>
+      ${then.length ? `<div class="fthen"><span class="eb2">Then</span>${then.map((x) => `<span><b>${esc(this.when(x.cur))}</b> ${esc(this.gname(x.g) || x.cur.text)}</span>`).join("")}</div>` : ""}
+      ${timers.length || turkeyOn ? `<div class="fbot">
+        ${timers.map((t) => `<div class="ftm${t.rang ? " ring" : ""}" data-tid="${esc(t.key)}"><span class="l">${esc(t.label)}</span><span class="tl"></span></div>`).join("")}
+        ${turkeyOn ? `<div class="ftk">${SPOTS.map((k, i) => `<div class="${L[i] && L[i]!.f >= 165 ? "ok" : ""}"><span>${SPOTNAME[k]}</span><b>${L[i] ? L[i]!.f + "°" : "–"}</b></div>`).join("")}</div>` : ""}
+      </div>` : ""}`;
+  }
   private nowHtml(): string {
     const { due, done, next, behind } = this.cards();
     const d = this.viewDay();
@@ -987,6 +1022,7 @@ export class PikHolidayCard extends LitElement {
     const todayLeft = this.plan.tasks.filter((t) => t.day === d && !!t.rid && !this.store.isDone(t.id)).length;
     const sub = this.inFinalHour() ? "Everything hot by " + fmt12(new Date(this.dinnerMs()).toTimeString().slice(0, 5)) + " · " + todayLeft + " left" : todayLeft + (todayLeft === 1 ? " task" : " tasks") + " left today" + (this.store.live ? "" : " · this screen only");
     const a = this.Q[this.Q.length - 1];
+    if (this.far) return html`<div class="op far" @click=${this.onClick}>${unsafeHTML(this.farHtml())}${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}</div>`;
     return html`<div class="op" @click=${this.onClick}>
 <header><div class="hd">
   <div class="clock" id="clock"></div>
