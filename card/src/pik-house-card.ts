@@ -705,7 +705,7 @@ export class PikHouseCard extends LitElement {
         return {
           id: x.id,
           cls: "tchip" + (done ? " tdone" : ""),
-          left: done ? "Done" : Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2),
+          left: done ? "Done" : secs >= 3600 ? Math.floor(secs / 3600) + ":" + ("0" + Math.floor((secs % 3600) / 60)).slice(-2) + ":" + ("0" + (secs % 60)).slice(-2) : Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2),
           label: x.label,
           dash: "stroke-dashoffset:" + (163.4 * (1 - left / x.total)).toFixed(1),
           btn: done ? "Stop" : "×",

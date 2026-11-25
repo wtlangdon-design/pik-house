@@ -9,7 +9,7 @@ views:
     panel: true
     cards:
       - type: custom:pik-house-card
-        weather: weather.home
+        weather: weather.hallway_thermostat   # the Ecobee's forecast (Met.no reads ~15° warm here: the hub's elevation is set to 0)
         sun: sun.sun
         thermostat: climate.hallway_thermostat
         feed_list: todo.house_feed
