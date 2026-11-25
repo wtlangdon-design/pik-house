@@ -4,7 +4,7 @@ Everything here goes onto the Home Assistant Green. Nothing in this folder runs 
 
 | File | What it is |
 |---|---|
-| `packages/pik_kitchen.yaml` | The shared kitchen timer pool (12 timers), the timer scripts Pik uses, and `script.pik_announce`, which speaks on every Echo and can push to both phones. |
+| `packages/pik_kitchen.yaml` | The shared kitchen timer pool (12 timers), the timer scripts Pik uses, and `script.pik_announce`, which speaks on the chosen Echos and can push to both phones. |
 | `packages/pik_holiday_thanksgiving_2026.yaml` | Holiday cooking mode for Thanksgiving. **Generated** from `holiday/thanksgiving-2026.json` by `node holiday/gen-ha.mjs thanksgiving-2026 tg26`; don't edit it by hand. `node holiday/check-plan.mjs` cross-checks the plan (it also runs on every card build). |
 | `packages/pik_smoke.yaml` | Smoking with the Inkbird: finds its four probes by itself, watches them every minute, and has Pik speak up (almost there, done, the stall, the smoker dropping, a probe lost). **Generated** by `node ha/gen-smoke.mjs`. |
 | `dashboards/smoking.yaml` | The Smoking dashboard: the four probes on one page. |
@@ -75,7 +75,10 @@ If it says **"this screen only"** at the top, the packages didn't load; recheck 
 
 **8. Echos and phones.** If the Alexa Devices integration is set up (main setup), Echo
 announcements already work. Test it: Settings → Developer tools → **Actions** → choose
-**Pik: announce** → type a message → **Perform action**. Every Echo should say it.
+**Pik: announce** → type a message → **Perform action**. The chosen Echos should say it.
+To choose them: Settings → Devices & services → **Helpers** → **Pik: Echos that announce**, and enter
+their announce entities, comma-separated (for example `notify.kitchen_echo_show_15_announce`). Left empty,
+every Echo speaks (never Fire TVs or speaker groups).
 For phone pushes ("the turkey is done"), each of you only needs the Home Assistant app
 signed in on your phone.
 
