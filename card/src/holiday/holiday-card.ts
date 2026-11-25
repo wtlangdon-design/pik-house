@@ -812,12 +812,11 @@ export class PikHolidayCard extends LitElement {
     const rest = all;
     const hidden = 0;
     void onTasks;
-    // Always here, even with nothing running: quick kitchen timers for anything the plan didn't time.
-    const quick = [5, 10, 15, 30].map((m) => `<button class="qt" data-timer='${esc(JSON.stringify(["Kitchen timer · " + m + " min", m, "check"]))}'>${m} min</button>`).join("");
+    // Always here, even with nothing running, so there's one place to look for timers.
     const head = all.length ? `Timers · ${all.length} running${hidden ? " · " + hidden + " on the cards" : ""}` : "Timers · none running";
     return `<div class="rcard2"><span class="eb">${head}</span>
       ${rest.length ? `<div class="tgrid">${rest.map((t) => `<div class="tg${t.rang ? " ring" : ""}" data-tid="${esc(t.key)}"><span class="l"><i class="k ${t.kind}"></i>${esc(t.label)}</span><span class="tl"></span><span class="mini">${t.rang ? "" : `<button data-plus="${esc(t.key)}">+5</button>`}<button data-stop="${esc(t.key)}">${t.rang ? "OK" : "×"}</button></span></div>`).join("")}</div>` : ""}
-      <div class="qts"><span>New timer</span>${quick}</div></div>`;
+      ${rest.length ? "" : `<p class="tnone">Timers you start from a step show up here.</p>`}</div>`;
   }
   private ribbonHtml(): string {
     if (this.echo) return "";
