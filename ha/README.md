@@ -292,3 +292,10 @@ Powerwall is connected and `energy:` is added to the card).
 posts or updates one, and automations post the doorbell (urgent), trash (Tuesdays 8 AM) and freeze (3 PM when tonight's
 low is 32°F or below) cards. Watered and Snooze on the plant card are shared through `input_text.pik_plants_quiet`.
 While a holiday plan is on (the card's `holiday:` dates), the feed shows a card that opens its cooking screen.
+
+## Deploying a new card build
+
+Phones running the Home Assistant app can keep an old copy of `/local/pik-house-card.js` even when the
+resource's `?v=` changes. So each build goes to the hub under a new file name, `www/pik-house-card-<commit>.js`,
+and the dashboard resource is pointed at that name. Older copies can be deleted from `www` once every screen
+has reloaded.
