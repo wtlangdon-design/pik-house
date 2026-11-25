@@ -506,42 +506,42 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .behindp .bfoot{display:flex;gap:10px;align-items:center;margin-top:12px}
 
 /* The far view (layout: far): read from across the kitchen. Sized from the screen, not in pixels. */
-.op.far{padding:3vh 4vw;gap:2.5vh;background:var(--bg)}
+.op.far{padding:calc(3*var(--u,1vh)) 4vw;gap:calc(2.5*var(--u,1vh));background:var(--bg)}
 .far .fhead{display:flex;align-items:baseline;justify-content:space-between;flex:none}
-.far .fclock{font:400 13vh/1 'Instrument Serif',Georgia,serif}
-.far .fclock small{font:600 5vh 'DM Sans',sans-serif;color:var(--muted);margin-left:1vw}
+.far .fclock{font:400 calc(13*var(--u,1vh))/1 'Instrument Serif',Georgia,serif}
+.far .fclock small{font:600 calc(5*var(--u,1vh)) 'DM Sans',sans-serif;color:var(--muted);margin-left:1vw}
 .far .fcd{text-align:right;display:flex;flex-direction:column}
-.far .fcd span{font:700 3vh 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.far .fcd b{font:400 8vh/1 'Instrument Serif',Georgia,serif}
-.far .fmain{flex:1;min-height:0;display:flex;flex-direction:column;gap:2.5vh;justify-content:center;overflow:hidden}
-.far .fmain.two{gap:2vh}.far .fmain.two .fitem{padding:1.8vh 3vw}.far .fmain.two .fl b{font-size:7vh}.far .fmain.two .ft{font-size:4.4vh;-webkit-line-clamp:2}.far .fmain.two .fdone{height:11vh}
-.far .fitem{display:flex;align-items:center;gap:3vw;background:var(--card);border:2px solid var(--line);border-radius:3vh;padding:2.5vh 3vw}
-.far .fl{flex:1;min-width:0;display:flex;flex-direction:column;gap:1vh}
-.far .flab{font:800 3.6vh 'DM Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--urg)}
-.far .fl b{font:800 9vh/1.05 'DM Sans',sans-serif}
-.far .ft{font:600 5.2vh/1.2 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.far .fdone{flex:none;height:14vh;min-width:22vw;border-radius:7vh;border:0;background:var(--done);color:#fff;font:800 6vh 'DM Sans',sans-serif;cursor:pointer}
-.far .fmore{font:700 4vh 'DM Sans',sans-serif;color:var(--muted);text-align:center}
-.far .fthen{flex:none;display:flex;gap:4vw;font:600 4.4vh 'DM Sans',sans-serif;color:var(--muted);white-space:nowrap;overflow:hidden}
+.far .fcd span{font:700 calc(3*var(--u,1vh)) 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.far .fcd b{font:400 calc(8*var(--u,1vh))/1 'Instrument Serif',Georgia,serif}
+.far .fmain{flex:1;min-height:0;display:flex;flex-direction:column;gap:calc(2.5*var(--u,1vh));justify-content:center;overflow:hidden}
+.far .fmain.two{gap:calc(2*var(--u,1vh))}.far .fmain.two .fitem{padding:calc(1.8*var(--u,1vh)) 3vw}.far .fmain.two .fl b{font-size:calc(7*var(--u,1vh))}.far .fmain.two .ft{font-size:calc(4.4*var(--u,1vh));-webkit-line-clamp:2}.far .fmain.two .fdone{height:calc(11*var(--u,1vh))}
+.far .fitem{display:flex;align-items:center;gap:3vw;background:var(--card);border:2px solid var(--line);border-radius:calc(3*var(--u,1vh));padding:calc(2.5*var(--u,1vh)) 3vw}
+.far .fl{flex:1;min-width:0;display:flex;flex-direction:column;gap:calc(1*var(--u,1vh))}
+.far .flab{font:800 calc(3.6*var(--u,1vh)) 'DM Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--urg)}
+.far .fl b{font:800 calc(9*var(--u,1vh))/1.05 'DM Sans',sans-serif}
+.far .ft{font:600 calc(5.2*var(--u,1vh))/1.2 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.far .fdone{flex:none;height:calc(14*var(--u,1vh));min-width:22vw;border-radius:calc(7*var(--u,1vh));border:0;background:var(--done);color:#fff;font:800 calc(6*var(--u,1vh)) 'DM Sans',sans-serif;cursor:pointer}
+.far .fmore{font:700 calc(4*var(--u,1vh)) 'DM Sans',sans-serif;color:var(--muted);text-align:center}
+.far .fthen{flex:none;display:flex;gap:4vw;font:600 calc(4.4*var(--u,1vh)) 'DM Sans',sans-serif;color:var(--muted);white-space:nowrap;overflow:hidden}
 .far .fthen b{color:var(--ink)}
-.far .fthen .eb2{font:800 3.2vh 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;align-self:center}
+.far .fthen .eb2{font:800 calc(3.2*var(--u,1vh)) 'DM Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;align-self:center}
 .far .fbot{flex:none;display:flex;gap:2vw;align-items:stretch}
-.far .ftm{flex:1;background:var(--card);border:2px solid var(--line);border-radius:3vh;padding:1.5vh 2vw;display:flex;flex-direction:column}
-.far .ftm .l{font:700 3.6vh 'DM Sans',sans-serif;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.far .ftm .tl{font:800 9vh/1 'DM Sans',sans-serif;font-variant-numeric:tabular-nums}
+.far .ftm{flex:1;background:var(--card);border:2px solid var(--line);border-radius:calc(3*var(--u,1vh));padding:calc(1.5*var(--u,1vh)) 2vw;display:flex;flex-direction:column}
+.far .ftm .l{font:700 calc(3.6*var(--u,1vh)) 'DM Sans',sans-serif;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.far .ftm .tl{font:800 calc(9*var(--u,1vh))/1 'DM Sans',sans-serif;font-variant-numeric:tabular-nums}
 .far .ftm.ring{background:var(--tempBg);border-color:var(--urg)}.far .ftm.ring .tl{color:var(--urg)}
 .far .ftk{flex:1.6;display:flex;gap:1.5vw}
-.far .ftk div{flex:1;background:var(--card);border:2px solid var(--line);border-radius:3vh;padding:1.5vh 1.5vw;display:flex;flex-direction:column}
-.far .ftk span{font:700 3.6vh 'DM Sans',sans-serif;color:var(--muted)}
-.far .ftk b{font:800 9vh/1 'DM Sans',sans-serif;color:var(--temp)}
+.far .ftk div{flex:1;background:var(--card);border:2px solid var(--line);border-radius:calc(3*var(--u,1vh));padding:calc(1.5*var(--u,1vh)) 1.5vw;display:flex;flex-direction:column}
+.far .ftk span{font:700 calc(3.6*var(--u,1vh)) 'DM Sans',sans-serif;color:var(--muted)}
+.far .ftk b{font:800 calc(9*var(--u,1vh))/1 'DM Sans',sans-serif;color:var(--temp)}
 .far .ftk .ok{background:var(--doneBg);border-color:var(--done)}.far .ftk .ok b{color:var(--done)}
-.far .fring{position:absolute;inset:0;background:var(--urg);color:#fff;display:flex;flex-direction:column;justify-content:center;gap:4vh;padding:6vh 6vw;animation:fpulse 1.6s ease-in-out infinite}
-.far .fw{font:800 6vh 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
-.far .fx{font:800 9vh/1.12 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.far .fgot{align-self:stretch;height:18vh;border:0;border-radius:9vh;background:#fff;color:var(--urg);font:800 8vh 'DM Sans',sans-serif;cursor:pointer}
+.far .fring{position:absolute;inset:0;background:var(--urg);color:#fff;display:flex;flex-direction:column;justify-content:center;gap:calc(4*var(--u,1vh));padding:calc(6*var(--u,1vh)) 6vw;animation:fpulse 1.6s ease-in-out infinite}
+.far .fw{font:800 calc(6*var(--u,1vh)) 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
+.far .fx{font:800 calc(9*var(--u,1vh))/1.12 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.far .fgot{align-self:stretch;height:calc(18*var(--u,1vh));border:0;border-radius:calc(9*var(--u,1vh));background:#fff;color:var(--urg);font:800 calc(8*var(--u,1vh)) 'DM Sans',sans-serif;cursor:pointer}
 
-.far .fbar{flex:none;display:flex;align-items:center;gap:2vw;background:var(--urg);color:#fff;border-radius:3vh;padding:1.5vh 1.5vw 1.5vh 3vw;animation:fpulse 1.6s ease-in-out infinite}
-.far .fbar span{flex:1;font:800 5vh/1.15 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.far .fgot2{flex:none;height:11vh;padding:0 4vw;border:0;border-radius:6vh;background:#fff;color:var(--urg);font:800 5.5vh 'DM Sans',sans-serif;cursor:pointer}
+.far .fbar{flex:none;display:flex;align-items:center;gap:2vw;background:var(--urg);color:#fff;border-radius:calc(3*var(--u,1vh));padding:calc(1.5*var(--u,1vh)) 1.5vw calc(1.5*var(--u,1vh)) 3vw;animation:fpulse 1.6s ease-in-out infinite}
+.far .fbar span{flex:1;font:800 calc(5*var(--u,1vh))/1.15 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.far .fgot2{flex:none;height:calc(11*var(--u,1vh));padding:0 4vw;border:0;border-radius:calc(6*var(--u,1vh));background:#fff;color:var(--urg);font:800 calc(5.5*var(--u,1vh)) 'DM Sans',sans-serif;cursor:pointer}
 @keyframes fpulse{0%,100%{background:#C2452F}50%{background:#D9622F}}
 `;
