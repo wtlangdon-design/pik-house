@@ -10,7 +10,7 @@ views:
       - type: custom:pik-plants-card
         entity: todo.plants
         groups:
-          - { name: Kitchen, sensor: sensor.gw1200b_soil_moisture_1, dry: 30, dry_entity: input_number.pik_dry_kitchen }
+          - { name: Kitchen, sensor: sensor.gw1200b_soil_moisture_1, dry: 15, dry_entity: input_number.pik_dry_kitchen }
           - { name: Big aroids, sensor: sensor.gw1200b_soil_moisture_2, dry: 25, dry_entity: input_number.pik_dry_big_aroids }
           - { name: Bedroom & office, sensor: sensor.gw1200b_soil_moisture_3, dry: 25, dry_entity: input_number.pik_dry_bedroom_office }
           - { name: Trees & palms, sensor: sensor.gw1200b_soil_moisture_4, dry: 22, dry_entity: input_number.pik_dry_trees_palms }
