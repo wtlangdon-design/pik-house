@@ -15,7 +15,7 @@ import "./plants/plants-card";
 import "./cellar/cellar-card";
 import { energySheet, plantsSheet, homeSheet } from "./views";
 import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type Group, type PikState } from "./mock-data";
-import { cellarTotals, condWord, liveGroups, localStamp, num, parseDesc, parseQuiet, plantTotal, poolTimers, today, writeQuiet, type Hass, type LiveConfig, type TodoItem } from "./live";
+import { cellarTotals, condWord, fetchEvents, whenWord, type CalEvent, liveGroups, localStamp, num, parseDesc, parseQuiet, plantTotal, poolTimers, today, writeQuiet, type Hass, type LiveConfig, type TodoItem } from "./live";
 
 const FONTS = "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap";
 
@@ -96,6 +96,9 @@ export class PikHouseCard extends LitElement {
   private feedItems: TodoItem[] = [];
   private plantItems: TodoItem[] = [];
   private cellarItems: TodoItem[] = [];
+  private calEvents: CalEvent[] = [];
+  private calAt = 0;
+  private calBusy = false;
   private low: number | null = null;
   private unsubs: Array<() => void> = [];
   private subscribing = false;
@@ -125,7 +128,7 @@ export class PikHouseCard extends LitElement {
   set hass(hass: unknown) {
     const was = this.isMock;
     this._hass = hass;
-    if (!this.isMock) { if (!this.unsubs.length && !this.subscribing) this.subscribe(); this.requestUpdate(); }
+    if (!this.isMock) { if (!this.unsubs.length && !this.subscribing) this.subscribe(); this.refreshCal(); this.requestUpdate(); }
     else if (was !== this.isMock) this.requestUpdate();
   }
 
@@ -146,6 +149,15 @@ export class PikHouseCard extends LitElement {
     const got = await Promise.allSettled(subs);
     got.forEach((r) => { if (r.status === "fulfilled") this.unsubs.push(r.value); });
     this.subscribing = false;
+  }
+
+  /** Live: the shared calendar's next two weeks, refreshed every 10 minutes (and when the calendar first appears). */
+  private refreshCal(): void {
+    const id = this.C.calendar;
+    if (!id || !this.S(id) || this.calBusy || Date.now() - this.calAt < 600000) return;
+    this.calBusy = true;
+    fetchEvents(this.H, id).then((ev) => { this.calEvents = ev; this.calAt = Date.now(); this.requestUpdate(); })
+      .catch(() => { this.calAt = Date.now() - 480000; }).finally(() => { this.calBusy = false; });
   }
 
   private svc(domain: string, service: string, data: Record<string, unknown> = {}, target?: Record<string, unknown>): void {
@@ -652,7 +664,11 @@ export class PikHouseCard extends LitElement {
     const cel = Lv && this.C.cellar ? cellarTotals(this.cellarItems) : null;
     const liveFeed = Lv ? this.feedItems.filter((it) => it.status === "needs_action").map((it) => ({ it, j: parseDesc(it.description) })) : [];
     const dlv = liveFeed.find((x) => (x.j.id || "").startsWith("delivery-"));
-    const lots = Lv && this.C.airport ? this.C.airport.lots.map((l) => ({ name: l.name, n: num(this.S(l.entity)) })).filter((l) => l.n !== null) as Array<{ name: string; n: number }> : [];
+    const lots = Lv && this.C.airport ? this.C.airport.lots.map((l) => ({ name: l.name, short: l.short, n: num(this.S(l.entity)) })).filter((l) => l.n !== null) as Array<{ name: string; short?: string; n: number }> : [];
+    const nowMs = Date.now();
+    const upcoming = Lv ? this.calEvents.filter((ev) => Date.parse(ev.end || ev.start) > nowMs) : [];
+    const flight = upcoming.find((ev) => /\bflight\b/i.test(ev.summary) && /T/.test(ev.start) && Date.parse(ev.start) - nowMs < 864e5);
+    const calOn = Lv && !!this.C.calendar && !!this.S(this.C.calendar);
     const best = lots.find((l) => l.n > 0);
     const out = dlv
       ? (() => {
@@ -662,12 +678,12 @@ export class PikHouseCard extends LitElement {
           return { eb: app + (done ? "" : " · on the way"), big: done ? "Here" : eta ? eta[1] : "On its way", small: done ? "delivered" : "", line: (map ? "Tap for the live map · " : "") + (dlv.j.detail || what), map };
         })()
       : lots.length
-        ? { eb: (this.C.airport?.name || "RNO") + " parking", big: best ? String(best.n) : "Full", small: best ? best.name : "every lot", line: lots.filter((l) => l !== best).map((l) => l.name + " " + (l.n > 0 ? l.n : "full")).join(" · "), map: "" }
+        ? { eb: (this.C.airport?.name || "RNO") + (flight ? " · flight " + new Date(flight.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : " parking"), big: best ? String(best.n) : "Full", small: best ? best.short || best.name : "every lot", line: lots.filter((l) => l !== best).map((l) => (l.short || l.name) + " " + (l.n > 0 ? l.n : "full")).join(" · "), map: "" }
         : null;
     const nPebs = (np ? 1 : 0) + (hasEnergy ? 1 : 0) + 3 + (cel ? 1 : 0) + (out ? 1 : 0);
 
     // pik
-    const nowMs = Date.now();
+    // nowMs: set above
     const tlist = Lv ? poolTimers(this.H, this.C.timers || 12).slice(0, 3) : st.timers || [];
     const timerDone = tlist.some((x) => x.end <= nowMs);
     const pik: PikState = st.talk || (urgent || timerDone ? "alert" : st.muted ? "muted" : "rest");
@@ -760,6 +776,9 @@ export class PikHouseCard extends LitElement {
       // pebbles
       pebsCls: nPebs >= 6 ? "pebs five six" : nPebs >= 5 ? "pebs five" : "pebs",
       cel,
+      showUpc: Lv,
+      upcOn: calOn,
+      upc: upcoming.slice(0, 2).map((ev) => ({ when: whenWord(ev.start, nowMs), what: ev.summary, where: (ev.location || "").split(",")[0] })),
       celBig: cel ? String(cel.bottles) : "",
       celLine: cel ? (cel.bottles ? "Worth about $" + Math.round(cel.value).toLocaleString() : "Send Pik a bottle photo") : "",
       openCellar: () => this.navigate((this.C.cellar && this.C.cellar.path) || "/dashboard-cellar/cellar"),
@@ -884,6 +903,12 @@ export class PikHouseCard extends LitElement {
 ${v.outTemp ? html`<div class="wx"><b>${v.outTemp}</b>${v.outLine}${v.airShort ? html` · <span class=${v.airCls2}>${v.airShort}</span>` : nothing}</div>
 <div class="sep"></div>` : nothing}
 ${v.inside ? html`<div class="wx"><b>${v.inside}</b>inside</div>` : nothing}
+${v.showUpc ? html`<div class=${"upc" + (v.upcOn ? "" : " ph")}>
+<span class="eb">Coming up</span>
+${!v.upcOn ? html`<span class="ul">Plans you send Pik show here once the shared calendar is connected.</span>`
+  : v.upc.length ? v.upc.map((u) => html`<span class="ul"><b>${u.when}</b> ${u.what}${u.where ? html`<i> · ${u.where}</i>` : nothing}</span>`)
+  : html`<span class="ul">Nothing on the calendar this week.</span>`}
+</div>` : nothing}
 ${this.isMock ? html`<div class="demo">
 <button type="button" class="dbtn" @click=${v.next}>＋ ${v.demoLabel}</button>
 <button type="button" class=${v.dayBtnCls} @click=${v.previewDay}>${v.dayBtn}</button>
@@ -939,7 +964,7 @@ ${v.hasEnergy ? html`<button type="button" class=${v.pebEnCls} @click=${v.openEn
 </button>
 ${v.cel ? html`<button type="button" class="peb" @click=${v.openCellar}>
 <span class="eb">Cellar</span>
-<span class="pv">${v.celBig}<small>bottles</small></span>
+<span class="pv">${v.celBig}<small>${v.celBig === "1" ? "bottle" : "bottles"}</small></span>
 <span class="ps">${v.celLine}</span>
 </button>` : nothing}
 ${v.out ? html`<button type="button" class=${"peb outab" + (v.out.map ? " map" : "")} @click=${() => { if (v.out && v.out.map) window.open(v.out.map, "_blank", "noopener"); }}>

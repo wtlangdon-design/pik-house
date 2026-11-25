@@ -19,6 +19,12 @@ export const daylightStyles = css`
 .wx b{font:400 34px 'Instrument Serif',Georgia,serif;color:var(--ink)}
 .airok{color:#5E8A5A}.dark .airok{color:#ADDFB9}
 .demo{margin-left:auto;display:flex;gap:8px}
+.upc{margin-left:auto;min-width:0;max-width:470px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right}
+.upc .eb{margin-bottom:1px}
+.upc .ul{font:500 15px/1.3 'DM Sans',system-ui,sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.upc .ul b{font-weight:700}
+.upc .ul i{font-style:normal;color:var(--muted)}
+.upc.ph .ul{color:var(--muted);white-space:normal;font-size:14px;max-width:330px}
 .dbtn{height:44px;padding:0 14px;border-radius:22px;border:1px dashed var(--line);background:transparent;color:var(--muted);font:600 13px 'DM Sans',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
 .dbtn.on{border-style:solid;border-color:var(--ink);color:var(--ink)}
 .ghost{height:44px;padding:0 14px;border-radius:22px;border:1px dashed var(--line);background:transparent;color:var(--muted);font:600 13px 'DM Sans',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
@@ -275,6 +281,8 @@ export const adjustStyles = css`
 .flow .top{position:static;height:auto;flex-wrap:wrap;gap:8px 18px;pointer-events:auto}
 .flow .clock{font-size:46px}
 .flow .wx b{font-size:28px}
+.flow .upc{margin-left:0;width:100%;align-items:flex-start;text-align:left;max-width:none}
+.flow .upc.ph .ul{max-width:none}
 .flow .stage{position:static;height:auto;gap:18px}
 .flow .bubble{min-width:0;height:auto;min-height:280px;padding:22px 24px 22px}
 .flow .btitle{font-size:36px}
