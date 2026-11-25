@@ -9,12 +9,13 @@
 //   type: custom:pik-plants-card
 //   entity: todo.plants
 //   groups:                       # watering groups in route order, each with its soil sensor
-//     - { name: Kitchen, sensor: sensor.gw1200b_soil_moisture_1, dry: 30 }
+//     - { name: Kitchen, sensor: sensor.gw1200b_soil_moisture_1, dry: 30, dry_entity: input_number.pik_dry_kitchen }
+//       dry_entity (optional) holds the thirst line on the hub, shared with the house feed; dry is the fallback.
 //   mock: false                   # true = sample plants, nothing saved
 import { LitElement, html, nothing, type TemplateResult } from "lit";
 import { plantsStyles } from "./plants-styles";
 
-export interface PlantGroup { name: string; sensor?: string; dry?: number }
+export interface PlantGroup { name: string; sensor?: string; dry?: number; dry_entity?: string }
 export interface PlantsConfig { type: string; entity?: string; groups?: PlantGroup[]; mock?: boolean; title?: string }
 interface HState { state: string; attributes: Record<string, unknown>; last_changed: string }
 interface Hass {
@@ -206,6 +207,14 @@ export class PikPlantsCard extends LitElement {
     else if (a === "past") this.showPast = !this.showPast;
     else if (a === "back") { const p = this.plants().find((x) => x.uid === v); if (p) { p.gone = false; this.save(p, false); } }
     else if (a === "filter") this.filter = this.filter === v ? "" : v;
+    else if (a === "thr") {
+      const cfg = (this.config.groups || []).find((x) => x.name === v), t = this.thr(cfg);
+      if (cfg && cfg.dry_entity && t !== undefined && this.hass) {
+        const nv = Math.max(1, Math.min(60, t + Number(el.dataset.d || 0)));
+        this.hass.callService("input_number", "set_value", { value: nv }, { entity_id: cfg.dry_entity });
+        this.flash(v + ": water at " + nv + "% (the house screen uses it too).");
+      }
+    }
     this.bump();
   };
   private onInput = (e: Event): void => {
@@ -225,8 +234,20 @@ export class PikPlantsCard extends LitElement {
     const extra = [...new Set(this.plants().map((p) => p.group).filter((g) => g && !fromCfg.includes(g)))];
     return [...fromCfg, ...extra];
   }
-  private soil(g: string): { pct: number | null; dry: boolean } {
-    const cfg = (this.config.groups || []).find((x) => x.name === g);
+  /** The group's thirst line: the shared helper on the hub if there is one, else the config number. */
+  private thr(cfg?: PlantGroup): number | undefined {
+    if (!cfg) return undefined;
+    const e = cfg.dry_entity && this._hass ? this._hass.states[cfg.dry_entity] : undefined;
+    const n = e ? Number(e.state) : NaN;
+    return isFinite(n) && e ? n : cfg.dry;
+  }
+  private soil(g: string): { pct: number | null; dry: boolean; thr?: number; adj: boolean } {
+    const cfg0 = (this.config.groups || []).find((x) => x.name === g);
+    const t = this.thr(cfg0), adj = !this.isMock && !!cfg0?.dry_entity && !!this._hass?.states[cfg0.dry_entity];
+    const r = this.soil0(g, cfg0 ? Object.assign({}, cfg0, { dry: t }) : undefined);
+    return Object.assign(r, { thr: t, adj });
+  }
+  private soil0(g: string, cfg?: PlantGroup): { pct: number | null; dry: boolean } {
     const mockPct: Record<string, number> = { Kitchen: 31, "Big aroids": 44, "Tough guys": 9, "Desert cacti": 6 };
     if (this.isMock) { const n = mockPct[g]; return n === undefined ? { pct: null, dry: false } : { pct: n, dry: cfg?.dry !== undefined && n <= cfg.dry }; }
     if (!cfg || !cfg.sensor || !this._hass) return { pct: null, dry: false };
@@ -262,6 +283,7 @@ export class PikPlantsCard extends LitElement {
           return html`<section>
             <div class="gh"><h2>${g}</h2>
               ${s.pct !== null ? html`<span class="soil${s.dry ? " dry" : ""}"><span class="bar"><i style="width:${Math.min(100, s.pct)}%"></i></span>${s.pct}% soil moisture${s.dry ? " · time to water" : ""}</span>` : html`<span class="soil none">No sensor reading yet</span>`}
+              ${s.thr !== undefined && s.pct !== null ? html`<span class="thr">Water at ${s.thr}%${s.adj ? html`<button class="tb" data-a="thr" data-v=${g} data-d="-1" aria-label="Lower ${g}'s line">−</button><button class="tb" data-a="thr" data-v=${g} data-d="1" aria-label="Raise ${g}'s line">+</button>` : nothing}</span>` : nothing}
               <button class="lnk" data-a="add" data-v=${g}>+ Add</button></div>
             ${list.length ? html`<div class="grid">${list.map((p) => this.tile(p))}</div>` : html`<p class="empty">No plants in this group yet.</p>`}
           </section>`;

@@ -15,6 +15,19 @@
 input_text:
   pik_plants_quiet: { name: "Plants: groups watered or snoozed (group:until)", max: 255 }
 
+# Each watering group's thirst line (%): its sensor plant reading at or below this means water the group.
+# The Plants page and the house screen both read these; adjust with − / + on the Plants page.
+# Starting values: Kitchen 30, Big aroids 28, Bedroom & office 28, Trees & palms 25, Tough guys 12,
+# Jungle cacti 20, Desert cacti 8.
+input_number:
+  pik_dry_kitchen: { name: "Plants: Kitchen thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
+  pik_dry_big_aroids: { name: "Plants: Big aroids thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
+  pik_dry_bedroom_office: { name: "Plants: Bedroom & office thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
+  pik_dry_trees_palms: { name: "Plants: Trees & palms thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
+  pik_dry_tough_guys: { name: "Plants: Tough guys thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
+  pik_dry_jungle_cacti: { name: "Plants: Jungle cacti thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
+  pik_dry_desert_cacti: { name: "Plants: Desert cacti thirst line", min: 1, max: 60, step: 1, unit_of_measurement: "%", mode: box, icon: mdi:water-percent }
+
 script:
   feed_post:
     alias: "House feed: post a card"

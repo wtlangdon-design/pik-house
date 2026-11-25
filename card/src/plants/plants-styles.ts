@@ -23,6 +23,8 @@ section{margin:6px 0 22px}
 .gh h2{margin:0;font:700 20px 'DM Sans',sans-serif}
 .soil{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
 .soil.dry{color:var(--dry)}
+.thr{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:600}
+.thr .tb{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:none;color:inherit;font:700 15px/1 'DM Sans',sans-serif;cursor:pointer}
 .bar{width:80px;height:8px;border-radius:4px;background:var(--soft);overflow:hidden;display:inline-block}
 .bar i{display:block;height:100%;background:var(--green);border-radius:4px}
 .soil.dry .bar i{background:var(--dry)}
