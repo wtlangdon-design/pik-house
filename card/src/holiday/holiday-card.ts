@@ -401,10 +401,11 @@ export class PikHolidayCard extends LitElement {
   private placed(i: number): Place | undefined { return this.store.places().find((p) => p.i === i && this.alive(p)); }
   private runStart(u: Run): number { const t = this.taskById(u.from); return t ? this.ms(t) : 0; }
   private runEnd(u: Run): number { const t = this.taskById(u.from); return t ? this.at(t.day, addMin(u.until, this.shiftMin(t))).getTime() : 0; }
-  /** The plan's run for a station right now that nobody has put on yet (shown faded on the tile, even if its first part is ticked). */
+  /** The plan's run for a station right now that nobody has put on yet (shown faded on the tile, even if its first part is ticked).
+   *  It stays up past its planned end while its part still isn't ticked off, so a late start still shows where it goes. */
   private plannedNow(st: string) {
     const now = Date.now();
-    return this.runs.map((u, i) => ({ u, i })).find(({ u, i }) => u.st === st && !this.placed(i) && !this.store.isDone(u.to) && this.runStart(u) <= now && now < this.runEnd(u));
+    return this.runs.map((u, i) => ({ u, i })).find(({ u, i }) => u.st === st && !this.placed(i) && !this.store.isDone(u.to) && this.runStart(u) <= now && (now < this.runEnd(u) || !this.store.isDone(u.from)));
   }
   private plannedNext(st: string) {
     const now = Date.now();
