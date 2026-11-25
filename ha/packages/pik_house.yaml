@@ -213,11 +213,11 @@ automation:
         at: "15:00:00"
     actions:
       - action: weather.get_forecasts
-        target: { entity_id: weather.home }
+        target: { entity_id: weather.hallway_thermostat }
         data: { type: daily }
         response_variable: fc
       - variables:
-          low: "{{ (fc['weather.home'].forecast[0].templow | default(99)) | round(0) | int }}"
+          low: "{{ (fc['weather.hallway_thermostat'].forecast[0].templow | default(99)) | round(0) | int }}"
       - condition: "{{ low <= 32 }}"
       - action: script.feed_post
         data:
