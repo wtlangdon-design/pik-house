@@ -66,8 +66,11 @@ export const daylightStyles = css`
 .peek .pt{overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
 .peek:hover{border-color:var(--muted)}
 .urgent .peek{display:none}
-.q{font:italic 400 30px/1.2 'Instrument Serif',Georgia,serif;color:var(--muted);margin:26px 0 0}
-.ans{font:400 40px/1.15 'Instrument Serif',Georgia,serif;margin:18px 0 0}
+.q{font:italic 400 30px/1.2 'Instrument Serif',Georgia,serif;color:var(--muted);margin:26px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:none}
+.ans{font:400 40px/1.15 'Instrument Serif',Georgia,serif;margin:18px 0 0;min-height:0;overflow-y:auto;overflow-wrap:anywhere}
+.ans.s2{font-size:33px}
+.ans.s3{font-size:27px;line-height:1.2}
+.ans.s4{font-size:23px;line-height:1.25}
 .wait{font:600 13px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
 /* pebbles */
 .pebs{position:absolute;left:44px;right:44px;top:598px;height:166px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:14px}
