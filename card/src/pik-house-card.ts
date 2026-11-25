@@ -107,13 +107,21 @@ export class PikHouseCard extends LitElement {
   private rangSeen = new Set<string>();
   private size: "wide" | "mid" | "narrow" = "wide";
   private onResize = () => this.measure();
+  private _ro?: ResizeObserver;
 
   /** Which layout fits the screen: the fixed 1280×800 kitchen design, or one that flows for a phone. */
   private measure(): void {
     const forced = this.config.layout && this.config.layout !== "auto" ? this.config.layout : null;
-    const w = window.innerWidth;
-    const next = forced || (w >= 1150 ? "wide" : w >= 600 ? "mid" : "narrow");
+    // The room the card actually has (the sidebar and header take some), not just the window.
+    const r = this.isConnected ? this.getBoundingClientRect() : null;
+    const w = window.innerWidth - (r ? Math.max(0, r.left) : 0);
+    const hAvail = window.innerHeight - (r ? Math.max(0, r.top + (window.scrollY || 0)) : 0);
+    const next = forced || (w >= 1000 ? "wide" : w >= 600 ? "mid" : "narrow");
     if (next !== this.size) { this.size = next; this.toggleAttribute("flow", next !== "wide"); this.requestUpdate(); }
+    // The kitchen design is a fixed 1280×800: shrink it to fit rather than cut it off.
+    const z = next === "wide" ? Math.min(1, w / 1280, Math.max(0.6, hAvail / 800)) : 1;
+    const zs = z < 0.995 ? z.toFixed(3) : "";
+    if ((this.style as unknown as { zoom: string }).zoom !== zs) (this.style as unknown as { zoom: string }).zoom = zs;
   }
   private _ac?: AudioContext;
   private _last?: { count: number; curIdx: number; urgent: boolean };
@@ -236,6 +244,8 @@ export class PikHouseCard extends LitElement {
     loadFonts();
     this.measure();
     window.addEventListener("resize", this.onResize);
+    if (typeof ResizeObserver !== "undefined" && this.parentElement) { this._ro = new ResizeObserver(() => this.measure()); this._ro.observe(this.parentElement); }
+    window.setTimeout(() => this.measure(), 300);
     this._tick = window.setInterval(() => this.setState({ now: Date.now() }), 30000);
     // When nothing is urgent, Pik moves to the next item every 25 seconds (paused for a minute after you page by hand).
     this._cycle = window.setInterval(() => this.autoAdvance(), 25000);
@@ -246,6 +256,7 @@ export class PikHouseCard extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener("resize", this.onResize);
+    if (this._ro) { this._ro.disconnect(); this._ro = undefined; }
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
     clearInterval(this._tick);
@@ -990,7 +1001,7 @@ ${v.timers.length ? html`<div class="timers">${repeat(v.timers, (tm) => tm.id, (
 <div class=${v.bubbleCls} aria-live="polite">
 ${v.showTalk ? html`<div class="btop"><span class="eb">You asked</span></div>
 <p class="q">“${v.q}”</p>
-<p class="ans">${v.a}</p>` : nothing}
+<p class=${"ans " + (v.a.length > 260 ? "s4" : v.a.length > 170 ? "s3" : v.a.length > 100 ? "s2" : "s1")}>${v.a}</p>` : nothing}
 ${v.showCard ? html`<div class="btop"><span class="eb">${v.pagerTxt}</span><span class="pdots">${v.pdots.map((c) => html`<i class=${c}></i>`)}</span>${v.hasWaiting ? html`<span class="wait">· ${v.waiting} waiting for morning</span>` : nothing}
 <span class="nav"><button type="button" class=${v.prevCls} aria-label="Previous" @click=${v.goPrev}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button><button type="button" class=${v.nextCls} aria-label="Next" @click=${v.goNext}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button></span></div>
 <div class="cat"><i class="cd ${cur.cat}"></i><span class="eb">${cur.urgent ? html`<span class="utag">Urgent · </span>` : nothing}${cur.label}</span></div>
