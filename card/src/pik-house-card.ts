@@ -92,6 +92,8 @@ export class PikHouseCard extends LitElement {
   private _t2?: number;
   private _t3?: number;
   private _hold = 0;
+  private _vs = "";
+  private _hideOv?: number;
   // live mode
   private feedItems: TodoItem[] = [];
   private plantItems: TodoItem[] = [];
@@ -128,7 +130,7 @@ export class PikHouseCard extends LitElement {
   set hass(hass: unknown) {
     const was = this.isMock;
     this._hass = hass;
-    if (!this.isMock) { if (!this.unsubs.length && !this.subscribing) this.subscribe(); this.refreshCal(); this.requestUpdate(); }
+    if (!this.isMock) { if (!this.unsubs.length && !this.subscribing) this.subscribe(); this.refreshCal(); this.syncVoice(); this.requestUpdate(); }
     else if (was !== this.isMock) this.requestUpdate();
   }
 
@@ -146,6 +148,12 @@ export class PikHouseCard extends LitElement {
     if (this.C.plants_list) subs.push(c.subscribeMessage<{ items: TodoItem[] }>((m) => { this.plantItems = m.items || []; this.requestUpdate(); }, { type: "todo/item/subscribe", entity_id: this.C.plants_list }));
     if (this.C.cellar && this.C.cellar.list) subs.push(c.subscribeMessage<{ items: TodoItem[] }>((m) => { this.cellarItems = m.items || []; this.requestUpdate(); }, { type: "todo/item/subscribe", entity_id: this.C.cellar.list }));
     if (this.C.weather) subs.push(c.subscribeMessage<{ forecast?: Array<{ templow?: number }> }>((m) => { const f = (m.forecast || [])[0]; this.low = f && typeof f.templow === "number" ? Math.round(f.templow) : null; this.requestUpdate(); }, { type: "weather/subscribe_forecast", entity_id: this.C.weather, forecast_type: "daily" }));
+    const v = this.C.voice;
+    if (v && v.satellite && c.subscribeEvents) subs.push(c.subscribeEvents<{ data: { entity_id?: string; stt_text?: string; tts_text?: string } }>((e) => {
+      const d = e.data || {};
+      if (!this.V || d.entity_id !== v.satellite) return;
+      this.setState({ q: d.stt_text || this.st.q || "", a: d.tts_text || "" });
+    }, "voice_satellite_chat"));
     const got = await Promise.allSettled(subs);
     got.forEach((r) => { if (r.status === "fulfilled") this.unsubs.push(r.value); });
     this.subscribing = false;
@@ -158,6 +166,46 @@ export class PikHouseCard extends LitElement {
     this.calBusy = true;
     fetchEvents(this.H, id).then((ev) => { this.calEvents = ev; this.calAt = Date.now(); this.requestUpdate(); })
       .catch(() => { this.calAt = Date.now() - 480000; }).finally(() => { this.calBusy = false; });
+  }
+
+  /** Live voice: Pik's face follows the Voice Satellite (listening, thinking, speaking), and the answer stays up a few seconds after. */
+  private syncVoice(): void {
+    const v = this.V;
+    const e = v && this.S(v.satellite);
+    if (!e || e.state === this._vs) return;
+    const prev = this._vs;
+    this._vs = e.state;
+    const map: Record<string, Talk> = { listening: "listen", processing: "think", responding: "speak" };
+    const t = map[e.state];
+    if (t) {
+      clearTimeout(this._t3);
+      this.setState(t === "listen" && prev !== "responding" ? { talk: t, q: "", a: "" } : { talk: t });
+    } else if (this.st.talk) {
+      clearTimeout(this._t3);
+      if (this.st.talk === "speak" && this.st.a) this._t3 = window.setTimeout(() => this.setState({ talk: null }), 7000);
+      else this.setState({ talk: null });
+    }
+  }
+
+  /** The voice config, only on the screen whose browser is bound to that satellite (so a phone tap never wakes the kitchen). */
+  private get V(): { satellite: string; mute?: string } | undefined {
+    const v = this.C.voice;
+    if (!v || this.isMock) return undefined;
+    try { return localStorage.getItem("vs-satellite-entity") === v.satellite ? v : undefined; } catch (_) { return undefined; }
+  }
+
+  private get voiceMuted(): boolean {
+    const v = this.V;
+    const e = v ? this.S(v.satellite) : undefined;
+    return e ? !!(e.attributes && (e.attributes as Record<string, unknown>).muted) : !!this.st.muted;
+  }
+
+  /** Voice Satellite draws its own full-screen overlay; on this screen Pik's face does that job instead. */
+  private hideOverlay(on: boolean): void {
+    const el = document.getElementById("voice-satellite-ui");
+    if (!el) return;
+    if (on && el.style.display !== "none") { el.style.display = "none"; el.dataset.pikHidden = "1"; }
+    if (!on && el.dataset.pikHidden) { el.style.display = ""; delete el.dataset.pikHidden; }
   }
 
   private svc(domain: string, service: string, data: Record<string, unknown> = {}, target?: Record<string, unknown>): void {
@@ -192,6 +240,7 @@ export class PikHouseCard extends LitElement {
     // When nothing is urgent, Pik moves to the next item every 25 seconds (paused for a minute after you page by hand).
     this._cycle = window.setInterval(() => this.autoAdvance(), 25000);
     this._sec = window.setInterval(() => this.tickTimers(), 1000);
+    this._hideOv = window.setInterval(() => { if (this.V) this.hideOverlay(true); }, 400);
   }
 
   disconnectedCallback(): void {
@@ -202,6 +251,9 @@ export class PikHouseCard extends LitElement {
     clearInterval(this._tick);
     clearInterval(this._cycle);
     clearInterval(this._sec);
+    clearInterval(this._hideOv);
+    this.hideOverlay(false);
+    this._vs = "";
     clearTimeout(this._toastT);
     clearTimeout(this._idle);
     this.clearTalk();
@@ -498,7 +550,14 @@ export class PikHouseCard extends LitElement {
   /** Mock conversation: tapping Pik walks through listening, thinking and speaking. */
   private talk(): void {
     const st = this.st;
-    if (!this.isMock) { this.flash("Pik's voice isn't hooked up yet. For now, tap the buttons."); return; }
+    if (!this.isMock) {
+      const v = this.V;
+      if (!v || !this.S(v.satellite)) { this.flash("Pik's voice isn't hooked up on this screen. Say the wake word on the kitchen screen."); return; }
+      if (this.voiceMuted) { this.flash("My mic is off. Tap “Mic off” to turn it back on."); return; }
+      if (st.talk) return;
+      this.svc("voice_satellite", "wake", {}, { entity_id: v.satellite });
+      return;
+    }
     if (st.muted) { this.flash("My mic is off. Tap “Mic off” to turn it back on."); return; }
     if (st.talk) return;
     const i = (st.qi || 0) % QUESTIONS.length;
@@ -686,7 +745,8 @@ export class PikHouseCard extends LitElement {
     // nowMs: set above
     const tlist = Lv ? poolTimers(this.H, this.C.timers || 12).slice(0, 3) : st.timers || [];
     const timerDone = tlist.some((x) => x.end <= nowMs);
-    const pik: PikState = st.talk || (urgent || timerDone ? "alert" : st.muted ? "muted" : "rest");
+    const muted = this.voiceMuted;
+    const pik: PikState = st.talk || (urgent || timerDone ? "alert" : muted ? "muted" : "rest");
 
     const page = st.page || "home";
     // Count single lights (a room tile can hold several).
@@ -711,12 +771,16 @@ export class PikHouseCard extends LitElement {
       talk: () => this.talk(),
       q: st.q || "",
       a: st.talk === "listen" ? "Listening…" : st.talk === "think" ? "Thinking…" : (st.a || ""),
-      showMic: !Lv,
-      micCls: st.muted ? "mic off" : "mic",
-      micPressed: st.muted ? "true" : "false",
-      micLabel: st.muted ? "Mic off" : "Mic on",
-      micSlash: st.muted ? "M3 3l18 18" : "",
-      toggleMic: () => { this.clearTalk(); this.setState({ muted: !st.muted, talk: null }); },
+      showMic: !Lv || !!(this.V && this.S(this.V.satellite)),
+      micCls: muted ? "mic off" : "mic",
+      micPressed: muted ? "true" : "false",
+      micLabel: muted ? "Mic off" : "Mic on",
+      micSlash: muted ? "M3 3l18 18" : "",
+      toggleMic: () => {
+        const v = this.V;
+        if (Lv && v && this.S(v.satellite)) { this.svc("switch", muted ? "turn_off" : "turn_on", {}, { entity_id: v.mute || v.satellite.replace("assist_satellite.", "switch.") + "_mute" }); return; }
+        this.clearTalk(); this.setState({ muted: !st.muted, talk: null });
+      },
       clock,
       ampm,
       dayName: days[d.getDay()],

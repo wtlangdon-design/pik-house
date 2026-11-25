@@ -48,6 +48,7 @@ views:
           yard: { name: Rachio, standby: switch.outside_home_controller_standby }
         doorbell: { name: Gate, camera: camera.outside_gate_live_view }
         echo: { media_player: media_player.tyler_s_echo_show_15 }
+        voice: { satellite: assist_satellite.kitchen_screen }   # only on the browser bound to it in the Voice Satellite panel
         energy:   # Teslemetry: battery > 0 = discharging, grid > 0 = importing (the card flips them)
           solar_power: sensor.home_solar_power
           load_power: sensor.home_load_power

@@ -6,7 +6,7 @@ export interface HState { entity_id: string; state: string; attributes: Record<s
 export interface Hass {
   states: Record<string, HState>;
   callService(domain: string, service: string, data?: Record<string, unknown>, target?: Record<string, unknown>): Promise<unknown>;
-  connection?: { subscribeMessage<T>(cb: (m: T) => void, msg: Record<string, unknown>): Promise<() => void> };
+  connection?: { subscribeMessage<T>(cb: (m: T) => void, msg: Record<string, unknown>): Promise<() => void>; subscribeEvents?<T>(cb: (e: T) => void, type: string): Promise<() => void> };
   callWS?<T>(msg: Record<string, unknown>): Promise<T>;
 }
 export interface TodoItem { uid: string; summary: string; status: string; description?: string | null; due?: string | null }
@@ -29,6 +29,7 @@ export interface LiveConfig {
   holiday?: Array<{ name: string; path: string; from: string; to: string }>;
   cellar?: { list: string; path?: string }; // the wine cellar to-do list and its dashboard
   airport?: { name?: string; lots: Array<{ name: string; short?: string; entity: string }> }; // live parking sensors, best lot first
+  voice?: { satellite: string; mute?: string }; // Voice Satellite on this screen: Pik's face shows listening/thinking/speaking and the overlay is hidden
   calendar?: string; // the shared calendar (e.g. calendar.tyler_charlie); until it exists the header shows a placeholder
 }
 
