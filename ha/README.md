@@ -115,7 +115,7 @@ agent, and add this paragraph to the end of the instructions:
 - **Chromebook:** open the Thanksgiving dashboard and go full screen. Sound starts on (the
   speaker button at the top mutes it); if the browser holds it back, your first tap anywhere turns it on. Settings → Device → Power → while charging, keep the display on.
 - **Echo Show 15:** open Silk, go to the same address as on the Chromebook but ending in
-  `/echo` (for example `http://homeassistant.local:8123/dashboard-thanksgiving/echo`) and sign in.
+  `/echo` (on this hub: `http://homeassistant.local/dashboard-thanksgiving/echo`, no `:8123`) and sign in.
 
 **11. If you started on the Thanksgiving page.** On the page: **Plan & recipes → Settings** (at the
 bottom) **→ Copy progress for the hub**. On the hub: **Plan & recipes → Settings** → paste → **Bring it
