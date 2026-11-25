@@ -254,7 +254,7 @@ var Jt=globalThis,Zt=Jt.ShadowRoot&&(Jt.ShadyCSS===void 0||Jt.ShadyCSS.nativeSha
 @keyframes pkTalk{from{transform:scaleY(.35)}to{transform:scaleY(1.1)}}
 @media (prefers-reduced-motion: reduce){.pik *{animation:none!important}}
 `,Ps=B`
-:host{display:block;width:1280px;height:800px;font-size:16px;font-weight:400;font-style:normal;line-height:normal;letter-spacing:normal;text-transform:none;text-align:start;white-space:normal}
+:host{display:block;position:relative;z-index:0;isolation:isolate;width:1280px;height:800px;font-size:16px;font-weight:400;font-style:normal;line-height:normal;letter-spacing:normal;text-transform:none;text-align:start;white-space:normal}
 `,Bs=B`
 /* Phone layouts ("flow"): the same parts stacked so they fit a narrower screen.
    mid = an unfolded Galaxy Z Fold or a small tablet; narrow = a phone, or the Fold's cover screen. */

@@ -261,7 +261,7 @@ export const daylightStyles = css`
 // Additions for running inside a custom element. They reset inherited text settings to
 // the browser defaults the prototype relies on, so a host page (Home Assistant) can't leak in.
 export const hostStyles = css`
-:host{display:block;width:1280px;height:800px;font-size:16px;font-weight:400;font-style:normal;line-height:normal;letter-spacing:normal;text-transform:none;text-align:start;white-space:normal}
+:host{display:block;position:relative;z-index:0;isolation:isolate;width:1280px;height:800px;font-size:16px;font-weight:400;font-style:normal;line-height:normal;letter-spacing:normal;text-transform:none;text-align:start;white-space:normal}
 `;
 
 // Deliberate differences from the prototype, each for a behavior SPEC.md asks for.
