@@ -1665,11 +1665,13 @@
     ],
     [
      "1½ cups",
-     "aged white cheddar, shredded"
+     "aged white cheddar, shredded",
+     "for the sauce"
     ],
     [
      "1 cup",
-     "gruyère, shredded"
+     "gruyère, shredded",
+     "for the sauce"
     ],
     [
      "⅓ cup",
@@ -1702,15 +1704,18 @@
     ],
     [
      "½ cup",
-     "aged white cheddar"
+     "aged white cheddar, shredded",
+     "for the top"
     ],
     [
      "½ cup",
-     "gruyère"
+     "gruyère, shredded",
+     "for the top"
     ],
     [
      "⅓ cup",
-     "pecorino romano, grated"
+     "pecorino romano, grated",
+     "for the top"
     ],
     [
      "—",
@@ -1777,7 +1782,7 @@
     },
     {
      "d": "wed",
-     "t": "Shred the cheddar and gruyère; grate the pecorino. Refrigerate.",
+     "t": "Shred all the cheddar (2 cups) and gruyère (1½ cups); grate the pecorino. Keep two containers: sauce (1½ cups cheddar + 1 cup gruyère) and top (½ cup cheddar + ½ cup gruyère + the pecorino). Refrigerate.",
      "min": 15,
      "ing": [
       [
