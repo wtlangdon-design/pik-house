@@ -37,6 +37,9 @@ input_text:
   kitchen_timer_10: { name: "Kitchen timer 10 label", max: 255 }
   kitchen_timer_11: { name: "Kitchen timer 11 label", max: 255 }
   kitchen_timer_12: { name: "Kitchen timer 12 label", max: 255 }
+  # Which Echos Pik speaks on: their announce entities, comma-separated
+  # (e.g. notify.kitchen_echo_announce). Empty = every Echo (never Fire TVs or speaker groups).
+  pik_announce_echos: { name: "Pik: Echos that announce", max: 255 }
 
 input_boolean:
   # On = finished timers stay quiet on the Echos (the screens still ring). Off by default.
@@ -177,7 +180,7 @@ script:
 
   pik_announce:
     alias: "Pik: announce"
-    description: Says a short message on every Echo, and optionally pushes it to both phones.
+    description: Says a short message on the chosen Echos (every Echo if none are chosen), and optionally pushes it to both phones.
     mode: queued
     max: 20
     fields:
@@ -185,7 +188,17 @@ script:
       phones: { description: Also push to both phones, default: false, selector: { boolean: null } }
     sequence:
       - variables:
-          echos: "{{ integration_entities('alexa_devices') | select('match', '^notify\\..*_announce$') | list }}"
+          # The Echos chosen in "Pik: Echos that announce"; if none are set, every real Echo
+          # (Fire TVs and speaker groups left out, so nothing interrupts the TV or is said twice).
+          echos: >-
+            {% set all = integration_entities('alexa_devices') | select('match', '^notify\\..*_announce$') | list %}
+            {% set picked = states('input_text.pik_announce_echos') | replace(' ', '') | lower %}
+            {% set picked = [] if picked in ['', 'unknown', 'unavailable'] else picked.split(',') | select | list %}
+            {% if picked %}{{ all | select('in', picked) | list }}
+            {% else %}{% set ns = namespace(e=[]) %}
+              {%- for x in all if (device_attr(x, 'model') or '') is search('(?i)echo') %}{% set ns.e = ns.e + [x] %}{% endfor %}
+              {{- ns.e }}
+            {% endif %}
           # Phones with the Home Assistant app: notify.mobile_app_<device name>.
           apps: >-
             {{ integration_entities('mobile_app') | map('device_id') | reject('none') | unique
