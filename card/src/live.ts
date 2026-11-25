@@ -7,6 +7,7 @@ export interface Hass {
   states: Record<string, HState>;
   callService(domain: string, service: string, data?: Record<string, unknown>, target?: Record<string, unknown>): Promise<unknown>;
   connection?: { subscribeMessage<T>(cb: (m: T) => void, msg: Record<string, unknown>): Promise<() => void> };
+  callWS?<T>(msg: Record<string, unknown>): Promise<T>;
 }
 export interface TodoItem { uid: string; summary: string; status: string; description?: string | null; due?: string | null }
 
@@ -27,7 +28,8 @@ export interface LiveConfig {
   energy?: { solar_power?: string; load_power?: string; battery_power?: string; grid_power?: string; battery_level?: string; grid_status?: string; capacity_kwh?: number };
   holiday?: Array<{ name: string; path: string; from: string; to: string }>;
   cellar?: { list: string; path?: string }; // the wine cellar to-do list and its dashboard
-  airport?: { name?: string; lots: Array<{ name: string; entity: string }> }; // live parking sensors, best lot first
+  airport?: { name?: string; lots: Array<{ name: string; short?: string; entity: string }> }; // live parking sensors, best lot first
+  calendar?: string; // the shared calendar (e.g. calendar.tyler_charlie); until it exists the header shows a placeholder
 }
 
 /** Cellar totals from the wine cellar list: bottles we still have and what they're worth. */
@@ -121,4 +123,27 @@ export function today(): string { const d = new Date(); return d.getFullYear() +
 export function localStamp(ms: number): string {
   const d = new Date(ms), p = (x: number) => String(x).padStart(2, "0");
   return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":00";
+}
+
+/** Upcoming events from a calendar entity, via calendar.get_events. */
+export interface CalEvent { summary: string; start: string; end: string; location?: string; description?: string }
+export async function fetchEvents(hass: Hass, entity: string, days = 14): Promise<CalEvent[]> {
+  if (!hass.callWS) return [];
+  const now = new Date();
+  const r = await hass.callWS<{ response: Record<string, { events: CalEvent[] }> }>({
+    type: "call_service", domain: "calendar", service: "get_events", target: { entity_id: entity },
+    service_data: { start_date_time: now.toISOString(), end_date_time: new Date(now.getTime() + days * 864e5).toISOString() }, return_response: true,
+  });
+  const ev = (r && r.response && r.response[entity] && r.response[entity].events) || [];
+  return ev.slice().sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+}
+/** "Tonight 7 PM", "Tomorrow 7:30 PM", "Sat 7 PM", "Sat" (all day). */
+export function whenWord(start: string, nowMs = Date.now()): string {
+  const allDay = !/T/.test(start);
+  const d = allDay ? new Date(start + "T12:00:00") : new Date(start);
+  const day0 = new Date(nowMs); day0.setHours(0, 0, 0, 0);
+  const diff = Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() - day0.getTime()) / 864e5);
+  const t = allDay ? "" : " " + d.toLocaleTimeString([], { hour: "numeric", minute: d.getMinutes() ? "2-digit" : undefined }).replace(":00", "");
+  const dayW = diff <= 0 ? (allDay ? "Today" : d.getHours() >= 17 ? "Tonight" : "Today") : diff === 1 ? "Tomorrow" : diff < 7 ? d.toLocaleDateString([], { weekday: "short" }) : d.toLocaleDateString([], { month: "short", day: "numeric" });
+  return dayW + t;
 }
