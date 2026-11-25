@@ -1996,35 +1996,36 @@
    "name": "Orange cranberry sauce (original orange/maple)",
    "tag": "Ambitious Kitchen",
    "gf": "Gluten-free",
-   "yield": "About 1½ cups",
+   "yield": "About 2¼ cups",
    "active": "5 min",
-   "passive": "15 min simmer, cool",
+   "passive": "15–20 min simmer, cool",
    "src": [
     "Ambitious Kitchen",
     "https://www.ambitiouskitchen.com/15-minute-homemade-orange-cranberry-sauce-naturally-sweetened/"
    ],
    "equip": [
-    "Small pot with lid",
+    "Medium pot with lid",
     "Zester",
     "Airtight container",
     "Serving bowl"
    ],
    "ingr": [
     [
-     "1 lb",
-     "cranberries"
+     "24 oz",
+     "cranberries",
+     "all of them (1½× the recipe)"
     ],
     [
-     "1 cup",
+     "1½ cups",
      "fresh-squeezed orange juice",
-     "≈3–4 oranges"
+     "≈5–6 oranges; top up with the bottled OJ if short"
     ],
     [
-     "½ cup",
+     "¾ cup",
      "pure maple syrup"
     ],
     [
-     "1 tsp",
+     "1½ tsp",
      "vanilla"
     ],
     [
@@ -2039,8 +2040,8 @@
    "flags": [
     [
      "note",
-     "Kept original",
-     "No alcohol, no spicy version. Bottled orange juice was ordered but isn't used unless you say so."
+     "Made 1½×",
+     "24 oz of cranberries, so everything is scaled 1½×. No alcohol, no spicy version. Bottled OJ only to top up the juice."
     ]
    ],
    "steps": [
@@ -2070,7 +2071,7 @@
     },
     {
      "d": "wed",
-     "t": "Cover, lower the heat and simmer until berries pop and it coats a spoon.",
+     "t": "Cover, lower the heat and simmer until berries pop and it coats a spoon (a few minutes longer than usual with the bigger batch).",
      "min": 2,
      "tm": [
       "Cranberries: popped and thick?",
@@ -4413,14 +4414,14 @@
   ],
   [
    "Fresh oranges",
-   "≈4 (1 cup juice + zest)",
+   "≈6 (1½ cups juice + zest)",
    "On a grocery order",
    "chk",
-   "Needed by Wednesday 9:00 AM for the cranberry sauce. If they don't come, the bottled OJ is the backup."
+   "Needed by Wednesday 9:00 AM for the cranberry sauce (1½ batch). If you're short, top up the juice with the bottled OJ."
   ],
   [
    "Maple syrup",
-   "½ cup (cranberry)",
+   "¾ cup (cranberry, 1½ batch)",
    "Not in your notes",
    "chk",
    ""
