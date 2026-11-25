@@ -49,6 +49,7 @@ function site() {
   cpSync("preview/index.html", "../docs/index.html");
   cpSync("preview/holiday.html", "../docs/holiday.html");
   cpSync("preview/plants.html", "../docs/plants.html");
+  cpSync("preview/privacy.html", "../docs/privacy.html");
   cpSync("dist/smoke-standalone.html", "../docs/smoking.html");
   cpSync("dist/pik-house-card.js", "../docs/pik-house-card.js");
   cpSync("../reference/daylight-reference.html", "../docs/reference.html");

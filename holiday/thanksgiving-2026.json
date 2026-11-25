@@ -322,7 +322,7 @@
    "gf": "Gluten-free",
    "yield": "17.6-lb bird, dinner for 7 plus leftovers",
    "active": "1 hr 30 min over 3 days",
-   "passive": "≈13 hr brine, overnight drying, ≈3½–4½ hr smoke, 30–45 min rest",
+   "passive": "≈11½ hr brine, overnight drying, ≈3½–4½ hr smoke, 30–45 min rest",
    "src": [
     "Jeff Phillips, smoking-meat.com",
     "https://www.smoking-meat.com/spatchcocked-turkey-with-herbed-butter"
@@ -421,13 +421,13 @@
     [
      "note",
      "Brine strength",
-     "Your first salt brine (last year was buttermilk), so this uses the recipe's brine: 230 g per gallon, the usual reading of its \"1 cup coarse kosher\". It brines 13 hours (in at 8 PM Tuesday, out at 9 AM Wednesday) instead of the recipe's 10, so expect it a little saltier. Weigh the salt on your kitchen scale. The drippings will be saltier than last year's, so taste before they go in the gravy."
+     "Your first salt brine (last year was buttermilk), so this uses the recipe's brine: 230 g per gallon, the usual reading of its \"1 cup coarse kosher\". It brines about 11½ hours (in at 9:30 PM Tuesday, out at 9 AM Wednesday) instead of the recipe's 10, so expect it a touch saltier. Weigh the salt on your kitchen scale. The drippings will be saltier than last year's, so taste before they go in the gravy."
     ]
    ],
    "steps": [
     {
      "d": "tue",
-     "t": "7:00 PM: unwrap. Pull out the neck and giblets and any pop-up timer or leg clip; keep the neck in the fridge for the gravy. Make sure it's fully thawed (no ice inside). Read the label: if it says enhanced, basted, self-basting or kosher, or lists a salt solution, it's already salted: skip the brine (tick off the brine steps), pat it dry and keep it uncovered on the rack in the fridge until Thursday.",
+     "t": "8:30 PM: unwrap. Pull out the neck and giblets and any pop-up timer or leg clip; keep the neck in the fridge for the gravy. Make sure it's fully thawed (no ice inside). Read the label: if it says enhanced, basted, self-basting or kosher, or lists a salt solution, it's already salted: skip the brine (tick off the brine steps), pat it dry and keep it uncovered on the rack in the fridge until Thursday.",
      "min": 10,
      "ing": []
     },
@@ -455,7 +455,7 @@
     },
     {
      "d": "tue",
-     "t": "8:00 PM: turkey into the brining bag, brine over it until covered, seal, into the fridge or a cooler packed with ice (check it stays at or below 40°F).",
+     "t": "9:30 PM: turkey into the brining bag, brine over it until covered, seal, into the fridge or a cooler packed with ice (check it stays at or below 40°F).",
      "min": 10,
      "tm": [
       "Turkey: out of the brine",
@@ -850,7 +850,7 @@
    "steps": [
     {
      "d": "tue",
-     "t": "7:30 PM: take both loaves out of their bags and leave them out on the counter, uncovered, to dry whole until Thursday (about 48 hours).",
+     "t": "9:00 PM: take both loaves out of their bags and leave them out on the counter, uncovered, to dry whole until Thursday (about 48 hours).",
      "min": 2,
      "ing": [
       [
@@ -2475,7 +2475,7 @@
   {
    "id": "tue_1900_turkey",
    "day": "tue",
-   "hm": "19:00",
+   "hm": "20:30",
    "lane": "prep",
    "rid": "turkey",
    "text": "Unwrap the turkey, giblets out, and read the label (already salted? skip the brine).",
@@ -2497,10 +2497,10 @@
   {
    "id": "tue_1900_brine",
    "day": "tue",
-   "hm": "19:00",
+   "hm": "20:30",
    "lane": "prep",
    "rid": "turkey",
-   "text": "Mix brine (230 g salt + ¾ cup brown sugar per gallon) and get it to 40°F or colder by 8:00 (lots of ice).",
+   "text": "Mix brine (230 g salt + ¾ cup brown sugar per gallon) and get it to 40°F or colder by 9:30 (lots of ice).",
    "tm": null,
    "steps": [
     [
@@ -2513,7 +2513,7 @@
   {
    "id": "tue_1915_turkey",
    "day": "tue",
-   "hm": "19:15",
+   "hm": "20:45",
    "lane": "prep",
    "rid": "turkey",
    "text": "Spatchcock the turkey.",
@@ -2535,7 +2535,7 @@
   {
    "id": "tue_1930_stuffing",
    "day": "tue",
-   "hm": "19:30",
+   "hm": "21:00",
    "lane": "prep",
    "rid": "stuffing",
    "text": "Bread out of the bags; leave both loaves out on the counter to dry whole until Thursday.",
@@ -2557,13 +2557,13 @@
   {
    "id": "tue_2000_turkey",
    "day": "tue",
-   "hm": "20:00",
+   "hm": "21:30",
    "lane": "fridge",
    "rid": "turkey",
    "text": "Turkey into the brine (fridge, or cooler with ice at 40°F or colder).",
    "tm": [
     "Turkey: out of the brine",
-    780,
+    690,
     "done"
    ],
    "steps": [
@@ -2583,7 +2583,7 @@
   {
    "id": "tue_2100_turkey",
    "day": "tue",
-   "hm": "21:00",
+   "hm": "22:30",
    "lane": "fridge",
    "rid": "turkey",
    "text": "Clear one full fridge shelf for the turkey's drying tray (from Wednesday 9:00).",
@@ -4500,7 +4500,7 @@
   "Turkey arrived Tuesday: 17.6 lb, fresh, no added salt solution, partly icy from shipping (the fridge and the cold brine finish the thaw). Thursday it goes on at 10:00, 15 minutes earlier than planned for a 16 lb bird.",
   "Two cooks: A runs the turkey, oven and gravy; B runs the potatoes, pasta, mac sauce, sprouts and cold dishes. Burners (5-burner stove): 1 potatoes · 2 pasta, then free as a spare · 3 mac sauce, then brown butter · 4 gravy · 5 sprouts skillet.",
   "Appetizers at 2:30 PM and dessert around 5:15 PM are proposed defaults.",
-  "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), 13 hours: in at 8 PM Tuesday, out at 9 AM Wednesday (the recipe says 10, so expect a slightly saltier bird and drippings). Your first salt brine (last year was buttermilk), so the strength is the recipe's.",
+  "Brine: 230 g salt per gallon (the recipe's 1 cup coarse kosher, read as Morton), about 11½ hours: in at 9:30 PM Tuesday, out at 9 AM Wednesday (the recipe says 10, so expect a touch saltier bird and drippings). Your first salt brine (last year was buttermilk), so the strength is the recipe's.",
   "Hot hold: the pellet smoker set to 200°F once the turkey comes off, verified with a thermometer at 140°F or hotter. Foil alone doesn't count. You've confirmed it holds 200°F.",
   "Reno is about 4,500 ft up: water boils cooler and takes longer, so every boil has a tenderness check, not a fixed time. The cake gets no altitude changes.",
   "Fridge: one full shelf for the turkey Wednesday night, plus room for the green beans, cake, cranberry, eggs, lobster, vinaigrette, dressing and gravy base. A cooler with ice can take drinks and produce.",
