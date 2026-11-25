@@ -1,0 +1,137 @@
+# Energy: the Powerwall 3 (through Teslemetry) and the weather service's alerts.
+#
+#   - Free power: once a day, when the Powerwall is full and the panels have been sending more than
+#     2 kW to the grid for 15 minutes, with a clear sky and at least 2.5 hours of sun left, a card
+#     suggests running the laundry or the dishwasher. "Not today" puts it away until tomorrow.
+#   - Storm days: the National Weather Service's alerts for the house (checked every 15 minutes).
+#     When a winter storm, blizzard, ice storm, high wind or red flag (fire weather, when NV Energy may
+#     shut power off) alert comes in, a card says whether Storm Watch is on, and offers to turn it on.
+#
+# Teslemetry's sign conventions: grid power > 0 = importing, < 0 = exporting; battery power > 0 = discharging.
+
+input_text:
+  pik_energy_free_day: { name: "Energy: day the free-power card last went up", max: 10 }
+
+rest:
+  - resource_template: >-
+      https://api.weather.gov/alerts/active?point={{ state_attr('zone.home', 'latitude') | round(4) }},{{ state_attr('zone.home', 'longitude') | round(4) }}
+    headers:
+      User-Agent: "PikHouse/1.0 (github.com/wtlangdon-design/pik-house)"
+      Accept: application/geo+json
+    scan_interval: 900
+    timeout: 20
+    sensor:
+      - name: "Weather alerts"
+        unique_id: pik_weather_alerts
+        icon: mdi:alert-outline
+        value_template: >-
+          {% set e = value_json.features | default([]) | map(attribute='properties.event') | unique | list %}
+          {{ (e | join(', ') if e else 'None')[:250] }}
+      - name: "Weather alert: storm"
+        unique_id: pik_weather_alert_storm
+        icon: mdi:weather-snowy-heavy
+        value_template: >-
+          {% set kinds = ['Blizzard Warning', 'Ice Storm Warning', 'Winter Storm Warning', 'Extreme Wind Warning', 'High Wind Warning', 'Red Flag Warning', 'Winter Storm Watch', 'High Wind Watch'] %}
+          {% set ns = namespace(e='None') %}
+          {% for k in kinds %}
+            {% if ns.e == 'None' and value_json.features | default([]) | selectattr('properties.event', 'eq', k) | list | count > 0 %}{% set ns.e = k %}{% endif %}
+          {% endfor %}{{ ns.e }}
+      - name: "Weather alert: storm ends"
+        unique_id: pik_weather_alert_storm_ends
+        device_class: timestamp
+        value_template: >-
+          {% set kinds = ['Blizzard Warning', 'Ice Storm Warning', 'Winter Storm Warning', 'Extreme Wind Warning', 'High Wind Warning', 'Red Flag Warning', 'Winter Storm Watch', 'High Wind Watch'] %}
+          {% set ns = namespace(t=none) %}
+          {% for k in kinds %}
+            {% set f = value_json.features | default([]) | selectattr('properties.event', 'eq', k) | list %}
+            {% if ns.t is none and f %}{% set ns.t = f[0].properties.ends or f[0].properties.expires %}{% endif %}
+          {% endfor %}{{ ns.t if ns.t else none }}
+
+script:
+  pik_storm_watch_on:
+    alias: "Energy: turn on Storm Watch"
+    description: "Turns on the Powerwall's Storm Watch, so it fills up ahead of a storm."
+    mode: single
+    sequence:
+      - action: switch.turn_on
+        target: { entity_id: switch.home_storm_watch }
+
+automation:
+  - id: pik_energy_free_power
+    alias: "Energy: free power card"
+    description: "Powerwall full + exporting over 2 kW for 15 minutes + clear sky + 2.5 hours of sun left: suggest the laundry or dishwasher, once a day."
+    mode: single
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.home_grid_power
+        below: -2
+        for: { minutes: 15 }
+    conditions:
+      - condition: time
+        after: "09:00:00"
+        before: "15:30:00"
+      - "{{ states('input_text.pik_energy_free_day') != now().strftime('%Y-%m-%d') }}"
+      - "{{ states('sensor.home_percentage_charged') | float(0) > 95 }}"
+      - "{{ is_state('binary_sensor.home_grid_status', 'on') }}"
+      - "{{ states('weather.hallway_thermostat') in ['sunny', 'clear-night', 'partlycloudy'] }}"
+      - "{{ (as_datetime(state_attr('sun.sun', 'next_setting')) - now()).total_seconds() > 9000 }}"
+    actions:
+      - variables:
+          kw: "{{ (states('sensor.home_grid_power') | float(0) | abs) | round(1) }}"
+          hrs: "{{ [3, ((as_datetime(state_attr('sun.sun', 'next_setting')) - now()).total_seconds() / 3600 - 1.5) | int] | min }}"
+      - action: input_text.set_value
+        target: { entity_id: input_text.pik_energy_free_day }
+        data: { value: "{{ now().strftime('%Y-%m-%d') }}" }
+      - action: script.feed_post
+        data:
+          id: free-power
+          title: "Free power for the next {{ hrs }} hours"
+          category: energy
+          label: "Energy · the Powerwall is full"
+          detail: >-
+            The panels are sending {{ kw }} kW to the grid. Good time for the laundry or the dishwasher:
+            they'll run on sunshine instead of the grid.
+          primary_label: Got it
+          primary_toast: Run them now while it's free.
+          secondary_label: Not today
+          secondary_kind: dismiss
+          expires_hours: "{{ hrs }}"
+
+  - id: pik_energy_storm_day
+    alias: "Energy: storm day check"
+    description: "A storm-type weather alert comes in: say whether Storm Watch is on, and offer to turn it on."
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: sensor.pik_weather_alert_storm
+    conditions:
+      - "{{ trigger.to_state.state not in ['None', 'unknown', 'unavailable', ''] }}"
+      - "{{ trigger.from_state is not none and trigger.from_state.state != trigger.to_state.state }}"
+    actions:
+      - variables:
+          ev: "{{ trigger.to_state.state }}"
+          ends: "{{ states('sensor.pik_weather_alert_storm_ends') }}"
+          until: >-
+            {% set t = as_datetime(ends) if ends not in ['unknown', 'unavailable', 'None', ''] else none %}
+            {% if t %}{% set t = as_local(t) %}{{ ' until ' ~ t.strftime('%A') ~ ' ' ~ (t.strftime('%I') | int) ~ t.strftime(' %p') }}{% endif %}
+          hours: >-
+            {% set t = as_datetime(ends) if ends not in ['unknown', 'unavailable', 'None', ''] else none %}
+            {{ [[((t - now()).total_seconds() / 3600) | round(1), 1] | max, 72] | min if t else 24 }}
+          fire: "{{ ev == 'Red Flag Warning' }}"
+          sw_on: "{{ is_state('switch.home_storm_watch', 'on') }}"
+      - action: script.feed_post
+        data:
+          id: storm-day
+          title: "{{ ev }}{{ until }}"
+          category: weather
+          label: "Weather · the Powerwall"
+          detail: >-
+            {% if fire %}Fire weather: NV Energy sometimes shuts power off on days like this. {% endif %}
+            {% if sw_on %}Storm Watch is on, so the Powerwall will fill up before it hits ({{ states('sensor.home_percentage_charged') }}% now).
+            {% else %}Storm Watch is off, so the Powerwall may not be full if the power goes out ({{ states('sensor.home_percentage_charged') }}% now).{% endif %}
+          primary_label: "{{ 'Got it' if sw_on else 'Turn on Storm Watch' }}"
+          primary_script: "{{ '' if sw_on else 'script.pik_storm_watch_on' }}"
+          primary_toast: "{{ 'Good. The Powerwall has it.' if sw_on else 'Storm Watch is on. The Powerwall will fill up.' }}"
+          secondary_label: "{{ '' if sw_on else 'Not now' }}"
+          secondary_kind: dismiss
+          expires_hours: "{{ hours }}"
