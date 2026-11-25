@@ -101,7 +101,7 @@ export function homeSheet(v: Vals) {
 <div class="shead"><span class="eb">Around the house</span><h2 class="stitle">Home</h2><button type="button" class="done" @click=${v.goHome}>Done</button></div>
 <div class="sbody hsb">
 <div class="hpanel"><span class="eb">Heat · Ecobee</span><div class="thermo"><button type="button" class="tbtn" aria-label="Lower the heat" @click=${v.down}>−</button><span class="tset">${v.setpoint}°</span><button type="button" class="tbtn" aria-label="Raise the heat" @click=${v.up}>+</button></div><div class="csub">${v.thermoSub}</div></div>
-<div class="hpanel"><span class="eb">${v.lightsEb}</span><div class="lights">${v.lights.map((l) => html`<button type="button" class=${l.cls} aria-pressed=${l.pressed} @click=${l.toggle}><i></i>${l.name}<small>${l.state}</small></button>`)}</div></div>
+<div class="hpanel"><span class="eb">${v.lightsEb}</span><div class=${v.lightsCls}>${v.lights.map((l) => html`<button type="button" class=${l.cls} aria-pressed=${l.pressed} @click=${l.toggle}><i></i>${l.name}<small>${l.state}</small></button>`)}</div></div>
 <div class="hpanel"><span class="eb">Outside</span>
 ${v.hasYard ? html`<div class="zone"><b>${v.yardName}</b><span>${v.yardTxt}</span>${v.hasYardBtn ? html`<button type="button" class="zbtn" @click=${v.toggleYard}>${v.yardBtn}</button>` : nothing}</div>` : nothing}
 ${v.hasGarden ? html`<div class="zone"><b>${v.gardenName}</b><span>${v.gardenTxt}</span><button type="button" class="zbtn" @click=${v.toggleGarden}>${v.gardenBtn}</button></div>` : nothing}

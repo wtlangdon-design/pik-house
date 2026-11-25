@@ -606,8 +606,11 @@ export class PikHouseCard extends LitElement {
       this.flash("Set to " + t + "°.");
     };
     const lightList = Lv
-      ? (this.C.lights || []).map((l) => { const on = l.entities.some((x) => this.S(x)?.state === "on"); return { name: l.name, on, toggle: () => this.svc("homeassistant", on ? "turn_off" : "turn_on", {}, { entity_id: l.entities }) }; })
-      : ([["living", "Living room"], ["porch", "Porch"], ["kitchen", "Kitchen"]] as const).map((x) => ({ name: x[1] as string, on: s.lights[x[0]], toggle: () => { const nl = Object.assign({}, s.lights); nl[x[0]] = !s.lights[x[0]]; this.setState({ lights: nl }); } }));
+      ? (this.C.lights || []).map((l) => {
+          const n = l.entities.filter((x) => this.S(x)?.state === "on").length, on = n > 0;
+          return { name: l.name, on, n, of: l.entities.length, toggle: () => this.svc("homeassistant", on ? "turn_off" : "turn_on", {}, { entity_id: l.entities }) };
+        })
+      : ([["living", "Living room"], ["porch", "Porch"], ["kitchen", "Kitchen"]] as const).map((x) => ({ name: x[1] as string, on: s.lights[x[0]], n: s.lights[x[0]] ? 1 : 0, of: 1, toggle: () => { const nl = Object.assign({}, s.lights); nl[x[0]] = !s.lights[x[0]]; this.setState({ lights: nl }); } }));
     const yard = Lv ? this.C.watering?.yard : undefined, garden = Lv ? this.C.watering?.garden : undefined;
     const paused = (z?: { standby: string }) => !!z && this.S(z.standby)?.state === "on";
     const waterWord = Lv ? [yard ? (paused(yard) ? "Yard paused" : "Yard on schedule") : "", garden ? (paused(garden) ? "garden paused" : "garden on") : ""].filter(Boolean).join(" · ") : s.garden ? "Freeze skip · drip on" : "Both paused";
@@ -632,7 +635,9 @@ export class PikHouseCard extends LitElement {
     const pik: PikState = st.talk || (urgent || timerDone ? "alert" : st.muted ? "muted" : "rest");
 
     const page = st.page || "home";
-    const nOn = lightList.filter((l) => l.on).length;
+    // Count single lights (a room tile can hold several).
+    const nOn = lightList.reduce((a, l) => a + l.n, 0);
+    const nLights = lightList.reduce((a, l) => a + l.of, 0);
     const stops = thirsty.map((g, i) => ({ n: i + 1, room: g.room, plants: g.plants }));
 
     const anyUrg = visibleIds.some(isUrg);
@@ -742,7 +747,8 @@ export class PikHouseCard extends LitElement {
       heatWord,
       insideLine: inside ? "It's " + inside + " inside" : "",
       nOn,
-      nLights: lightList.length,
+      nLights,
+      lightsCls: lightList.length > 4 ? "lights many" : "lights",
       waterWord,
 
       // sheets
@@ -794,7 +800,7 @@ export class PikHouseCard extends LitElement {
       lights: lightList.map((l) => ({
         name: l.name,
         cls: l.on ? "lp on" : "lp",
-        state: l.on ? "On" : "Off",
+        state: !l.on ? "Off" : l.of > 1 && l.n < l.of ? l.n + " of " + l.of + " on" : "On",
         pressed: l.on ? "true" : "false",
         toggle: l.toggle,
       })),
