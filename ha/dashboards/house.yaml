@@ -1,6 +1,7 @@
 # The house feed: Pik on the kitchen Chromebook, live (1280×800).
 # Data: the House feed list (todo.house_feed, filled by script.feed_post), the plant catalog and soil sensors,
-# the Ecobee, Leviton lights, Rachio, Ring, the Echo Show and the shared kitchen timers.
+# the Ecobee, Leviton lights, Rachio, Ring, the Echo Show, the shared kitchen timers, the wine cellar
+# (todo.wine_cellar) and RNO's live parking counts; an active Instacart/Grubhub/DoorDash delivery takes the parking tile's place.
 # A tile with nothing behind it hides (no Powerwall yet = no Energy tile).
 title: House
 views:
@@ -16,6 +17,14 @@ views:
         plants_list: todo.plants
         plants_quiet: input_text.pik_plants_quiet
         timers: 12
+        cellar: { list: todo.wine_cellar, path: /dashboard-cellar/cellar }
+        airport:
+          name: RNO
+          lots:
+            - { name: Long-Term Garage, entity: sensor.rno_parking_long_term_garage }
+            - { name: Park & Walk, entity: sensor.rno_parking_park_walk }
+            - { name: Long-Term Surface, entity: sensor.rno_parking_long_term_surface }
+            - { name: Short-Term, entity: sensor.rno_parking_short_term_garage }
         plant_groups:
           - { name: Kitchen, indicator: nerve plant, sensor: sensor.gw1200b_soil_moisture_1, dry: 30, dry_entity: input_number.pik_dry_kitchen }
           - { name: Big aroids, indicator: entry monstera, sensor: sensor.gw1200b_soil_moisture_2, dry: 28, dry_entity: input_number.pik_dry_big_aroids }

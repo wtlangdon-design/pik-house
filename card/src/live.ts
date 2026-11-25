@@ -26,6 +26,20 @@ export interface LiveConfig {
   timers?: number;
   energy?: { solar_power?: string; load_power?: string; battery_power?: string; grid_power?: string; battery_level?: string; grid_status?: string; capacity_kwh?: number };
   holiday?: Array<{ name: string; path: string; from: string; to: string }>;
+  cellar?: { list: string; path?: string }; // the wine cellar to-do list and its dashboard
+  airport?: { name?: string; lots: Array<{ name: string; entity: string }> }; // live parking sensors, best lot first
+}
+
+/** Cellar totals from the wine cellar list: bottles we still have and what they're worth. */
+export function cellarTotals(items: Array<{ status: string; description?: string | null }>): { bottles: number; value: number } {
+  let bottles = 0, value = 0;
+  items.forEach((it) => {
+    if (it.status !== "needs_action") return;
+    bottles++;
+    const m = (it.description || "").match(/^\s*Value\s*:\s*\$?([0-9.,]+)/im);
+    if (m) value += parseFloat(m[1].replace(/,/g, "")) || 0;
+  });
+  return { bottles, value };
 }
 
 export const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");

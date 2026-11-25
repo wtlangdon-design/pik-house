@@ -64,8 +64,11 @@ export const daylightStyles = css`
 .ans{font:400 40px/1.15 'Instrument Serif',Georgia,serif;margin:18px 0 0}
 .wait{font:600 13px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
 /* pebbles */
-.pebs{position:absolute;left:44px;right:44px;top:598px;height:166px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:14px}
+.pebs{position:absolute;left:44px;right:44px;top:598px;height:166px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:14px}
+.peb{min-width:0}
 .pebs.five .pv{font-size:44px}
+.pebs.six{gap:10px}.pebs.six .peb{padding:16px 16px}.pebs.six .pv{font-size:38px}.pebs.six .ps{font-size:13px}
+.peb.outab{cursor:default}.peb.outab.map{cursor:pointer;border-color:var(--muted)}.peb.outab .pv{font-size:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.peb .ps{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .peb{box-sizing:border-box;padding:18px 20px;border-radius:28px;border:1px solid var(--line);background:var(--soft);color:var(--ink);text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;transition:background .4s,border-color .4s}
 .peb:hover{border-color:var(--muted)}
 .peb.out{border-color:var(--urg);background:var(--urgBg)}

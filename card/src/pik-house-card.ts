@@ -15,7 +15,7 @@ import "./plants/plants-card";
 import "./cellar/cellar-card";
 import { energySheet, plantsSheet, homeSheet } from "./views";
 import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type Group, type PikState } from "./mock-data";
-import { condWord, liveGroups, localStamp, num, parseDesc, parseQuiet, plantTotal, poolTimers, today, writeQuiet, type Hass, type LiveConfig, type TodoItem } from "./live";
+import { cellarTotals, condWord, liveGroups, localStamp, num, parseDesc, parseQuiet, plantTotal, poolTimers, today, writeQuiet, type Hass, type LiveConfig, type TodoItem } from "./live";
 
 const FONTS = "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap";
 
@@ -95,6 +95,7 @@ export class PikHouseCard extends LitElement {
   // live mode
   private feedItems: TodoItem[] = [];
   private plantItems: TodoItem[] = [];
+  private cellarItems: TodoItem[] = [];
   private low: number | null = null;
   private unsubs: Array<() => void> = [];
   private subscribing = false;
@@ -140,6 +141,7 @@ export class PikHouseCard extends LitElement {
     const subs: Array<Promise<() => void>> = [];
     if (this.C.feed_list) subs.push(c.subscribeMessage<{ items: TodoItem[] }>((m) => { this.feedItems = m.items || []; this.requestUpdate(); }, { type: "todo/item/subscribe", entity_id: this.C.feed_list }));
     if (this.C.plants_list) subs.push(c.subscribeMessage<{ items: TodoItem[] }>((m) => { this.plantItems = m.items || []; this.requestUpdate(); }, { type: "todo/item/subscribe", entity_id: this.C.plants_list }));
+    if (this.C.cellar && this.C.cellar.list) subs.push(c.subscribeMessage<{ items: TodoItem[] }>((m) => { this.cellarItems = m.items || []; this.requestUpdate(); }, { type: "todo/item/subscribe", entity_id: this.C.cellar.list }));
     if (this.C.weather) subs.push(c.subscribeMessage<{ forecast?: Array<{ templow?: number }> }>((m) => { const f = (m.forecast || [])[0]; this.low = f && typeof f.templow === "number" ? Math.round(f.templow) : null; this.requestUpdate(); }, { type: "weather/subscribe_forecast", entity_id: this.C.weather, forecast_type: "daily" }));
     const got = await Promise.allSettled(subs);
     got.forEach((r) => { if (r.status === "fulfilled") this.unsubs.push(r.value); });
@@ -382,6 +384,7 @@ export class PikHouseCard extends LitElement {
           else if (p.open === "energy" || p.open === "plants") this.go(p.open);
           else if (p.open === "home") this.go("controls");
           else if (p.open && p.open.startsWith("/")) this.navigate(p.open);
+          else if (p.open && /^https:\/\//.test(p.open)) { window.open(p.open, "_blank", "noopener"); return; } // a live map link: keep the card
           done();
           if (c.toast) this.flash(c.toast);
         },
@@ -645,6 +648,24 @@ export class PikHouseCard extends LitElement {
     const batH = (e.pct * 0.34).toFixed(1);
     const gridFlow = e.grid === null ? "flow w-grid" : e.grid > 0 ? "flow w-grid on rev" : e.grid < 0 ? "flow w-grid on" : "flow w-grid";
 
+    // cellar and out & about (live only, when configured)
+    const cel = Lv && this.C.cellar ? cellarTotals(this.cellarItems) : null;
+    const liveFeed = Lv ? this.feedItems.filter((it) => it.status === "needs_action").map((it) => ({ it, j: parseDesc(it.description) })) : [];
+    const dlv = liveFeed.find((x) => (x.j.id || "").startsWith("delivery-"));
+    const lots = Lv && this.C.airport ? this.C.airport.lots.map((l) => ({ name: l.name, n: num(this.S(l.entity)) })).filter((l) => l.n !== null) as Array<{ name: string; n: number }> : [];
+    const best = lots.find((l) => l.n > 0);
+    const out = dlv
+      ? (() => {
+          const what = dlv.it.summary.replace(/^[^:]*:\s*/, ""), app = (dlv.j.label || "Delivery").split(" · ")[0];
+          const eta = what.match(/arriving\s+(.+)/i), done = /delivered/i.test(what);
+          const map = dlv.j.primary && dlv.j.primary.open && /^https:\/\//.test(dlv.j.primary.open) ? dlv.j.primary.open : "";
+          return { eb: app + (done ? "" : " · on the way"), big: done ? "Here" : eta ? eta[1] : "On its way", small: done ? "delivered" : "", line: (map ? "Tap for the live map · " : "") + (dlv.j.detail || what), map };
+        })()
+      : lots.length
+        ? { eb: (this.C.airport?.name || "RNO") + " parking", big: best ? String(best.n) : "Full", small: best ? best.name : "every lot", line: lots.filter((l) => l !== best).map((l) => l.name + " " + (l.n > 0 ? l.n : "full")).join(" · "), map: "" }
+        : null;
+    const nPebs = (np ? 1 : 0) + (hasEnergy ? 1 : 0) + 3 + (cel ? 1 : 0) + (out ? 1 : 0);
+
     // pik
     const nowMs = Date.now();
     const tlist = Lv ? poolTimers(this.H, this.C.timers || 12).slice(0, 3) : st.timers || [];
@@ -737,7 +758,12 @@ export class PikHouseCard extends LitElement {
       }),
 
       // pebbles
-      pebsCls: np && hasEnergy ? "pebs five" : "pebs",
+      pebsCls: nPebs >= 6 ? "pebs five six" : nPebs >= 5 ? "pebs five" : "pebs",
+      cel,
+      celBig: cel ? String(cel.bottles) : "",
+      celLine: cel ? (cel.bottles ? "Worth about $" + Math.round(cel.value).toLocaleString() : "Send Pik a bottle photo") : "",
+      openCellar: () => this.navigate((this.C.cellar && this.C.cellar.path) || "/dashboard-cellar/cellar"),
+      out,
       np,
       npTitle: np ? np.title : "",
       npSub: np ? (np.playing ? "" : "Paused · ") + "Echo Show" + (np.sub ? " · " + np.sub : "") : "",
@@ -911,6 +937,16 @@ ${v.hasEnergy ? html`<button type="button" class=${v.pebEnCls} @click=${v.openEn
 <span class="gd">${v.gdots.map((c) => html`<i class=${c}></i>`)}</span>
 <span class="ps">${v.plShort}</span>
 </button>
+${v.cel ? html`<button type="button" class="peb" @click=${v.openCellar}>
+<span class="eb">Cellar</span>
+<span class="pv">${v.celBig}<small>bottles</small></span>
+<span class="ps">${v.celLine}</span>
+</button>` : nothing}
+${v.out ? html`<button type="button" class=${"peb outab" + (v.out.map ? " map" : "")} @click=${() => { if (v.out && v.out.map) window.open(v.out.map, "_blank", "noopener"); }}>
+<span class="eb">${v.out.eb}</span>
+<span class="pv">${v.out.big}<small>${v.out.small}</small></span>
+<span class="ps">${v.out.line}</span>
+</button>` : nothing}
 <button type="button" class="peb" @click=${v.openControls}>
 <span class="eb">Heat · Ecobee</span>
 <span class="pv">${v.setpoint}°<small>${v.heatWord}</small></span>
