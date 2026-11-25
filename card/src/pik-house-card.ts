@@ -58,6 +58,7 @@ interface State {
   idx?: number;
   toast?: string;
   vol?: number;
+  capIdx?: number;
 }
 
 export interface Energy {
@@ -94,6 +95,7 @@ export class PikHouseCard extends LitElement {
   private _hold = 0;
   private _vs = "";
   private _hideOv?: number;
+  private _cap?: number;
   // live mode
   private feedItems: TodoItem[] = [];
   private plantItems: TodoItem[] = [];
@@ -160,7 +162,8 @@ export class PikHouseCard extends LitElement {
     if (v && v.satellite && c.subscribeEvents) subs.push(c.subscribeEvents<{ data: { entity_id?: string; stt_text?: string; tts_text?: string } }>((e) => {
       const d = e.data || {};
       if (!this.V || d.entity_id !== v.satellite) return;
-      this.setState({ q: d.stt_text || this.st.q || "", a: d.tts_text || "" });
+      this.setState({ q: d.stt_text || this.st.q || "", a: d.tts_text || "", capIdx: 0 });
+      if (this.st.talk === "speak") this.startCaps();
     }, "voice_satellite_chat"));
     const got = await Promise.allSettled(subs);
     got.forEach((r) => { if (r.status === "fulfilled") this.unsubs.push(r.value); });
@@ -187,7 +190,8 @@ export class PikHouseCard extends LitElement {
     const t = map[e.state];
     if (t) {
       clearTimeout(this._t3);
-      this.setState(t === "listen" && prev !== "responding" ? { talk: t, q: "", a: "" } : { talk: t });
+      this.setState(t === "listen" && prev !== "responding" ? { talk: t, q: "", a: "", capIdx: 0 } : { talk: t });
+      if (t === "speak") this.startCaps();
     } else if (this.st.talk) {
       clearTimeout(this._t3);
       if (this.st.talk === "speak" && this.st.a) this._t3 = window.setTimeout(() => this.setState({ talk: null }), 7000);
@@ -206,6 +210,46 @@ export class PikHouseCard extends LitElement {
     const v = this.V;
     const e = v ? this.S(v.satellite) : undefined;
     return e ? !!(e.attributes && (e.attributes as Record<string, unknown>).muted) : !!this.st.muted;
+  }
+
+  /** A long answer, cut into bubble-sized pages at sentence breaks (each about two lines of the big type). */
+  private capText(): string {
+    const p = this.pages(this.st.a || "");
+    return p.length > 1 ? p[Math.min(this.st.capIdx || 0, p.length - 1)] : (this.st.a || "");
+  }
+
+  private capDots(): string[] {
+    const p = this.pages(this.st.a || "");
+    const i = Math.min(this.st.capIdx || 0, p.length - 1);
+    return p.length > 1 ? p.map((_x, k) => (k === i ? "on" : "")) : [];
+  }
+
+  private pages(a: string): string[] {
+    const sents = (a || "").match(/[^.!?]+[.!?]+["”’)]*\s*|[^.!?]+$/g) || [a || ""];
+    const out: string[] = [];
+    let cur = "";
+    sents.forEach((x) => {
+      const t = x.trim();
+      if (!t) return;
+      if (cur && (cur + " " + t).length > 150) { out.push(cur); cur = t; } else cur = cur ? cur + " " + t : t;
+    });
+    if (cur) out.push(cur);
+    return out.length ? out : [""];
+  }
+
+  /** While Pik speaks, show the answer a page at a time, paced to the speech (about 2.6 words a second). */
+  private startCaps(): void {
+    clearTimeout(this._cap);
+    this.setState({ capIdx: 0 });
+    this.nextCap();
+  }
+
+  private nextCap(): void {
+    const p = this.pages(this.st.a || "");
+    const i = this.st.capIdx || 0;
+    if (i >= p.length - 1) return;
+    const words = p[i].split(/\s+/).length;
+    this._cap = window.setTimeout(() => { this.setState({ capIdx: i + 1 }); this.nextCap(); }, Math.max(2400, (words / 2.6) * 1000));
   }
 
   /** Voice Satellite draws its own full-screen overlay; on this screen Pik's face does that job instead. */
@@ -263,6 +307,7 @@ export class PikHouseCard extends LitElement {
     clearInterval(this._cycle);
     clearInterval(this._sec);
     clearInterval(this._hideOv);
+    clearTimeout(this._cap);
     this.hideOverlay(false);
     this._vs = "";
     clearTimeout(this._toastT);
@@ -781,7 +826,8 @@ export class PikHouseCard extends LitElement {
       pillCls: pik === "alert" ? "pill alert" : "pill",
       talk: () => this.talk(),
       q: st.q || "",
-      a: st.talk === "listen" ? "Listening…" : st.talk === "think" ? "Thinking…" : (st.a || ""),
+      a: st.talk === "listen" ? "Listening…" : st.talk === "think" ? "Thinking…" : this.capText(),
+      capDots: st.talk === "speak" || st.talk === null ? this.capDots() : [],
       showMic: !Lv || !!(this.V && this.S(this.V.satellite)),
       micCls: muted ? "mic off" : "mic",
       micPressed: muted ? "true" : "false",
@@ -999,7 +1045,7 @@ ${pikArt(v.pikAria)}
 ${v.timers.length ? html`<div class="timers">${repeat(v.timers, (tm) => tm.id, (tm) => html`<div class=${tm.cls}><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle class="tr-bg" cx="32" cy="32" r="26"></circle><circle class="tr-fg" cx="32" cy="32" r="26" style=${tm.dash}></circle></svg><div class="tt"><b>${tm.left}</b><span>${tm.label}</span></div><button type="button" class="tx" aria-label=${tm.aria} @click=${tm.stop}>${tm.btn}</button></div>`)}</div>` : nothing}
 </div>
 <div class=${v.bubbleCls} aria-live="polite">
-${v.showTalk ? html`<div class="btop"><span class="eb">You asked</span></div>
+${v.showTalk ? html`<div class="btop"><span class="eb">You asked</span>${v.capDots.length ? html`<span class="pdots">${v.capDots.map((c) => html`<i class=${c}></i>`)}</span>` : nothing}</div>
 <p class="q">“${v.q}”</p>
 <p class=${"ans " + (v.a.length > 260 ? "s4" : v.a.length > 170 ? "s3" : v.a.length > 100 ? "s2" : "s1")}>${v.a}</p>` : nothing}
 ${v.showCard ? html`<div class="btop"><span class="eb">${v.pagerTxt}</span><span class="pdots">${v.pdots.map((c) => html`<i class=${c}></i>`)}</span>${v.hasWaiting ? html`<span class="wait">· ${v.waiting} waiting for morning</span>` : nothing}
