@@ -115,7 +115,9 @@ agent, and add this paragraph to the end of the instructions:
 - **Chromebook:** open the Thanksgiving dashboard and go full screen. Sound starts on (the
   speaker button at the top mutes it); if the browser holds it back, your first tap anywhere turns it on. Settings → Device → Power → while charging, keep the display on.
 - **Echo Show 15:** open Silk, go to the same address as on the Chromebook but ending in
-  `/echo` (on this hub: `http://homeassistant.local/dashboard-thanksgiving/echo`, no `:8123`) and sign in.
+  `/echo` (on this hub the Echo needs the number address: `http://192.168.1.106/dashboard-thanksgiving/echo`) and sign in.
+  It shows the **far view**: big type for reading from the stove (the time, what to do now, what's next, timers,
+  the turkey's temperatures, and a full-screen alarm with one big **Got it**). Recipes and burners stay on the Chromebook.
 
 **11. If you started on the Thanksgiving page.** On the page: **Plan & recipes → Settings** (at the
 bottom) **→ Copy progress for the hub**. On the hub: **Plan & recipes → Settings** → paste → **Bring it
