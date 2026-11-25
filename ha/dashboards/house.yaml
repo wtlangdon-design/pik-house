@@ -24,9 +24,14 @@ views:
           - { name: Tough guys, indicator: big ZZ in the yellow pot, sensor: sensor.gw1200b_soil_moisture_5, dry: 12 }
           - { name: Jungle cacti, indicator: blooming Christmas cactus, sensor: sensor.gw1200b_soil_moisture_6, dry: 20 }
           - { name: Desert cacti, indicator: tall euphorbia, sensor: sensor.gw1200b_soil_moisture_7, dry: 8 }
-        lights:
+        lights:   # every Leviton light, by room (the tile counts single lights)
           - { name: Kitchen, entities: [light.kitchen_cans, light.kitchen_chandelier, light.bar] }
           - { name: Living room, entities: [light.living_room_chandelier, light.living_room_cans] }
+          - { name: Dining room, entities: [light.dining_room_chandelier, light.dining_room_cans] }
+          - { name: Bedroom, entities: [light.master_bedroom, light.master_closet] }
+          - { name: Master bath, entities: [light.bathroom, light.vanity, light.shower] }
+          - { name: Office, entities: [light.office, light.office_cans] }
+          - { name: Entry & hall, entities: [light.entryway, light.hallway] }
           - { name: Front door, entities: [light.front_door] }
         watering:
           yard: { name: Rachio, standby: switch.outside_home_controller_standby }

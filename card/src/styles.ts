@@ -196,6 +196,10 @@ export const daylightStyles = css`
 .lp{height:64px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 17px 'DM Sans',system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;gap:12px;padding:0 18px}
 .lp i{width:14px;height:14px;border-radius:50%;background:var(--line);display:block}
 .lp small{margin-left:auto;font:600 13px 'DM Sans',system-ui,sans-serif;color:var(--muted)}
+.lights.many{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lights.many .lp{height:50px;font-size:15px;padding:0 12px;gap:8px;border-radius:16px}
+.lights.many .lp i{width:11px;height:11px;flex:none}
+.lights.many .lp small{font-size:12px;white-space:nowrap}
 .lp.on{border-color:#D8953F}
 .lp.on i{background:#F0A54E;box-shadow:0 0 12px #F0A54E}
 .zone{padding:12px 0;border-bottom:1px solid var(--line)}
