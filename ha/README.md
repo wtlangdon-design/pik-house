@@ -279,3 +279,16 @@ the Echo reads the three temperatures out, and "the turkey is done" fires on its
 three. You can still type or say a reading to correct one. Before the turkey comes off, confirm
 with your instant-read thermometer in each spot.
 
+
+
+## The house feed (live)
+
+`dashboards/house.yaml` puts Pik's house feed on its own dashboard (`/dashboard-house/house`), wired to the real devices:
+weather, the Ecobee, the Leviton lights, Rachio, the Ring gate camera, the Echo Show 15, the shared kitchen timers, the
+seven soil sensors and the plant catalog. Tiles with nothing behind them hide (the Energy tile appears once the
+Powerwall is connected and `energy:` is added to the card).
+
+`packages/pik_house.yaml` adds the feed itself: the **House feed** Local To-do list holds the cards, `script.feed_post`
+posts or updates one, and automations post the doorbell (urgent), trash (Tuesdays 8 AM) and freeze (3 PM when tonight's
+low is 32°F or below) cards. Watered and Snooze on the plant card are shared through `input_text.pik_plants_quiet`.
+While a holiday plan is on (the card's `holiday:` dates), the feed shows a card that opens its cooking screen.

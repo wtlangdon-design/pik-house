@@ -13,14 +13,14 @@ import "./holiday/holiday-card";
 import "./smoke/smoke-card";
 import "./plants/plants-card";
 import { energySheet, plantsSheet, homeSheet } from "./views";
-import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type PikState } from "./mock-data";
+import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type Group, type PikState } from "./mock-data";
+import { condWord, liveGroups, localStamp, num, parseDesc, parseQuiet, plantTotal, poolTimers, today, writeQuiet, type Hass, type LiveConfig, type TodoItem } from "./live";
 
 const FONTS = "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap";
 
-export interface PikHouseCardConfig {
+export interface PikHouseCardConfig extends LiveConfig {
   type: string;
   mock?: boolean;
-  [key: string]: unknown;
 }
 
 interface NowPlaying { kind: string; title: string; sub: string; playing: boolean }
@@ -89,6 +89,13 @@ export class PikHouseCard extends LitElement {
   private _t2?: number;
   private _t3?: number;
   private _hold = 0;
+  // live mode
+  private feedItems: TodoItem[] = [];
+  private plantItems: TodoItem[] = [];
+  private low: number | null = null;
+  private unsubs: Array<() => void> = [];
+  private subscribing = false;
+  private rangSeen = new Set<string>();
   private _ac?: AudioContext;
   private _last?: { count: number; curIdx: number; urgent: boolean };
 
@@ -103,7 +110,30 @@ export class PikHouseCard extends LitElement {
   set hass(hass: unknown) {
     const was = this.isMock;
     this._hass = hass;
-    if (was !== this.isMock) this.requestUpdate();
+    if (!this.isMock) { if (!this.unsubs.length && !this.subscribing) this.subscribe(); this.requestUpdate(); }
+    else if (was !== this.isMock) this.requestUpdate();
+  }
+
+  private get H(): Hass { return this._hass as Hass; }
+  private get C(): PikHouseCardConfig { return this.config; }
+  private S(id?: string) { return id ? this.H.states[id] : undefined; }
+
+  /** Live: follow the feed list, the plant catalog and the daily forecast. */
+  private async subscribe(): Promise<void> {
+    const c = this.H && this.H.connection;
+    if (!c) return;
+    this.subscribing = true;
+    const subs: Array<Promise<() => void>> = [];
+    if (this.C.feed_list) subs.push(c.subscribeMessage<{ items: TodoItem[] }>((m) => { this.feedItems = m.items || []; this.requestUpdate(); }, { type: "todo/item/subscribe", entity_id: this.C.feed_list }));
+    if (this.C.plants_list) subs.push(c.subscribeMessage<{ items: TodoItem[] }>((m) => { this.plantItems = m.items || []; this.requestUpdate(); }, { type: "todo/item/subscribe", entity_id: this.C.plants_list }));
+    if (this.C.weather) subs.push(c.subscribeMessage<{ forecast?: Array<{ templow?: number }> }>((m) => { const f = (m.forecast || [])[0]; this.low = f && typeof f.templow === "number" ? Math.round(f.templow) : null; this.requestUpdate(); }, { type: "weather/subscribe_forecast", entity_id: this.C.weather, forecast_type: "daily" }));
+    const got = await Promise.allSettled(subs);
+    got.forEach((r) => { if (r.status === "fulfilled") this.unsubs.push(r.value); });
+    this.subscribing = false;
+  }
+
+  private svc(domain: string, service: string, data: Record<string, unknown> = {}, target?: Record<string, unknown>): void {
+    this.H.callService(domain, service, data, target).catch((e: Error) => this.flash("That didn't work: " + e.message));
   }
 
   get hass(): unknown {
@@ -136,6 +166,8 @@ export class PikHouseCard extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     clearInterval(this._tick);
     clearInterval(this._cycle);
     clearInterval(this._sec);
@@ -152,6 +184,13 @@ export class PikHouseCard extends LitElement {
   // ---- timers ----
 
   private tickTimers(): void {
+    if (!this.isMock) {
+      // Kitchen timers come from the shared pool; chime once when one finishes, and keep the countdown moving.
+      const pool = poolTimers(this.H, this.C.timers || 12);
+      pool.forEach((t) => { const k = t.id + "@" + t.end; if (t.rang && !this.rangSeen.has(k)) { this.rangSeen.add(k); if (Date.now() - t.end < 60000) this.chime(); } });
+      if (pool.length) this.setState({ sec: Date.now() });
+      return;
+    }
     const ts = this.st.timers || [];
     if (!ts.length) return;
     const now = Date.now();
@@ -239,8 +278,25 @@ export class PikHouseCard extends LitElement {
     return new Date(st.now || Date.now()).getHours();
   }
 
+  /** The plant groups with their current moisture: the demo's, or the real sensors and catalog. */
+  private grp(moist: Record<string, number>): Array<Group & { live?: boolean }> {
+    if (this.isMock) return GROUPS.map((g) => Object.assign({}, g, { m: moist[g.id], live: true }));
+    return liveGroups(this.C, this.H, this.plantItems);
+  }
+
+  private quiet(): Record<string, number> { return parseQuiet(this.S(this.C.plants_quiet)?.state); }
+
   private thirsty(moist: Record<string, number>) {
-    return GROUPS.filter((g) => moist[g.id] < g.thr);
+    const q = this.isMock ? {} : this.quiet(), now = Date.now();
+    return this.grp(moist).filter((g) => g.live && g.m < g.thr && !((q[g.id] || 0) > now));
+  }
+
+  /** Live: hide groups from the thirsty list for a while (Watered = 12 hours, Snooze = 1 day). */
+  private quietGroups(ids: string[], hours: number): void {
+    if (!this.C.plants_quiet) return;
+    const q = this.quiet(), until = Date.now() + hours * 3600000;
+    ids.forEach((id) => { q[id] = until; });
+    this.svc("input_text", "set_value", { value: writeQuiet(q) }, { entity_id: this.C.plants_quiet });
   }
 
   private energy(s: ReturnType<PikHouseCard["cur"]>, dark: boolean): Energy {
@@ -259,6 +315,69 @@ export class PikHouseCard extends LitElement {
     else if (dark) { e.main = "The Powerwall is running the house"; e.sub = "Solar's asleep until about 7 AM"; }
     else { e.main = "The sun is running the house"; e.sub = "Charging the Powerwall · sending the extra to the grid"; }
     return e;
+  }
+
+  /** Live energy from the Powerwall's sensors, or null when they aren't set up (the tile then hides). */
+  private liveEnergy(dark: boolean): Energy | null {
+    const en = this.C.energy;
+    if (!en || !this.S(en.battery_level)) return null;
+    const v = (id?: string) => num(this.S(id)) || 0;
+    // Home Assistant: battery power > 0 = discharging, grid (site) power > 0 = importing. Here: bat > 0 = charging, grid > 0 = exporting.
+    const out = !!en.grid_status && this.S(en.grid_status)?.state === "off";
+    const e: Energy = { solar: Math.max(0, v(en.solar_power)), house: Math.max(0, v(en.load_power)), bat: -v(en.battery_power), grid: out ? null : -v(en.grid_power), pct: Math.round(v(en.battery_level)) };
+    if (Math.abs(e.solar) > 50 || Math.abs(e.house) > 50) { e.solar /= 1000; e.house /= 1000; e.bat /= 1000; if (e.grid !== null) e.grid /= 1000; } // watts → kW
+    e.hours = e.bat < -0.05 ? Math.round((e.pct / 100) * (en.capacity_kwh || CAP) / -e.bat) : null;
+    if (out) { e.main = "Power's out. The Powerwall has it."; e.sub = e.hours ? "About " + e.hours + " hours left at this rate" : "Solar is keeping it charged"; }
+    else if (e.solar > 0.1 && e.solar >= e.house) { e.main = "The sun is running the house"; e.sub = e.bat > 0.05 ? "Charging the Powerwall" + ((e.grid || 0) > 0.05 ? " · sending the extra to the grid" : "") : (e.grid || 0) > 0.05 ? "Sending the extra to the grid" : "Right on balance"; }
+    else if (e.bat < -0.05) { e.main = "The Powerwall is running the house"; e.sub = dark ? "Solar's asleep until morning" : "Solar is topping it up a little"; }
+    else { e.main = "The grid is running the house"; e.sub = "The Powerwall is resting at " + e.pct + "%"; }
+    return e;
+  }
+
+  private navigate(path: string): void {
+    history.pushState(null, "", path);
+    window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+  }
+
+  private moreInfo(entityId: string): void {
+    this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId }, bubbles: true, composed: true }));
+  }
+
+  /** Live feed: the House feed list, plus the plant card and any holiday cooking mode that's on today. */
+  private liveEntries(thirsty: Array<Group>, plantCard: () => FeedCard) {
+    const out: Array<{ id: string; urgent: boolean; c: FeedCard; onPrimary: () => void; onSecondary: () => void }> = [];
+    const d = today();
+    (this.C.holiday || []).filter((x) => x.from <= d && d <= x.to).forEach((x) => {
+      out.push({ id: "holiday-" + x.path, urgent: false, c: { cat: "reminder", label: "Cooking mode", title: x.name + " cooking mode is on", detail: "Today's tasks, timers and recipes are on the " + x.name + " screen.", primary: "Open it", secondary: "Not now", toast: "" },
+        onPrimary: () => this.navigate(x.path), onSecondary: () => { this.flash("Okay. It's in the sidebar when you need it."); } });
+    });
+    const now = Date.now();
+    this.feedItems.filter((it) => it.status === "needs_action" && !(it.due && Date.parse(it.due) > now)).forEach((it) => {
+      const j = parseDesc(it.description);
+      if (j.expires && Date.parse(j.expires) < now) return;
+      const p = j.primary || {}, sec = j.secondary || null;
+      const done = () => this.svc("todo", "update_item", { item: it.uid, status: "completed" }, { entity_id: this.C.feed_list });
+      const c: FeedCard = { cat: j.category || "home", label: j.label || "", title: it.summary, detail: j.detail || "", primary: p.label || "Got it", secondary: sec && sec.label ? sec.label : undefined, urgent: !!j.urgent, toast: p.toast || "" };
+      out.push({ id: it.uid, urgent: !!j.urgent, c,
+        onPrimary: () => {
+          if (p.script && /^script\.[a-z0-9_]+$/.test(p.script)) this.svc("script", p.script.slice(7));
+          if (p.open === "camera" && this.C.doorbell?.camera) this.moreInfo(this.C.doorbell.camera);
+          else if (p.open === "energy" || p.open === "plants") this.go(p.open);
+          else if (p.open === "home") this.go("controls");
+          else if (p.open && p.open.startsWith("/")) this.navigate(p.open);
+          done();
+          if (c.toast) this.flash(c.toast);
+        },
+        onSecondary: () => {
+          if (sec && sec.kind === "snooze") { this.svc("todo", "update_item", { item: it.uid, due_datetime: localStamp(now + (sec.minutes || 60) * 60000) }, { entity_id: this.C.feed_list }); this.flash("Okay. I'll bring it back " + ((sec.minutes || 60) >= 1440 ? "tomorrow." : "in " + ((sec.minutes || 60) >= 60 ? Math.round((sec.minutes || 60) / 60) + " hour" + ((sec.minutes || 60) >= 120 ? "s." : ".") : (sec.minutes || 60) + " minutes."))); }
+          else { done(); this.flash("Okay, dismissed."); }
+        } });
+    });
+    if (thirsty.length) {
+      const c = plantCard();
+      out.push({ id: "plants", urgent: false, c, onPrimary: () => { this.quietGroups(thirsty.map((g) => g.id), 12); this.flash(c.toast); }, onSecondary: () => { this.quietGroups(thirsty.map((g) => g.id), 24); this.flash("Snoozed. I'll bring it back tomorrow."); } });
+    }
+    return out;
   }
 
   private flash(msg: string): void {
@@ -347,6 +466,7 @@ export class PikHouseCard extends LitElement {
   /** Mock conversation: tapping Pik walks through listening, thinking and speaking. */
   private talk(): void {
     const st = this.st;
+    if (!this.isMock) { this.flash("Pik's voice isn't hooked up yet. For now, tap the buttons."); return; }
     if (st.muted) { this.flash("My mic is off. Tap “Mic off” to turn it back on."); return; }
     if (st.talk) return;
     const i = (st.qi || 0) % QUESTIONS.length;
@@ -364,7 +484,9 @@ export class PikHouseCard extends LitElement {
     const st = this.st;
     const h = this.hour();
     const quiet = h >= 23 || h < 7;
-    const dark = h >= 17 || h < 7;
+    const Lv = !this.isMock;
+    const sunSt = Lv ? this.S(this.C.sun) : undefined;
+    const dark = Lv && sunSt && !st.mode ? sunSt.state === "below_horizon" : h >= 17 || h < 7;
     const d = new Date(st.now || Date.now());
     const mins = d.getMinutes();
     let clock: string, ampm: string;
@@ -375,55 +497,76 @@ export class PikHouseCard extends LitElement {
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     // plants
+    const G = this.grp(s.moist);
     const thirsty = this.thirsty(s.moist);
     const thirstyIds = thirsty.map((g) => g.id);
     const routeOn = thirsty.length >= 2;
-    const groups = GROUPS.map((g) => {
-      const m = s.moist[g.id];
-      const tone = m < g.thr ? "dry" : m >= 55 ? "wet" : "ok";
+    const qmap = this.isMock ? {} : this.quiet();
+    const groups = G.map((g) => {
+      const m = g.m;
+      const resting = (qmap[g.id] || 0) > Date.now();
+      const tone = !g.live ? "ok" : m < g.thr && !resting ? "dry" : m >= 55 ? "wet" : "ok";
       const stop = routeOn ? thirstyIds.indexOf(g.id) + 1 : 0;
-      const status = tone === "dry" ? "Thirsty" : tone === "wet" ? "Moist" : "Steady";
+      const status = !g.live ? "No reading" : tone === "dry" ? "Thirsty" : m < g.thr ? "Just watered" : tone === "wet" ? "Moist" : "Steady";
       return {
         id: g.id,
         cls: "prow " + tone,
         room: g.room,
         sub: g.ind.charAt(0).toUpperCase() + g.ind.slice(1) + " · " + g.plants + " plants",
-        m,
+        m: g.live ? m : 0,
+        mTxt: g.live ? m + "%" : "–",
         status,
-        fill: "width:" + Math.min(100, (m / 70) * 100).toFixed(0) + "%",
+        fill: "width:" + Math.min(100, (Math.max(0, m) / 70) * 100).toFixed(0) + "%",
         tick: "left:" + ((g.thr / 70) * 100).toFixed(0) + "%",
         hasStop: stop > 0,
         isDry: tone === "dry",
         stop,
         tap: () => {
-          if (s.moist[g.id] < g.thr) { this.water([g.id]); this.flash("Logged: " + g.room.toLowerCase() + " group watered."); }
-          else this.flash(g.room + " is at " + m + "%. No water needed.");
+          if (tone === "dry") {
+            if (this.isMock) this.water([g.id]); else this.quietGroups([g.id], 12);
+            this.flash("Logged: " + g.room.toLowerCase() + " group watered.");
+          } else this.flash(g.room + " is at " + m + "%. No water needed.");
         },
       };
     });
     const plantsNeeded = thirsty.reduce((a, g) => a + g.plants, 0);
+    const moistOf = (id: string) => (G.find((g) => g.id === id) || { m: 0 }).m;
+    const plantCard = (): FeedCard => {
+      const one = thirsty.length === 1;
+      return {
+        cat: "plant",
+        label: "Plants · soil sensors",
+        title: one ? (thirsty[0].id === "kitchen" ? "The nerve plant has fainted again" : "The " + thirsty[0].room.toLowerCase() + " group is thirsty") : thirsty.length + " plant groups need water",
+        detail: one ? "The " + thirsty[0].ind + " is at " + moistOf(thirsty[0].id) + "%. Water all " + thirsty[0].plants + " plants in the " + thirsty[0].room.toLowerCase() + " group" + (thirsty[0].id === "kitchen" ? ". It perks up within the hour." : ".") : thirsty.map((g) => g.room).join(" → ") + ". " + plantsNeeded + " plants, about " + plantsNeeded + " minutes. Tap Plants for the route.",
+        primary: one ? "Watered" : "Watered them all",
+        secondary: "Snooze 1 day",
+        toast: one ? "Logged: " + thirsty[0].room.toLowerCase() + " group watered." : "Logged: " + thirsty.length + " groups watered.",
+      };
+    };
 
-    // cards
-    const isUrg = (id: string) => !!(ALL[id] && ALL[id].urgent);
-    const ids = s.cards.filter((id) => id !== "plants" || thirsty.length > 0);
+    // cards: the demo's, or the live feed
+    type Entry = { id: string; urgent: boolean; c: FeedCard; onPrimary: () => void; onSecondary: () => void };
+    let entries: Entry[];
+    if (this.isMock) {
+      entries = s.cards.filter((id) => id !== "plants" || thirsty.length > 0).map((id) => {
+        const c = id === "plants" ? plantCard() : ALL[id];
+        return {
+          id, urgent: !!c.urgent, c,
+          onPrimary: () => { if (id === "plants") this.water(thirstyIds); this.resolve(id, c.toast, false, c.fx); },
+          onSecondary: () => this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null),
+        };
+      });
+    } else entries = this.liveEntries(thirsty, plantCard);
+    const byId: Record<string, Entry> = {};
+    entries.forEach((e) => { byId[e.id] = e; });
+    const isUrg = (id: string) => !!(byId[id] && byId[id].urgent);
+    const ids = entries.map((e) => e.id);
     let visibleIds = quiet ? ids.filter(isUrg) : ids;
     // Urgent first.
     visibleIds = visibleIds.filter(isUrg).concat(visibleIds.filter((id) => !isUrg(id)));
     const waiting = ids.length - visibleIds.length;
     const cards = visibleIds.map((id) => {
-      let c: FeedCard = ALL[id];
-      if (id === "plants") {
-        const one = thirsty.length === 1;
-        c = {
-          cat: "plant",
-          label: "Plants · indicator sensors",
-          title: one ? (thirsty[0].id === "kitchen" ? "The nerve plant has fainted again" : "The " + thirsty[0].room.toLowerCase() + " group is thirsty") : thirsty.length + " plant groups need water",
-          detail: one ? "The " + thirsty[0].ind + " is at " + s.moist[thirsty[0].id] + "%. Water all " + thirsty[0].plants + " plants in the " + thirsty[0].room.toLowerCase() + " group" + (thirsty[0].id === "kitchen" ? ". It perks up within the hour." : ".") : thirsty.map((g) => g.room).join(" → ") + ". " + plantsNeeded + " plants, about " + plantsNeeded + " minutes. Tap Plants for the route.",
-          primary: one ? "Watered" : "Watered them all",
-          secondary: "Snooze 1 day",
-          toast: one ? "Logged: " + thirsty[0].room.toLowerCase() + " group watered." : "Logged: " + thirsty.length + " groups watered.",
-        };
-      }
+      const e = byId[id], c = e.c;
       return {
         cat: c.cat,
         urgent: !!c.urgent,
@@ -433,29 +576,63 @@ export class PikHouseCard extends LitElement {
         primary: c.primary,
         secondary: c.secondary || "",
         hasSecondary: !!c.secondary,
-        onPrimary: () => {
-          if (id === "plants") this.water(thirstyIds);
-          this.resolve(id, c.toast, false, c.fx);
-        },
-        onSecondary: () => this.resolve(id, c.secondary === "Snooze 1 day" ? "Snoozed. I'll bring it back tomorrow." : c.secondary === "In an hour" ? "Okay. I'll remind you in an hour." : "Okay, dismissed.", c.secondary === "Snooze 1 day" || c.secondary === "In an hour", null),
+        onPrimary: e.onPrimary,
+        onSecondary: e.onSecondary,
       };
     });
     const count = visibleIds.length;
     const urgent = ids.some(isUrg);
 
+    // live house: weather, heat, lights, watering, Now playing
+    const wx = Lv ? this.S(this.C.weather) : undefined;
+    const outTemp = Lv ? (wx && wx.attributes.temperature != null ? Math.round(Number(wx.attributes.temperature)) + "°" : "") : (dark ? "31°" : "48°");
+    const outLine = Lv ? (wx ? condWord(wx.state) + (this.low !== null ? " · low " + this.low + "°" : "") : "") : (dark ? "Clear" : "Sunny") + " · low 28°";
+    const pm = Lv ? num(this.S(this.C.air_pm25)) : null;
+    const airShort = Lv ? (pm === null ? "" : pm > 35 ? "air smoky" : "air good") : s.smoky ? "air smoky" : "air good";
+    const th = Lv ? this.S(this.C.thermostat) : undefined;
+    const thA = th ? th.attributes : {};
+    const dual = !!th && th.state === "heat_cool";
+    const inside = Lv ? (thA.current_temperature != null ? Math.round(Number(thA.current_temperature)) + "°" : "") : "68°";
+    const setRaw = Lv ? (dual ? thA.target_temp_low : thA.temperature) : s.setpoint;
+    const setpoint = setRaw != null && setRaw !== "" ? Math.round(Number(setRaw)) : null;
+    const act = String(thA.hvac_action || "");
+    const heatWord = Lv ? (!th ? "" : th.state === "off" ? "off" : act === "heating" ? "heating" : act === "cooling" ? "cooling" : "holding") : s.setpoint > 68 ? "heating" : "holding";
+    const setHeat = (dd: number) => {
+      if (!Lv) { this.setState({ setpoint: Math.min(78, Math.max(60, s.setpoint + dd)) }); return; }
+      if (setpoint === null || !this.C.thermostat) return;
+      const t = setpoint + dd;
+      if (dual) this.svc("climate", "set_temperature", { target_temp_low: t, target_temp_high: Math.max(t + 3, Math.round(Number(thA.target_temp_high || t + 4))) }, { entity_id: this.C.thermostat });
+      else this.svc("climate", "set_temperature", { temperature: t }, { entity_id: this.C.thermostat });
+      this.flash("Set to " + t + "°.");
+    };
+    const lightList = Lv
+      ? (this.C.lights || []).map((l) => { const on = l.entities.some((x) => this.S(x)?.state === "on"); return { name: l.name, on, toggle: () => this.svc("homeassistant", on ? "turn_off" : "turn_on", {}, { entity_id: l.entities }) }; })
+      : ([["living", "Living room"], ["porch", "Porch"], ["kitchen", "Kitchen"]] as const).map((x) => ({ name: x[1] as string, on: s.lights[x[0]], toggle: () => { const nl = Object.assign({}, s.lights); nl[x[0]] = !s.lights[x[0]]; this.setState({ lights: nl }); } }));
+    const yard = Lv ? this.C.watering?.yard : undefined, garden = Lv ? this.C.watering?.garden : undefined;
+    const paused = (z?: { standby: string }) => !!z && this.S(z.standby)?.state === "on";
+    const waterWord = Lv ? [yard ? (paused(yard) ? "Yard paused" : "Yard on schedule") : "", garden ? (paused(garden) ? "garden paused" : "garden on") : ""].filter(Boolean).join(" · ") : s.garden ? "Freeze skip · drip on" : "Both paused";
+    const mp = Lv ? this.S(this.C.echo?.media_player) : undefined;
+    const np: NowPlaying | null = Lv
+      ? (mp && (mp.state === "playing" || mp.state === "paused") && mp.attributes.media_title ? { kind: "music", title: String(mp.attributes.media_title), sub: String(mp.attributes.app_name || mp.attributes.media_artist || ""), playing: mp.state === "playing" } : null)
+      : s.np;
+    const mpCall = (svc: string) => { if (this.C.echo?.media_player) this.svc("media_player", svc, {}, { entity_id: this.C.echo.media_player }); };
+
     // energy
-    const e = this.energy(s, dark);
+    const eLive = Lv ? this.liveEnergy(dark) : null;
+    const hasEnergy = !Lv || !!eLive;
+    const outNow = Lv ? !!eLive && eLive.grid === null : s.outage;
+    const e = eLive || this.energy(s, dark);
     const batH = (e.pct * 0.34).toFixed(1);
     const gridFlow = e.grid === null ? "flow w-grid" : e.grid > 0 ? "flow w-grid on rev" : e.grid < 0 ? "flow w-grid on" : "flow w-grid";
 
     // pik
     const nowMs = Date.now();
-    const tlist = st.timers || [];
+    const tlist = Lv ? poolTimers(this.H, this.C.timers || 12).slice(0, 3) : st.timers || [];
     const timerDone = tlist.some((x) => x.end <= nowMs);
     const pik: PikState = st.talk || (urgent || timerDone ? "alert" : st.muted ? "muted" : "rest");
 
     const page = st.page || "home";
-    const nOn = (["living", "porch", "kitchen"] as const).filter((k) => s.lights[k]).length;
+    const nOn = lightList.filter((l) => l.on).length;
     const stops = thirsty.map((g, i) => ({ n: i + 1, room: g.room, plants: g.plants }));
 
     const anyUrg = visibleIds.some(isUrg);
@@ -463,7 +640,6 @@ export class PikHouseCard extends LitElement {
     const curIdx = focusOk ? visibleIds.indexOf(st.focus!) : anyUrg ? 0 : Math.min(st.idx || 0, Math.max(0, count - 1));
     this._last = { count, curIdx, urgent: anyUrg };
     const curCard = cards[curIdx] || { cat: "", label: "", title: "", detail: "", primary: "", secondary: "", hasSecondary: false, urgent: false, onPrimary: () => {}, onSecondary: () => {} };
-    const L = s.lights;
     const page_ = (p: Page) => () => this.go(p);
 
     return {
@@ -476,6 +652,7 @@ export class PikHouseCard extends LitElement {
       talk: () => this.talk(),
       q: st.q || "",
       a: st.talk === "listen" ? "Listening…" : st.talk === "think" ? "Thinking…" : (st.a || ""),
+      showMic: !Lv,
       micCls: st.muted ? "mic off" : "mic",
       micPressed: st.muted ? "true" : "false",
       micLabel: st.muted ? "Mic off" : "Mic on",
@@ -485,9 +662,10 @@ export class PikHouseCard extends LitElement {
       ampm,
       dayName: days[d.getDay()],
       monthDay: months[d.getMonth()] + " " + d.getDate(),
-      outTemp: dark ? "31°" : "48°",
-      outLine: (dark ? "Clear" : "Sunny") + " · low 28°",
-      airShort: s.smoky ? "air smoky" : "air good",
+      outTemp,
+      outLine,
+      airShort,
+      inside,
       airCls2: s.smoky ? "" : "airok",
       demoLabel: s.queue.length ? "Simulate event" : "Restart demo",
       next: () => this.next(),
@@ -532,36 +710,40 @@ export class PikHouseCard extends LitElement {
           dash: "stroke-dashoffset:" + (163.4 * (1 - left / x.total)).toFixed(1),
           btn: done ? "Stop" : "×",
           aria: done ? "Stop the " + x.label + " timer" : "Cancel the " + x.label + " timer",
-          stop: () => { this.stopTimer(x.id); if (!done) this.flash(x.label + " timer canceled."); },
+          stop: () => { if (Lv) this.svc("script", "kitchen_timer_stop", { slot: x.id }); else this.stopTimer(x.id); if (!done) this.flash(x.label + " timer canceled."); },
         };
       }),
 
       // pebbles
-      pebsCls: s.np ? "pebs five" : "pebs",
-      np: s.np,
-      npTitle: s.np ? s.np.title : "",
-      npSub: s.np ? (s.np.playing ? "" : "Paused · ") + "Echo Show · " + s.np.sub : "",
-      eqCls: s.np && s.np.playing ? "eq on" : "eq",
-      npIcon: s.np && s.np.playing ? PAUSE : PLAY,
-      npToggleLbl: s.np && s.np.playing ? "Pause" : "Play",
-      npToggle: () => { if (s.np) this.setState({ np: Object.assign({}, s.np, { playing: !s.np.playing }) }); },
-      volDown: () => { const v = Math.max(1, (st.vol || 5) - 1); this.setState({ vol: v }); this.flash("Echo volume " + v); },
-      volUp: () => { const v = Math.min(10, (st.vol || 5) + 1); this.setState({ vol: v }); this.flash("Echo volume " + v); },
-      npStop: () => { this.setState({ np: null }); this.flash("Stopped the Echo Show."); },
-      pebEnCls: "peb" + (s.outage ? " out" : ""),
-      modeTxt: s.outage ? "Grid outage" : dark ? "After dark" : "Solar day",
-      bfillCls: "bfill" + (e.bat > 0 ? " chg" : e.bat < 0 ? " dis" : "") + (s.outage ? " out" : ""),
+      pebsCls: np && hasEnergy ? "pebs five" : "pebs",
+      np,
+      npTitle: np ? np.title : "",
+      npSub: np ? (np.playing ? "" : "Paused · ") + "Echo Show" + (np.sub ? " · " + np.sub : "") : "",
+      eqCls: np && np.playing ? "eq on" : "eq",
+      npIcon: np && np.playing ? PAUSE : PLAY,
+      npToggleLbl: np && np.playing ? "Pause" : "Play",
+      npToggle: () => { if (Lv) { mpCall("media_play_pause"); return; } if (s.np) this.setState({ np: Object.assign({}, s.np, { playing: !s.np.playing }) }); },
+      volDown: () => { if (Lv) { mpCall("volume_down"); return; } const v = Math.max(1, (st.vol || 5) - 1); this.setState({ vol: v }); this.flash("Echo volume " + v); },
+      volUp: () => { if (Lv) { mpCall("volume_up"); return; } const v = Math.min(10, (st.vol || 5) + 1); this.setState({ vol: v }); this.flash("Echo volume " + v); },
+      npStop: () => { if (Lv) { mpCall("media_stop"); this.flash("Stopped the Echo Show."); return; } this.setState({ np: null }); this.flash("Stopped the Echo Show."); },
+      hasEnergy,
+      pebEnCls: "peb" + (outNow ? " out" : ""),
+      modeTxt: outNow ? "Grid outage" : dark ? "After dark" : "Solar day",
+      bfillCls: "bfill" + (e.bat > 0 ? " chg" : e.bat < 0 ? " dis" : "") + (outNow ? " out" : ""),
       bfillStyle: "width:" + e.pct + "%",
-      pebEnLine: s.outage ? "Grid's down · tap for details" : dark ? "The battery is running the house" : "Charging from the sun",
+      pebEnLine: Lv ? (outNow ? "Grid's down · tap for details" : e.main || "") : outNow ? "Grid's down · tap for details" : dark ? "The battery is running the house" : "Charging from the sun",
       pebPlCls: "pv" + (thirsty.length ? " dry" : ""),
-      plBig: thirsty.length ? String(thirsty.length) : String(PLANT_TOTAL),
+      plBig: thirsty.length ? String(thirsty.length) : String(Lv ? plantTotal(this.plantItems) : PLANT_TOTAL),
       plBigSub: thirsty.length ? (thirsty.length === 1 ? "group thirsty" : "groups thirsty") : "plants happy",
-      gdots: GROUPS.map((g) => { const m = s.moist[g.id]; return m < g.thr ? "dry" : m >= 55 ? "wet" : ""; }),
+      gdots: groups.map((g) => (g.isDry ? "dry" : g.cls.endsWith("wet") ? "wet" : "")),
+      groupCount: G.length,
       plShort: thirsty.length ? thirsty.map((g) => g.room).join(" → ") : "Everyone's had a drink",
-      setpoint: s.setpoint,
-      heatWord: s.setpoint > 68 ? "heating" : "holding",
+      setpoint: setpoint === null ? "–" : String(setpoint),
+      heatWord,
+      insideLine: inside ? "It's " + inside + " inside" : "",
       nOn,
-      waterWord: s.garden ? "Freeze skip · drip on" : "Both paused",
+      nLights: lightList.length,
+      waterWord,
 
       // sheets
       page,
@@ -573,7 +755,7 @@ export class PikHouseCard extends LitElement {
 
       // energy sheet
       e,
-      ewinCls: "ewin" + (s.outage ? " out" : ""),
+      ewinCls: "ewin" + (outNow ? " out" : ""),
       energyAria: e.main + ". " + e.sub + ".",
       solarFlow: e.solar > 0 ? "flow w-sun on" : "flow w-sun",
       gridFlow,
@@ -581,17 +763,17 @@ export class PikHouseCard extends LitElement {
       solarLbl: dark ? "SOLAR · ASLEEP" : "SOLAR",
       solarVal: kw(e.solar),
       houseVal: kw(e.house),
-      gridLbl: s.outage ? "GRID · DOWN" : (e.grid || 0) > 0 ? "GRID · EXPORT" : (e.grid || 0) < 0 ? "GRID · IMPORT" : "GRID · IDLE",
-      gridVal: s.outage ? "Offline" : kw(e.grid),
+      gridLbl: outNow ? "GRID · DOWN" : (e.grid || 0) > 0 ? "GRID · EXPORT" : (e.grid || 0) < 0 ? "GRID · IMPORT" : "GRID · IDLE",
+      gridVal: outNow ? "Offline" : kw(e.grid),
       batStyle: "height:" + batH + "px;y:" + (17 - Number(batH)).toFixed(1) + "px",
       batVal: e.pct + "% · " + (e.bat > 0 ? "+" : "−") + kw(e.bat),
-      gridStat: s.outage ? "Down" : (e.grid || 0) > 0 ? "Sending " + kw(e.grid) : (e.grid || 0) < 0 ? "Using " + kw(e.grid) : "Idle",
-      showEssentials: s.outage && !s.essentials,
+      gridStat: outNow ? "Down" : (e.grid || 0) > 0 ? "Sending " + kw(e.grid) : (e.grid || 0) < 0 ? "Using " + kw(e.grid) : "Idle",
+      showEssentials: outNow && !s.essentials,
       essentialsOn: () => { this.applyFx("essentials"); this.setState({ cards: this.cur().cards.filter((x) => x !== "outage") }); this.flash("Essentials only. That roughly doubles the time left."); },
 
       // plants sheet
       groups,
-      plantsEb: "Plants · " + PLANT_TOTAL + " in " + GROUPS.length + " groups",
+      plantsEb: "Plants · " + (Lv ? plantTotal(this.plantItems) : PLANT_TOTAL) + " in " + G.length + " groups",
       plHead: thirsty.length ? thirsty.length + " thirsty" : "All happy",
       routeLbl: thirsty.length ? "Watering route" : "All caught up",
       routeHead: thirsty.length > 1 ? thirsty.length + " stops, about " + plantsNeeded + " minutes" : thirsty.length ? "One stop, about " + plantsNeeded + " minutes" : "Nothing to water today",
@@ -605,20 +787,35 @@ export class PikHouseCard extends LitElement {
       },
 
       // home sheet
-      down: () => this.setState({ setpoint: Math.max(60, s.setpoint - 1) }),
-      up: () => this.setState({ setpoint: Math.min(78, s.setpoint + 1) }),
-      thermoSub: s.setpoint > 68 ? "Heating · it's 68° inside" : "Holding · it's 68° inside",
-      lights: ([["living", "Living room"], ["porch", "Porch"], ["kitchen", "Kitchen"]] as const).map((x) => ({
-        name: x[1],
-        cls: L[x[0]] ? "lp on" : "lp",
-        state: L[x[0]] ? "On" : "Off",
-        pressed: L[x[0]] ? "true" : "false",
-        toggle: () => { const nl = Object.assign({}, L); nl[x[0]] = !L[x[0]]; this.setState({ lights: nl }); },
+      down: () => setHeat(-1),
+      up: () => setHeat(1),
+      thermoSub: (heatWord ? heatWord.charAt(0).toUpperCase() + heatWord.slice(1) : "") + (inside ? " · it's " + inside + " inside" : ""),
+      lightsEb: Lv ? "Lights" : "Lights · Wemo + Leviton",
+      lights: lightList.map((l) => ({
+        name: l.name,
+        cls: l.on ? "lp on" : "lp",
+        state: l.on ? "On" : "Off",
+        pressed: l.on ? "true" : "false",
+        toggle: l.toggle,
       })),
-      gardenTxt: s.garden ? "Drip runs on its schedule" : "Paused until March 1",
-      gardenBtn: s.garden ? "Pause until March" : "Resume",
-      toggleGarden: () => { this.setState({ garden: !s.garden }); this.flash(s.garden ? "The garden drip is paused until March 1." : "The garden drip is back on schedule."); },
-      camera: () => this.flash("Opening the front door camera."),
+      // watering: the demo's yard and garden, or the real Rachio (and B-Hyve once it's connected)
+      hasYard: !Lv || !!yard,
+      yardName: Lv ? "Yard · " + (yard?.name || "Rachio") : "Yard · Rachio",
+      yardTxt: Lv ? (paused(yard) ? "On standby · not watering" : "Running its schedule") : "Skipping while it's freezing",
+      hasYardBtn: Lv && !!yard,
+      yardBtn: paused(yard) ? "Resume" : "Pause",
+      toggleYard: () => { if (!yard) return; const p = paused(yard); this.svc("switch", p ? "turn_off" : "turn_on", {}, { entity_id: yard.standby }); this.flash(p ? "The yard sprinklers are back on their schedule." : "The yard sprinklers are on standby."); },
+      hasGarden: !Lv || !!garden,
+      gardenName: Lv ? "Garden · " + (garden?.name || "B-Hyve") : "Garden · B-Hyve",
+      gardenTxt: Lv ? (paused(garden) ? "Paused" : "Running its schedule") : s.garden ? "Drip runs on its schedule" : "Paused until March 1",
+      gardenBtn: Lv ? (paused(garden) ? "Resume" : "Pause") : s.garden ? "Pause until March" : "Resume",
+      toggleGarden: () => {
+        if (Lv) { if (!garden) return; const p = paused(garden); this.svc("switch", p ? "turn_off" : "turn_on", {}, { entity_id: garden.standby }); this.flash(p ? "The garden is back on its schedule." : "The garden watering is paused."); return; }
+        this.setState({ garden: !s.garden }); this.flash(s.garden ? "The garden drip is paused until March 1." : "The garden drip is back on schedule.");
+      },
+      hasCamera: !Lv || !!this.C.doorbell?.camera,
+      camLabel: Lv ? (this.C.doorbell?.name || "Ring") + " live view" : "Ring live view",
+      camera: () => { if (Lv && this.C.doorbell?.camera) this.moreInfo(this.C.doorbell.camera); else this.flash("Opening the front door camera."); },
 
       hasToast: !!st.toast,
       toast: st.toast || "",
@@ -635,9 +832,9 @@ export class PikHouseCard extends LitElement {
 <div class="clock">${v.clock}<span>${v.ampm}</span></div>
 <div class="date">${v.dayName}<br>${v.monthDay}</div>
 <div class="sep"></div>
-<div class="wx"><b>${v.outTemp}</b>${v.outLine} · <span class=${v.airCls2}>${v.airShort}</span></div>
-<div class="sep"></div>
-<div class="wx"><b>68°</b>inside</div>
+${v.outTemp ? html`<div class="wx"><b>${v.outTemp}</b>${v.outLine}${v.airShort ? html` · <span class=${v.airCls2}>${v.airShort}</span>` : nothing}</div>
+<div class="sep"></div>` : nothing}
+${v.inside ? html`<div class="wx"><b>${v.inside}</b>inside</div>` : nothing}
 ${this.isMock ? html`<div class="demo">
 <button type="button" class="dbtn" @click=${v.next}>＋ ${v.demoLabel}</button>
 <button type="button" class=${v.dayBtnCls} @click=${v.previewDay}>${v.dayBtn}</button>
@@ -649,7 +846,7 @@ ${this.isMock ? html`<div class="demo">
 <button type="button" class="pikbtn pik p-${v.pik}" aria-label="Talk to Pik" @click=${v.talk}>
 ${pikArt(v.pikAria)}
 </button>
-<div class="pikname"><b>Pik</b><span class=${v.pillCls}>${v.pikLabel}</span><button type="button" class=${v.micCls} aria-pressed=${v.micPressed} aria-label=${v.micLabel} @click=${v.toggleMic}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"></path><path d=${v.micSlash}></path></svg></button></div>
+<div class="pikname"><b>Pik</b><span class=${v.pillCls}>${v.pikLabel}</span>${v.showMic ? html`<button type="button" class=${v.micCls} aria-pressed=${v.micPressed} aria-label=${v.micLabel} @click=${v.toggleMic}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"></path><path d=${v.micSlash}></path></svg></button>` : nothing}</div>
 ${v.timers.length ? html`<div class="timers">${repeat(v.timers, (tm) => tm.id, (tm) => html`<div class=${tm.cls}><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle class="tr-bg" cx="32" cy="32" r="26"></circle><circle class="tr-fg" cx="32" cy="32" r="26" style=${tm.dash}></circle></svg><div class="tt"><b>${tm.left}</b><span>${tm.label}</span></div><button type="button" class="tx" aria-label=${tm.aria} @click=${tm.stop}>${tm.btn}</button></div>`)}</div>` : nothing}
 </div>
 <div class=${v.bubbleCls} aria-live="polite">
@@ -679,14 +876,14 @@ ${v.np ? html`<div class="peb np">
 <button type="button" class="nc" aria-label="Stop" @click=${v.npStop}>×</button>
 </span>
 </div>` : nothing}
-<button type="button" class=${v.pebEnCls} @click=${v.openEnergy}>
+${v.hasEnergy ? html`<button type="button" class=${v.pebEnCls} @click=${v.openEnergy}>
 <span class="eb">Energy · ${v.modeTxt}</span>
 <span class="pv">${v.e.pct}%<small>Powerwall</small></span>
 <span class="bbar"><span class=${v.bfillCls} style=${v.bfillStyle}></span></span>
 <span class="ps">${v.pebEnLine}</span>
-</button>
+</button>` : nothing}
 <button type="button" class="peb" @click=${v.openPlants}>
-<span class="eb">Plants · ${GROUPS.length} groups</span>
+<span class="eb">Plants · ${v.groupCount} groups</span>
 <span class=${v.pebPlCls}>${v.plBig}<small>${v.plBigSub}</small></span>
 <span class="gd">${v.gdots.map((c) => html`<i class=${c}></i>`)}</span>
 <span class="ps">${v.plShort}</span>
@@ -694,11 +891,11 @@ ${v.np ? html`<div class="peb np">
 <button type="button" class="peb" @click=${v.openControls}>
 <span class="eb">Heat · Ecobee</span>
 <span class="pv">${v.setpoint}°<small>${v.heatWord}</small></span>
-<span class="ps">It's 68° inside</span>
+<span class="ps">${v.insideLine}</span>
 </button>
 <button type="button" class="peb" @click=${v.openControls}>
 <span class="eb">Lights &amp; watering</span>
-<span class="pv">${v.nOn}<small>of 3 lights on</small></span>
+<span class="pv">${v.nOn}<small>of ${v.nLights} lights on</small></span>
 <span class="ps">${v.waterWord}</span>
 </button>
 </section>

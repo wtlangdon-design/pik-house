@@ -52,7 +52,7 @@ export function energySheet(v: Vals) {
 <path d="M-5-21v-3H5v3" fill="none" stroke="#B0D3AC" stroke-width="1.5"></path>
 <rect class="batfill" x="-8.5" width="17" rx="2" fill="url(#eBat)" style=${v.batStyle}></rect>
 </g>
-<text class="nlbl" text-anchor="middle" x="334" y="200">POWERWALL 2</text>
+<text class="nlbl" text-anchor="middle" x="334" y="200">POWERWALL</text>
 <text class="nval" text-anchor="middle" x="334" y="214" style="font-size: 13px">${v.batVal}</text>
 </svg>
 </div>
@@ -79,7 +79,7 @@ ${repeat(v.groups, (g) => g.id, (g) => html`<div class=${g.cls}>
 ${g.hasStop ? html`<span class="stopn">${g.stop}</span>` : html`<span class="okdot"></span>`}
 <span class="pname"><b>${g.room}</b><span>${g.sub}</span></span>
 <span class="meter"><span class="mfill" style=${g.fill}></span><span class="mtick" style=${g.tick}></span></span>
-<span class="ppct">${g.m}%</span>
+<span class="ppct">${g.mTxt}</span>
 <span class="pst">${g.status}</span>
 ${g.isDry ? html`<button type="button" class="wbtn" @click=${g.tap}>Watered</button>` : html`<span></span>`}
 </div>`)}
@@ -101,11 +101,11 @@ export function homeSheet(v: Vals) {
 <div class="shead"><span class="eb">Around the house</span><h2 class="stitle">Home</h2><button type="button" class="done" @click=${v.goHome}>Done</button></div>
 <div class="sbody hsb">
 <div class="hpanel"><span class="eb">Heat · Ecobee</span><div class="thermo"><button type="button" class="tbtn" aria-label="Lower the heat" @click=${v.down}>−</button><span class="tset">${v.setpoint}°</span><button type="button" class="tbtn" aria-label="Raise the heat" @click=${v.up}>+</button></div><div class="csub">${v.thermoSub}</div></div>
-<div class="hpanel"><span class="eb">Lights · Wemo + Leviton</span><div class="lights">${v.lights.map((l) => html`<button type="button" class=${l.cls} aria-pressed=${l.pressed} @click=${l.toggle}><i></i>${l.name}<small>${l.state}</small></button>`)}</div></div>
+<div class="hpanel"><span class="eb">${v.lightsEb}</span><div class="lights">${v.lights.map((l) => html`<button type="button" class=${l.cls} aria-pressed=${l.pressed} @click=${l.toggle}><i></i>${l.name}<small>${l.state}</small></button>`)}</div></div>
 <div class="hpanel"><span class="eb">Outside</span>
-<div class="zone"><b>Yard · Rachio</b><span>Skipping while it's freezing</span></div>
-<div class="zone"><b>Garden · B-Hyve</b><span>${v.gardenTxt}</span><button type="button" class="zbtn" @click=${v.toggleGarden}>${v.gardenBtn}</button></div>
-<button type="button" class="cam" @click=${v.camera}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="M16 10l5-3v10l-5-3"></path></svg>Ring live view</button>
+${v.hasYard ? html`<div class="zone"><b>${v.yardName}</b><span>${v.yardTxt}</span>${v.hasYardBtn ? html`<button type="button" class="zbtn" @click=${v.toggleYard}>${v.yardBtn}</button>` : nothing}</div>` : nothing}
+${v.hasGarden ? html`<div class="zone"><b>${v.gardenName}</b><span>${v.gardenTxt}</span><button type="button" class="zbtn" @click=${v.toggleGarden}>${v.gardenBtn}</button></div>` : nothing}
+${v.hasCamera ? html`<button type="button" class="cam" @click=${v.camera}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="M16 10l5-3v10l-5-3"></path></svg>${v.camLabel}</button>` : nothing}
 </div>
 </div>
 </div>`;

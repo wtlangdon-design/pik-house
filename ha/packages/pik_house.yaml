@@ -1,0 +1,188 @@
+# Pik House: the house feed on the kitchen screen (SPEC.md "The 'Needs you' feed").
+#
+# Every card in Pik's bubble is a row in the "House feed" Local To-do list (todo.house_feed).
+# Automations and Pik post cards through script.feed_post; the card follows the list live.
+#   summary      the card's title
+#   description  JSON: id, category, label, detail, urgent, primary {label, script, open, toast},
+#                secondary {label, kind: dismiss|snooze, minutes}, expires
+# Buttons may only run script.* entities or open a view (energy, plants, home, camera, or a /dashboard path).
+# Tapping the main button marks the row done; Snooze moves its due time; an hourly cleanup removes
+# finished and expired rows.
+#
+# input_text.pik_plants_quiet: plant groups taken off the thirsty list for a while ("group:until,…"),
+# set by the Watered (12 hours) and Snooze (1 day) buttons.
+
+input_text:
+  pik_plants_quiet: { name: "Plants: groups watered or snoozed (group:until)", max: 255 }
+
+script:
+  feed_post:
+    alias: "House feed: post a card"
+    description: >-
+      Put a card on the kitchen screen's house feed (Pik's bubble). Posting the same id again updates
+      that card instead of adding a second one. Use category to pick the colored dot.
+    mode: queued
+    max: 20
+    fields:
+      id: { description: "A stable id, e.g. trash or doorbell", required: true, selector: { text: {} } }
+      title: { description: "The card's title", required: true, selector: { text: {} } }
+      category: { description: "plant, weather, bill, home, package, energy, door, air, light, water or reminder", selector: { text: {} } }
+      label: { description: "Small line above the title, e.g. 'Reminder · every Tuesday, 8 AM'", selector: { text: {} } }
+      detail: { description: "One or two sentences under the title", selector: { text: { multiline: true } } }
+      urgent: { description: "Jumps to the front and shows during quiet hours", selector: { boolean: {} } }
+      primary_label: { description: "Main button text (default 'Got it')", selector: { text: {} } }
+      primary_script: { description: "Optional script.* to run when the main button is tapped", selector: { text: {} } }
+      primary_open: { description: "Optional view to open: energy, plants, home, camera, or a /dashboard path", selector: { text: {} } }
+      primary_toast: { description: "What the screen says after the main button", selector: { text: {} } }
+      secondary_label: { description: "Optional second button, e.g. 'Dismiss' or 'In an hour'", selector: { text: {} } }
+      secondary_kind: { description: "dismiss or snooze", selector: { select: { options: [dismiss, snooze] } } }
+      snooze_minutes: { description: "For snooze: how long (default 60)", selector: { number: { min: 5, max: 10080 } } }
+      expires_hours: { description: "Optional: the card disappears after this many hours", selector: { number: { min: 0.1, max: 720, step: 0.1 } } }
+    sequence:
+      - action: todo.get_items
+        target: { entity_id: todo.house_feed }
+        data: { status: [needs_action, completed] }
+        response_variable: got
+      - variables:
+          desc: >-
+            {{ {
+              'id': id,
+              'category': category | default('home', true),
+              'label': label | default('', true),
+              'detail': detail | default('', true),
+              'urgent': urgent | default(false) | bool,
+              'primary': {
+                'label': primary_label | default('Got it', true),
+                'script': primary_script | default('', true),
+                'open': primary_open | default('', true),
+                'toast': primary_toast | default('', true)
+              },
+              'secondary': ({
+                'label': secondary_label,
+                'kind': secondary_kind | default('dismiss', true),
+                'minutes': snooze_minutes | default(60, true) | int
+              } if secondary_label | default('', true) else none),
+              'expires': ((now() + timedelta(hours=expires_hours | float)).isoformat() if expires_hours | default(0, true) | float > 0 else '')
+            } | to_json }}
+          existing: >-
+            {% set ns = namespace(u='') %}
+            {% for it in got['todo.house_feed']['items'] %}
+              {% set d = it.description | default('', true) %}
+              {% if d.startswith('{') and (d | from_json).id | default('') == id %}{% set ns.u = it.uid %}{% endif %}
+            {% endfor %}{{ ns.u }}
+      - if: "{{ existing | trim != '' }}"
+        then:
+          - action: todo.update_item
+            target: { entity_id: todo.house_feed }
+            data:
+              item: "{{ existing | trim }}"
+              rename: "{{ title }}"
+              description: "{{ desc }}"
+              status: needs_action
+        else:
+          - action: todo.add_item
+            target: { entity_id: todo.house_feed }
+            data:
+              item: "{{ title }}"
+              description: "{{ desc }}"
+
+automation:
+  - id: pik_feed_cleanup
+    alias: "House feed: hourly cleanup"
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: 7
+    actions:
+      - action: todo.remove_completed_items
+        target: { entity_id: todo.house_feed }
+      - action: todo.get_items
+        target: { entity_id: todo.house_feed }
+        data: { status: needs_action }
+        response_variable: got
+      - variables:
+          expired: >-
+            {% set ns = namespace(l=[]) %}
+            {% for it in got['todo.house_feed']['items'] %}
+              {% set d = it.description | default('', true) %}
+              {% if d.startswith('{') %}{% set e = (d | from_json).expires | default('', true) %}
+                {% if e and as_datetime(e) < now() %}{% set ns.l = ns.l + [it.uid] %}{% endif %}
+              {% endif %}
+            {% endfor %}{{ ns.l }}
+      - if: "{{ expired | count > 0 }}"
+        then:
+          - action: todo.remove_item
+            target: { entity_id: todo.house_feed }
+            data: { item: "{{ expired }}" }
+
+  - id: pik_feed_doorbell
+    alias: "House feed: someone rang the gate"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: event.outside_gate_ding
+    conditions:
+      - "{{ trigger.from_state is not none and trigger.from_state.state not in ['unavailable', 'unknown'] and trigger.to_state.state not in ['unavailable', 'unknown'] }}"
+    actions:
+      - action: script.feed_post
+        data:
+          id: doorbell
+          title: "Someone's at the gate"
+          category: door
+          label: "Gate · Ring"
+          detail: "The doorbell rang at {{ now().strftime('%-I:%M %p') }}."
+          urgent: true
+          primary_label: Show camera
+          primary_open: camera
+          secondary_label: Dismiss
+          expires_hours: 0.25
+
+  - id: pik_feed_trash
+    alias: "House feed: trash goes out (Tuesdays, 8 AM)"
+    mode: single
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+    conditions:
+      - condition: time
+        weekday: [tue]
+    actions:
+      - action: script.feed_post
+        data:
+          id: trash
+          title: Trash goes out this morning
+          category: reminder
+          label: "Reminder · every Tuesday, 8 AM"
+          detail: Bins to the curb before pickup.
+          primary_label: Done
+          primary_toast: Nice. See you next Tuesday.
+          secondary_label: In an hour
+          secondary_kind: snooze
+          snooze_minutes: 60
+          expires_hours: 10
+
+  - id: pik_feed_freeze
+    alias: "House feed: freeze tonight"
+    mode: single
+    triggers:
+      - trigger: time
+        at: "15:00:00"
+    actions:
+      - action: weather.get_forecasts
+        target: { entity_id: weather.home }
+        data: { type: daily }
+        response_variable: fc
+      - variables:
+          low: "{{ (fc['weather.home'].forecast[0].templow | default(99)) | round(0) | int }}"
+      - condition: "{{ low <= 32 }}"
+      - action: script.feed_post
+        data:
+          id: freeze
+          title: "{{ 'Hard freeze' if low <= 25 else 'Freeze' }} tonight. Low of {{ low }}°"
+          category: weather
+          label: "Weather · tonight"
+          detail: >-
+            Bring any tender pots in before dark.{{ ' The yard sprinklers are on standby.' if is_state('switch.outside_home_controller_standby', 'on') else '' }}
+          primary_label: Done
+          primary_toast: Nice. The pots are safe.
+          expires_hours: 16

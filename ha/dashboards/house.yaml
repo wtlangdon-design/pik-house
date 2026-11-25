@@ -1,0 +1,36 @@
+# The house feed: Pik on the kitchen Chromebook, live (1280×800).
+# Data: the House feed list (todo.house_feed, filled by script.feed_post), the plant catalog and soil sensors,
+# the Ecobee, Leviton lights, Rachio, Ring, the Echo Show and the shared kitchen timers.
+# A tile with nothing behind it hides (no Powerwall yet = no Energy tile).
+title: House
+views:
+  - title: House
+    path: house
+    panel: true
+    cards:
+      - type: custom:pik-house-card
+        weather: weather.home
+        sun: sun.sun
+        thermostat: climate.hallway_thermostat
+        feed_list: todo.house_feed
+        plants_list: todo.plants
+        plants_quiet: input_text.pik_plants_quiet
+        timers: 12
+        plant_groups:
+          - { name: Kitchen, indicator: nerve plant, sensor: sensor.gw1200b_soil_moisture_1, dry: 30 }
+          - { name: Big aroids, indicator: entry monstera, sensor: sensor.gw1200b_soil_moisture_2, dry: 28 }
+          - { name: Bedroom & office, indicator: spider plant, sensor: sensor.gw1200b_soil_moisture_3, dry: 28 }
+          - { name: Trees & palms, indicator: bedroom fiddle leaf fig, sensor: sensor.gw1200b_soil_moisture_4, dry: 25 }
+          - { name: Tough guys, indicator: big ZZ in the yellow pot, sensor: sensor.gw1200b_soil_moisture_5, dry: 12 }
+          - { name: Jungle cacti, indicator: blooming Christmas cactus, sensor: sensor.gw1200b_soil_moisture_6, dry: 20 }
+          - { name: Desert cacti, indicator: tall euphorbia, sensor: sensor.gw1200b_soil_moisture_7, dry: 8 }
+        lights:
+          - { name: Kitchen, entities: [light.kitchen_cans, light.kitchen_chandelier, light.bar] }
+          - { name: Living room, entities: [light.living_room_chandelier, light.living_room_cans] }
+          - { name: Front door, entities: [light.front_door] }
+        watering:
+          yard: { name: Rachio, standby: switch.outside_home_controller_standby }
+        doorbell: { name: Gate, camera: camera.outside_gate_live_view }
+        echo: { media_player: media_player.tyler_s_echo_show_15 }
+        holiday:
+          - { name: Thanksgiving, path: /dashboard-thanksgiving/kitchen, from: "2026-11-24", to: "2026-11-26" }
