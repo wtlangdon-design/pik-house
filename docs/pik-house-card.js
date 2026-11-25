@@ -899,7 +899,8 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .tc.cmp .cl .stn2{font:600 12px 'DM Sans',sans-serif;font-style:normal;color:var(--muted);white-space:nowrap}
 .tc.cmp{min-height:64px}
 /* folded card: dish and step count on top, the step underneath */
-.tc.cmp .cl{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:12px;row-gap:3px;align-items:center;min-width:0}
+.tc.cmp .cl{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:12px;row-gap:5px;align-items:center;min-width:0}
+.tc.cmp{padding-top:14px;padding-bottom:18px;min-height:76px}
 .tc.cmp .cl .r1{display:flex;align-items:center;gap:10px;min-width:0}
 .tc.cmp .cl .r1 b{font-size:17px;white-space:nowrap}
 .tc.cmp .cl .sp{font:600 11.5px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
