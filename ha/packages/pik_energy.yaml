@@ -7,6 +7,9 @@
 #     When a winter storm, blizzard, ice storm, high wind or red flag (fire weather, when NV Energy may
 #     shut power off) alert comes in, a card says whether Storm Watch is on, and offers to turn it on.
 #
+# Entities: sensor.weather_alerts ("No alerts" or the alert names), sensor.weather_alert_storm ("none" or the
+# storm-type alert), sensor.weather_alert_storm_ends. ("None" can't be a state: the hub reads it as empty.)
+#
 # Teslemetry's sign conventions: grid power > 0 = importing, < 0 = exporting; battery power > 0 = discharging.
 
 input_text:
@@ -26,15 +29,15 @@ rest:
         icon: mdi:alert-outline
         value_template: >-
           {% set e = value_json.features | default([]) | map(attribute='properties.event') | unique | list %}
-          {{ (e | join(', ') if e else 'None')[:250] }}
+          {{ (e | join(', ') if e else 'No alerts')[:250] }}
       - name: "Weather alert: storm"
         unique_id: pik_weather_alert_storm
         icon: mdi:weather-snowy-heavy
         value_template: >-
           {% set kinds = ['Blizzard Warning', 'Ice Storm Warning', 'Winter Storm Warning', 'Extreme Wind Warning', 'High Wind Warning', 'Red Flag Warning', 'Winter Storm Watch', 'High Wind Watch'] %}
-          {% set ns = namespace(e='None') %}
+          {% set ns = namespace(e='none') %}
           {% for k in kinds %}
-            {% if ns.e == 'None' and value_json.features | default([]) | selectattr('properties.event', 'eq', k) | list | count > 0 %}{% set ns.e = k %}{% endif %}
+            {% if ns.e == 'none' and value_json.features | default([]) | selectattr('properties.event', 'eq', k) | list | count > 0 %}{% set ns.e = k %}{% endif %}
           {% endfor %}{{ ns.e }}
       - name: "Weather alert: storm ends"
         unique_id: pik_weather_alert_storm_ends
@@ -103,14 +106,14 @@ automation:
     mode: queued
     triggers:
       - trigger: state
-        entity_id: sensor.pik_weather_alert_storm
+        entity_id: sensor.weather_alert_storm
     conditions:
-      - "{{ trigger.to_state.state not in ['None', 'unknown', 'unavailable', ''] }}"
+      - "{{ trigger.to_state.state not in ['none', 'unknown', 'unavailable', ''] }}"
       - "{{ trigger.from_state is not none and trigger.from_state.state != trigger.to_state.state }}"
     actions:
       - variables:
           ev: "{{ trigger.to_state.state }}"
-          ends: "{{ states('sensor.pik_weather_alert_storm_ends') }}"
+          ends: "{{ states('sensor.weather_alert_storm_ends') }}"
           until: >-
             {% set t = as_datetime(ends) if ends not in ['unknown', 'unavailable', 'None', ''] else none %}
             {% if t %}{% set t = as_local(t) %}{{ ' until ' ~ t.strftime('%A') ~ ' ' ~ (t.strftime('%I') | int) ~ t.strftime(' %p') }}{% endif %}
