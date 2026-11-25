@@ -16,7 +16,7 @@
 //   prefix: tg26
 //   timers: 12
 //   layout: echo        # optional: the Echo Show 15 (no day strip)
-//   layout: far         # optional: big type to read from across the kitchen (now, next, timers, turkey, alarms)
+//   layout: far         # optional: big type to read from across the kitchen (now, next, timers, turkey; no pop-ups)
 //   mock: false         # true = keep everything in this browser only
 import { LitElement, html, nothing } from "lit";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
@@ -737,11 +737,11 @@ export class PikHolidayCard extends LitElement {
   }
   /** The far view: only what you need from across the kitchen, in big type. Ticks and timers are shared with the other screens. */
   private farHtml(): string {
-    const a = this.Q[this.Q.length - 1];
-    if (a) {
-      return `<div class="fring" role="alert"><div class="fw">${esc(a.when)}${this.Q.length > 1 ? ` · ${this.Q.length - 1} more` : ""}</div>
-        <div class="fx">${esc(a.text)}</div><button class="fgot" data-ack="1">Got it</button></div>`;
-    }
+    // No full-screen alarms here: a task that comes due just shows up under "Now" with its Done button.
+    // A timer or turkey alarm gets a slim bar on top, so the steps stay readable underneath.
+    const urgent = this.Q.filter((q) => q.kind !== "task");
+    const a = urgent[urgent.length - 1];
+    const bar = a ? `<div class="fbar" role="alert"><span>${esc(a.text)}${urgent.length > 1 ? ` · ${urgent.length - 1} more` : ""}</span><button class="fgot2" data-ack="1">Got it</button></div>` : "";
     const now = new Date(), left = this.dinnerMs() - now.getTime();
     const hrs = Math.floor((left % 86400000) / 3600000), mins = Math.floor((left % 3600000) / 60000);
     const count = left > 86400000 ? Math.floor(left / 86400000) + "d " + hrs + "h" : left > 3600000 ? hrs + "h " + String(mins).padStart(2, "0") + "m" : left > 0 ? mins + " min" : "";
@@ -760,7 +760,7 @@ export class PikHolidayCard extends LitElement {
       : next.length ? line(next[0].g, next[0].cur, "Next · " + this.when(next[0].cur), false)
       : `<div class="fitem"><div class="fl"><b>All done for today</b></div></div>`;
     const then = (due.length ? next : next.slice(1)).slice(0, 2);
-    return `<div class="fhead"><div class="fclock" id="clock"></div>${count ? `<div class="fcd"><span>Dinner in</span><b>${count}</b></div>` : ""}</div>
+    return `${bar}<div class="fhead"><div class="fclock" id="clock"></div>${count ? `<div class="fcd"><span>Dinner in</span><b>${count}</b></div>` : ""}</div>
       <div class="fmain${due.length > 1 && room > 1 ? " two" : ""}">${nowPart}</div>
       ${then.length ? `<div class="fthen"><span class="eb2">Then</span>${then.map((x) => `<span><b>${esc(this.when(x.cur))}</b> ${esc(this.gname(x.g) || x.cur.text)}</span>`).join("")}</div>` : ""}
       ${timers.length || turkeyOn ? `<div class="fbot">

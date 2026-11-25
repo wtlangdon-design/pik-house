@@ -539,5 +539,9 @@ details.settings textarea{width:100%;border-radius:14px;border:1px solid var(--l
 .far .fw{font:800 6vh 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
 .far .fx{font:800 9vh/1.12 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .far .fgot{align-self:stretch;height:18vh;border:0;border-radius:9vh;background:#fff;color:var(--urg);font:800 8vh 'DM Sans',sans-serif;cursor:pointer}
+
+.far .fbar{flex:none;display:flex;align-items:center;gap:2vw;background:var(--urg);color:#fff;border-radius:3vh;padding:1.5vh 1.5vw 1.5vh 3vw;animation:fpulse 1.6s ease-in-out infinite}
+.far .fbar span{flex:1;font:800 5vh/1.15 'DM Sans',sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.far .fgot2{flex:none;height:11vh;padding:0 4vw;border:0;border-radius:6vh;background:#fff;color:var(--urg);font:800 5.5vh 'DM Sans',sans-serif;cursor:pointer}
 @keyframes fpulse{0%,100%{background:#C2452F}50%{background:#D9622F}}
 `;
