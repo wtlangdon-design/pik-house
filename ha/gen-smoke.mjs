@@ -33,7 +33,7 @@ L(`# Finds the Inkbird by itself: the built-in Inkbird integration names the pro
 L(`# sensor.<device>_temperature_probe_1 … _4. (If it ever can't, put the four entity IDs, comma-separated,`);
 L(`# in input_text.smoke_probes.) Needs pik_kitchen.yaml for script.pik_announce.`);
 L(`#`);
-L(`#   sensor.smoke_probe_1 … _4       each probe in °F, read once a minute; unavailable when unplugged,`);
+L(`#   sensor.smoke_probe_1 … _4       each probe in °F, read once a minute; unavailable when unplugged (the Inkbird sends -1°C / 30.2°F for an empty jack),`);
 L(`#                                   off or out of range. Attributes: food, kind, target, rate (°F/hour),`);
 L(`#                                   eta_min, flat (holding steady), source, hist (last 20 minutes)`);
 L(`#   input_text.smoke_probe_N_food   what the probe is in ("Brisket"; "Smoker" for an air probe); empty = not in use`);
@@ -83,7 +83,7 @@ const read = `{% set ns = namespace(out=[]) %}
           {% for e in ids %}
             {% set l = expand(e) if e else [] %}{% set s = l[0] if l | count > 0 else none %}
             {% set seen = (s.last_reported if s and s.last_reported is defined else (s.last_updated if s else none)) %}
-            {% set ok = s is not none and s.state | is_number and seen is not none and (now() - seen).total_seconds() < 150 %}
+            {% set ok = s is not none and s.state | is_number and s.state | float(0) not in [30.2, -1.0] and seen is not none and (now() - seen).total_seconds() < 150 %}
             {% set v = s.state | float(0) if ok else 0 %}
             {% if ok and (s.attributes.unit_of_measurement | default('°F')) == '°C' %}{% set v = v * 9 / 5 + 32 %}{% endif %}
             {% set ns.out = ns.out + [(v | round(0) | int) if ok and -40 < v < 1100 else none] %}
