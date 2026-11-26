@@ -313,14 +313,17 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .namechips{display:flex;flex-wrap:wrap;gap:6px}.namechips span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
 
 /* ---------- Inside & music ---------- */
-.tile.itile{position:relative;display:grid;grid-template-columns:88px minmax(0,1fr);grid-template-rows:auto 1fr auto;column-gap:8px;padding:12px 13px;border:0;background:radial-gradient(120% 100% at 0% 0%,#FFFFFF 0%,#F6EEE3 60%,#EDE2D3 100%)}
+.tile.itile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:2px;padding:11px 10px 12px;border:0;background:radial-gradient(120% 100% at 0% 0%,#FFFFFF 0%,#F6EEE3 60%,#EDE2D3 100%)}
 .tile.itile.heat{background:radial-gradient(120% 100% at 0% 0%,#FFF6EA 0%,#FBE3C8 55%,#F3CFA9 100%)}
 .tile.itile.cool{background:radial-gradient(120% 100% at 0% 0%,#F4F9FD 0%,#DCEAF6 60%,#C9DDEF 100%)}
-.dialbtn{grid-row:1 / span 2;position:relative;border:0;background:none;padding:0;width:88px;height:88px}
+.itile .eb{align-self:flex-start;margin-left:4px}
+.dialrow{display:flex;align-items:center;justify-content:center;gap:2px}
+.nudge{width:34px;height:34px;border-radius:50%;border:1px solid rgba(42,34,27,.18);background:rgba(255,255,255,.6);font-size:20px;line-height:1;color:var(--ink);padding:0;flex:none}
+.dialbtn{position:relative;border:0;background:none;padding:0;width:118px;height:118px;flex:none}
 .dialbtn svg{position:absolute;inset:0}
-.dialnum{position:absolute;left:0;right:0;top:27px;text-align:center;font-family:var(--serif);font-size:30px;line-height:1}
+.dialnum{position:absolute;left:0;right:0;top:37px;text-align:center;font-family:var(--serif);font-size:40px;line-height:1}
 .itext{min-width:0;align-self:start;padding-top:4px}
-.isub{font-size:12.5px;color:var(--mute2);line-height:1.4;margin-top:3px}
+.isub{font-size:12.5px;color:var(--mute2);line-height:1.3;text-align:center;white-space:nowrap}
 .bulbs{grid-column:1 / -1;display:flex;align-items:center;gap:5px;margin-top:6px}
 .bulbs span{margin-left:auto;font-size:12px;color:var(--mute2);white-space:nowrap}
 .bulb{width:22px;height:22px;border-radius:50%;border:1px solid rgba(42,34,27,.15);background:rgba(255,255,255,.6);padding:0;display:flex;align-items:center;justify-content:center}
