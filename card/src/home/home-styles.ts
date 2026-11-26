@@ -362,7 +362,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .wisp{opacity:0;stroke-opacity:.12;filter:blur(3px);animation:rise 7s ease-in infinite}
 .wisp.w1{animation-delay:-2.3s}.wisp.w2{animation-delay:-4.6s}
 @keyframes rise{0%{opacity:0;transform:translateY(30px)}25%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
-.shead2{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:6px}.shead2 .eb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shead2{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:6px}.shead2 .eb{white-space:nowrap;flex:none}
 .stile .eb{color:#F2B27A}
 .pit{font-size:12px;color:#F5ECE4;background:rgba(255,255,255,.1);border-radius:999px;padding:2px 8px;white-space:nowrap}.pit small{color:#D9CBBE}
 .probes{position:relative;display:flex;flex-direction:column;gap:7px;flex:1;justify-content:center}

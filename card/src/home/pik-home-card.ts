@@ -982,7 +982,7 @@ ${on ? html`<div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></di
     const elapsed = isFinite(mins) ? (mins >= 60 ? Math.floor(mins / 60) + "h " + (mins % 60) + "m" : mins + "m") : "";
     return html`<button type="button" class="tile stile" @click=${() => this.open("smoker", () => sm.path && this.navigate(sm.path))}>
 <svg class="wisps" viewBox="0 0 200 200" preserveAspectRatio="none" aria-hidden="true">${svg`${[30, 90, 150].map((x, i) => svg`<path d=${`M${x} 210 C${x - 20} 160 ${x + 25} 120 ${x} 70 C${x - 15} 40 ${x + 10} 20 ${x} -10`} fill="none" stroke="#fff" stroke-width=${10 - i * 2} stroke-linecap="round" class=${"wisp w" + i}></path>`)}`}</svg>
-<div class="shead2"><span class="eb">Smoker${elapsed ? " · " + elapsed : ""}</span>${pit ? html`<span class="pit">Pit ${Math.round(pit.v)}°${pit.target ? html`<small> / ${pit.target}°</small>` : nothing}</span>` : nothing}</div>
+<div class="shead2"><span class="eb">Smoker${elapsed ? " · " + elapsed : ""}</span>${pit ? html`<span class="pit" title=${pit.target ? "Smoker set to " + pit.target + "°" : "Smoker"}>${Math.round(pit.v)}° pit</span>` : nothing}</div>
 <div class="probes">${foods.length ? foods.slice(0, 3).map((p) => {
       const frac = p.target ? Math.max(0, Math.min(1, (p.v - 40) / (p.target - 40))) : 0;
       const done = p.target > 0 && p.v >= p.target;
