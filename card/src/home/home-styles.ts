@@ -161,6 +161,11 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .lbar{display:grid;grid-template-columns:110px minmax(0,1fr) 54px;gap:10px;align-items:center;font-size:14px}
 .lbar .tk{height:10px;border-radius:5px;background:var(--line2);position:relative}
 .lbar .tk i{position:absolute;top:0;bottom:0;border-radius:5px}
+.vbub{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);width:720px;max-width:calc(100% - 80px);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:26px;padding:16px 22px;z-index:7;box-shadow:0 30px 60px -20px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px;animation:fade .3s}
+.vbub.inline{position:static;transform:none;width:auto;max-width:none;box-shadow:none;animation:none}.vbub.inline .line{font-size:22px}
+.vbub .who{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--clay);font-weight:600;display:flex;justify-content:space-between}
+.vbub .q{font-size:14px;color:var(--mute2)}
+.vbub .line{font-family:var(--serif);font-size:26px;line-height:1.15}
 .toast{position:absolute;left:50%;top:22px;transform:translateX(-50%);background:var(--ink);color:#FCF8F1;padding:12px 22px;border-radius:999px;font-size:15px;z-index:20;animation:fade .3s}
 @media (prefers-reduced-motion: reduce){.flow,.amb,.mom,.sheet{animation:none!important}}
 `;
