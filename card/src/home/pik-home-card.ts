@@ -128,7 +128,6 @@ export class PikHomeCard extends LitElement {
   setConfig(config: PikHomeConfig): void {
     if (!config) throw new Error("pik-home-card: missing config");
     this.config = config;
-    if (this._legacy) this._legacy.setConfig(Object.assign({}, config, { type: "custom:pik-house-card" }));
     this.requestUpdate();
   }
   set hass(h: unknown) {
@@ -175,7 +174,6 @@ export class PikHomeCard extends LitElement {
 
   /** The design is a fixed 1280×800: shrink it to fit the room it has. On a phone (narrow), the House card's phone layout takes over. */
   private narrow = false;
-  private _legacy?: HTMLElement & { setConfig(c: unknown): void; hass: unknown };
   private measure(): void {
     const r = this.isConnected ? this.getBoundingClientRect() : null;
     const w = window.innerWidth - (r ? Math.max(0, r.left) : 0);
@@ -292,7 +290,7 @@ export class PikHomeCard extends LitElement {
   private tick(): void {
     this.now = Date.now();
     const idle = (this.now - this.touched) / 1000;
-    if (this.layer === "home" && !this.talk && !this.sheet && idle > (this.C.ambient_after || 120)) { this.layer = "ambient"; this.storyIdx = 0; this.storyAt = this.now; }
+    if (!this.narrow && this.layer === "home" && !this.talk && !this.sheet && idle > (this.C.ambient_after || 120)) { this.layer = "ambient"; this.storyIdx = 0; this.storyAt = this.now; }
     if (this.layer === "ambient" && this.now - this.storyAt > (this.C.story_seconds || 12) * 1000) { this.storyIdx++; this.storyAt = this.now; }
     if (this.sheet && idle > 90) this.sheet = "";
     if (this.H) { this.refreshCal(); this.refreshCook(); }
@@ -1085,18 +1083,114 @@ ${tops.length ? html`<div class="bars">${tops.slice(0, 8).map((t) => html`<div c
 </div></div></div>`;
   }
 
-  /** Phones get the House card (it has real phone layouts), fed the same config. */
-  private legacy(): HTMLElement {
-    if (!this._legacy) {
-      this._legacy = document.createElement("pik-house-card") as HTMLElement & { setConfig(c: unknown): void; hass: unknown };
-      this._legacy.setConfig(Object.assign({}, this.C, { type: "custom:pik-house-card" }));
+  // ---------------- phone ----------------
+
+  /** A moment on the phone: a banner at the top instead of taking over the screen. */
+  private banner(m: Moment): TemplateResult {
+    const now = this.now;
+    if (m.kind === "leave") {
+      const lv = this.leaveInfo()!;
+      const mins = Math.max(0, Math.ceil((lv.at - now) / 60000));
+      return html`<div class="ban navy"><div class="bk">Time to go</div><div class="bt">${mins > 0 ? "Leave at " + hmA(new Date(lv.at)) + " · " + mins + " min" : "Time to head out"}</div><div class="bs">${lv.t}${lv.drive ? " · " + lv.drive + " drive" : ""}</div>
+<div class="bb"><button type="button" class="pill sun" @click=${() => { this.svcSay("script", (this.C.leaving_script || "script.pik_leaving").replace("script.", "")); this.hide(m.key); }}>We're leaving</button><button type="button" class="pill ghost" @click=${() => this.dismissMoment(m, 5 * 60000)}>5 more min</button></div></div>`;
     }
-    this._legacy.hass = this.H;
-    return this._legacy;
+    if (m.kind === "doorbell") {
+      const rg = this.C.ring!;
+      const cam = this.S(rg.camera);
+      const pic = cam && cam.attributes.entity_picture ? String(cam.attributes.entity_picture) + "&t=" + Math.floor(now / 2000) : "";
+      return html`<div class="ban ring"><div class="bk">${rg.name || "Doorbell"} · ${hmA(new Date(Date.parse(this.S(rg.ding)!.state)))}</div><div class="bt">Someone's at the ${(rg.name || "door").toLowerCase()}</div>
+${pic ? html`<img class="bimg" src=${pic} alt="Live view" @click=${() => this.moreInfo(rg.camera)}>` : nothing}
+<div class="bb">${rg.light ? html`<button type="button" class="pill sun" @click=${() => this.svc("light", "toggle", {}, { entity_id: rg.light })}>Light ${this.S(rg.light)?.state === "on" ? "off" : "on"}</button>` : nothing}<button type="button" class="pill ghost" @click=${() => this.dismissMoment(m)}>Done</button></div></div>`;
+    }
+    if (m.kind === "timer") {
+      const t = poolTimers(this.H, this.C.timers || 12).find((y) => m.key === "timer-" + y.id + "-" + y.end);
+      return html`<div class="ban paper"><div class="bk">Timer done</div><div class="bt">${t ? t.label : "Timer"}</div>
+<div class="bb"><button type="button" class="pill ink" @click=${() => { if (t) this.svc("script", "kitchen_timer_stop", { slot: t.id }); this.hide(m.key); }}>Got it</button><button type="button" class="pill ghost" @click=${() => { if (t) this.svc("script", "kitchen_timer_add5", { slot: t.id }); this.hide(m.key); }}>+5 min</button></div></div>`;
+    }
+    if (m.kind === "storm") {
+      const st = this.C.storm!;
+      const w = st.watch ? this.S(st.watch) : undefined;
+      return html`<div class="ban storm"><div class="bk">Weather alert</div><div class="bt">${this.S(st.alert)?.state}</div><div class="bs">Storm Watch is ${w && w.state === "on" ? "on" : "off"}${this.energy() ? " · Powerwall " + this.energy()!.pct + "%" : ""}</div>
+<div class="bb">${w && w.state !== "on" ? html`<button type="button" class="pill sun" @click=${() => this.svc("switch", "turn_on", {}, { entity_id: st.watch })}>Turn on Storm Watch</button>` : nothing}<button type="button" class="pill ghost" @click=${() => this.dismissMoment(m)}>Got it</button></div></div>`;
+    }
+    const ck = this.cook as { due_now?: Array<{ id: string; when: string; task: string }> };
+    const due = (ck.due_now || [])[0];
+    const hol = this.holiday();
+    return html`<div class="ban paper"><div class="bk">${hol ? hol.name : "Cooking"} · due ${due.when.replace(/^\w+ /, "").replace(/ \(moved.*\)/, "")}</div><div class="bt" style="font-size: 22px">${due.task}</div>
+<div class="bb"><button type="button" class="pill ink" @click=${() => { this.svc("script", (this.C.cooking!.done_script || "script.holiday_task_done").replace("script.", ""), { task: due.id }); this.hide(m.key); this.cookAt = 0; }}>Done</button>${hol ? html`<button type="button" class="pill ghost" @click=${() => this.navigate(hol.path)}>Open the plan</button>` : nothing}<button type="button" class="pill ghost" @click=${() => this.dismissMoment(m, 10 * 60000)}>Later</button></div></div>`;
+  }
+
+  /** Light groups with one tap each: off if anything's on, otherwise on. */
+  private lightsTile(): TemplateResult {
+    const gs = (this.C.lights || []).map((g) => ({ name: g.name, ids: g.entities, on: g.entities.filter((id) => this.S(id)?.state === "on").length }));
+    return html`<div class="tile lightsT"><span class="eb">Lights · ${gs.reduce((a, g) => a + g.on, 0)} on</span>
+<div class="lgrid">${gs.map((g) => html`<button type="button" class=${"lg" + (g.on ? " on" : "")} @click=${() => { this.log("inside", "tap"); const ids = g.ids.filter((id) => this.S(id)); const dom = (id: string) => id.split(".")[0]; ids.forEach((id) => this.svc(dom(id), g.on ? "turn_off" : "turn_on", {}, { entity_id: id })); }}><b>${g.name}</b><span>${g.on ? g.on + " on" : "off"}</span></button>`)}</div></div>`;
+  }
+
+  private phoneLayer(): TemplateResult {
+    const d = new Date(this.now);
+    const people = this.C.people || [];
+    const today = this.today();
+    const feed = this.feed().filter((f) => f.cat !== "package").slice(0, 6);
+    const moms = this.moments();
+    const e = this.energy();
+    const timers = poolTimers(this.H, this.C.timers || 12);
+    const mp = this.C.echo && this.S(this.C.echo.media_player);
+    const smokeOn = !!this.C.smoke && this.S(this.C.smoke.active)?.state === "on";
+    // the swipe row: the same ranking as the kitchen tiles, plus lights
+    const cards: Array<{ id: string; score: number; body: () => TemplateResult }> = [
+      { id: "timers", score: timers.length ? 100 : -99, body: () => this.timersTile(timers) },
+      { id: "smoker", score: smokeOn ? this.rank("smoker", 60) : -99, body: () => this.smokeTile() },
+      { id: "energy", score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, body: () => this.energyTile(e!) },
+      { id: "plants", score: this.groups().length ? this.rank("plants", 1.5 + (this.groups().some((g) => g.dry) ? 3 : 0)) : -99, body: () => this.plantsTile() },
+      { id: "cellar", score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, body: () => this.cellarTile() },
+      { id: "lights", score: (this.C.lights || []).length ? this.rank("inside", 1.4) : -99, body: () => this.lightsTile() },
+      { id: "inside", score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, body: () => this.insideTile() },
+      { id: "music", score: mp ? this.rank("music", 1 + (mp.state === "playing" ? 2.5 : 0)) : -99, body: () => this.musicTile() },
+    ];
+    const row = cards.filter((c) => c.score > -50).sort((a, b) => b.score - a.score);
+    const sug = this.rules().filter((r) => r.state === "suggested").length;
+    return html`<div class="phonewrap">
+<div class="ph-top">
+<div class="pik p-rest mini" style="width: 64px; height: 64px; flex: none">${pikArt("Pik")}</div>
+<div style="min-width: 0"><div class="ph-clock">${hm(d)} <span>${d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</span></div>
+<div class="wxl">${this.outTemp()} ${this.wxWord().toLowerCase()}${this.hi !== null ? ", high " + this.hi : ""}${this.S(this.C.thermostat) ? " · " + Math.round(Number(this.S(this.C.thermostat)!.attributes.current_temperature || 0)) + "° inside" : ""}</div></div>
+</div>
+<div class="bubble ph-bub"><div class="who"><span>Pik</span></div><div class="line">${this.headline()}</div></div>
+${moms.map((m) => this.banner(m))}
+<div class="us ph-us">${people.map((p) => {
+      const st = this.S(p.person);
+      const where = !st ? "" : st.state === "home" ? "home" : st.state === "not_home" ? "out" : st.state;
+      const nx = this.nextFor(p.key);
+      return html`<button type="button" class="person" @click=${() => this.moreInfo(p.person)}>
+<div class="av" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></div>
+<div style="min-width: 0"><b>${p.name}${where ? " · " + where : ""}</b><span>${nx ? nx.summary + " · " + whenWord(nx.start) : "Nothing else planned"}</span></div></button>`;
+    })}</div>
+<div class="ph-row">${row.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>
+<div class="panel">
+<div class="phead"><span class="eb">Today, together</span></div>
+${today.map((r) => html`<button type="button" class="row" @click=${() => r.tap && r.tap()}><span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w">${r.what}</span></button>`)}
+${today.length < 3 ? html`<div class="empty" style="border-top: 1px solid var(--line2)">${today.length ? "That's everything today." : "Nothing on the calendar today."} Send either Pik a plan and it lands here for both of you.</div>` : nothing}
+</div>
+<div class="panel">
+<div class="phead"><span class="eb">From your Piks</span></div>
+${feed.length ? repeat(feed, (f) => f.uid, (f) => {
+      const p = this.person(f.who);
+      return html`<div class=${"fitem" + (f.urgent ? " urgent" : "")}>
+${p ? html`<div class="av sm" style=${"background: " + p.color}>${p.name[0]}</div>` : html`<div class="av sm house" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></div>`}
+<button type="button" class="fb" @click=${f.primary}><div class="ft">${f.title}</div><div class="fs">${[p ? p.name + "'s Pik" : f.label, f.at ? ago(f.at) : ""].filter(Boolean).join(" · ")}</div></button>
+<button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
+    }) : html`<div class="empty">Nothing waiting right now.</div>`}
+</div>
+<div style="display: flex; justify-content: center; padding: 4px 0 18px"><button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button></div>
+</div>`;
   }
 
   render() {
-    if (this.narrow && this.H && customElements.get("pik-house-card")) return html`${this.legacy()}`;
+    if (this.narrow && this.H) return html`<div class="root phone">${this.phoneLayer()}
+${this.sheet === "energy" ? this.energySheet() : nothing}
+${this.sheet === "notes" ? this.notesSheet() : nothing}
+${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}</div>`;
     if (!this.H) return html`<div class="root"><div class="empty" style="padding: 60px">Waiting for Home Assistant…</div></div>`;
     const moms = this.moments();
     const m = moms[0];
