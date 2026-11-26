@@ -1260,7 +1260,8 @@ ${pic ? html`<img class="bimg" src=${pic} alt="Live view" @click=${() => this.mo
     window.setTimeout(() => {
       if (!this.lightsRoom) return;
       const el = this.renderRoot.querySelector("[data-room=\"" + this.lightsRoom + "\"]") as HTMLElement | null;
-      if (el && !el.dataset.scrolled) { el.dataset.scrolled = "1"; el.scrollIntoView({ block: "start" }); }
+      const box = this.renderRoot.querySelector(".lrooms") as HTMLElement | null;
+      if (el && box && !el.dataset.scrolled) { el.dataset.scrolled = "1"; box.scrollTop = el.offsetTop - box.offsetTop; }
     }, 50);
     return html`<div class="scrim" @click=${close}></div><div class="sheet lsheet">
 <div class="shtop"><h2>Lights</h2>${anyOn ? html`<button type="button" class="chip" @click=${() => { rooms.forEach((r) => r.ids.filter((id) => this.S(id)?.state === "on").forEach((id) => this.svc(id.split(".")[0], "turn_off", {}, { entity_id: id }))); this.flash("Turning everything off."); }}>All off</button>` : nothing}<button type="button" class="done" @click=${close}>Done</button></div>
