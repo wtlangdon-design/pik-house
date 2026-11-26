@@ -125,7 +125,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .mom.paper{background:#F4E9DA}
 .mom.storm{background:#20262E;color:#EEF0F2}
 .mom.ring{background:radial-gradient(ellipse at 30% 20%,#26305A 0%,#1B2240 45%,#121730 100%);color:#E9E6F2}
-.mpad{flex:1;min-height:0;padding:40px 56px 30px;display:flex;flex-direction:column;gap:20px}
+.mpad{flex:1;min-height:0;padding:72px 56px 30px;display:flex;flex-direction:column;gap:20px}
 .mbar{display:flex;align-items:center;gap:14px}
 .mbar .grow{flex:1;font-size:16px;opacity:.85}
 .pill{font:600 17px var(--sans);border:0;border-radius:999px;padding:0 28px;min-height:56px}
@@ -166,6 +166,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .vbub .who{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--clay);font-weight:600;display:flex;justify-content:space-between}
 .vbub .q{font-size:14px;color:var(--mute2)}
 .vbub .line{font-family:var(--serif);font-size:26px;line-height:1.15}
+.mexit{position:absolute;top:18px;right:22px;z-index:8;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(42,34,27,.25);background:rgba(252,248,241,.85);color:var(--ink);font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.mexit span{font-size:20px;line-height:1}
+.mexit.light{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
 .toast{position:absolute;left:50%;top:22px;transform:translateX(-50%);background:var(--ink);color:#FCF8F1;padding:12px 22px;border-radius:999px;font-size:15px;z-index:20;animation:fade .3s}
 
 /* ---------- Illustrated pieces ---------- */
