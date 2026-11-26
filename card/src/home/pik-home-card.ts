@@ -963,6 +963,44 @@ ${on ? html`<div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></di
     this.flash("Asking the Echo to play " + p.say + "…");
   }
 
+  private smokeTile(): TemplateResult {
+    const sm = this.C.smoke!;
+    const ps = sm.probes.map((id, i) => {
+      const e = this.S(id);
+      const v = e ? parseFloat(e.state) : NaN;
+      const at = (e?.attributes || {}) as Record<string, unknown>;
+      const food = String(at.food || this.S("input_text.smoke_probe_" + (i + 1) + "_food")?.state || "");
+      return { v, food: food && !["unknown", "unavailable"].includes(food) ? food : "Probe " + (i + 1), kind: String(at.kind || "food"), target: Number(at.target) || 0 };
+    }).filter((p) => isFinite(p.v));
+    const pit = ps.find((p) => p.kind === "smoker");
+    const foods = ps.filter((p) => p.kind !== "smoker");
+    const st = this.S("input_datetime.smoke_started");
+    const since = st && st.state && !["unknown", "unavailable"].includes(st.state) ? Date.parse(String(st.attributes.timestamp ? Number(st.attributes.timestamp) * 1000 : st.state)) : NaN;
+    const mins = isFinite(since) ? Math.max(0, Math.round((this.now - since) / 60000)) : NaN;
+    const elapsed = isFinite(mins) ? (mins >= 60 ? Math.floor(mins / 60) + "h " + (mins % 60) + "m" : mins + "m") : "";
+    return html`<button type="button" class="tile stile" @click=${() => this.open("smoker", () => sm.path && this.navigate(sm.path))}>
+<svg class="wisps" viewBox="0 0 200 200" preserveAspectRatio="none" aria-hidden="true">${svg`${[30, 90, 150].map((x, i) => svg`<path d=${`M${x} 210 C${x - 20} 160 ${x + 25} 120 ${x} 70 C${x - 15} 40 ${x + 10} 20 ${x} -10`} fill="none" stroke="#fff" stroke-width=${10 - i * 2} stroke-linecap="round" class=${"wisp w" + i}></path>`)}`}</svg>
+<div class="shead2"><span class="eb">Smoker${elapsed ? " · " + elapsed : ""}</span>${pit ? html`<span class="pit">Pit ${Math.round(pit.v)}°${pit.target ? html`<small> / ${pit.target}°</small>` : nothing}</span>` : nothing}</div>
+<div class="probes">${foods.length ? foods.slice(0, 3).map((p) => {
+      const frac = p.target ? Math.max(0, Math.min(1, (p.v - 40) / (p.target - 40))) : 0;
+      const done = p.target > 0 && p.v >= p.target;
+      return html`<div class=${"probe" + (done ? " done" : "")}><div class="pl"><span>${p.food}</span><b>${Math.round(p.v)}°</b></div>
+${p.target ? html`<div class="pbar"><i style=${"width: " + frac * 100 + "%"}></i></div><div class="pt">${done ? "Done · pull it" : "to " + p.target + "°"}</div>` : nothing}</div>`;
+    }) : html`<div class="isub" style="color: #D9CBBE; text-align: left">Waiting for the Inkbird</div>`}</div></button>`;
+  }
+
+  private timersTile(ts: PoolTimer[]): TemplateResult {
+    const ring = (t: PoolTimer) => {
+      const left = Math.max(0, t.end - this.now);
+      const f = t.rang ? 1 : t.total > 0 ? Math.min(1, left / t.total) : 0;
+      const r = 20, c = 2 * Math.PI * r;
+      return html`<svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true">${svg`<circle cx="25" cy="25" r=${r} fill="none" stroke="rgba(255,255,255,.12)" stroke-width="5"></circle><circle cx="25" cy="25" r=${r} fill="none" stroke=${t.rang ? "#FF9C6B" : "#F0B25E"} stroke-width="5" stroke-linecap="round" stroke-dasharray=${`${c * f} ${c}`} transform="rotate(-90 25 25)"></circle>`}</svg>`;
+    };
+    return html`<div class="tile ttile"><span class="eb">Timers · ${ts.length}</span>
+<div class="trings">${ts.slice(0, 3).map((t) => html`<button type="button" class=${"tring" + (t.rang ? " rang" : "")} @click=${() => { this.svc("script", "kitchen_timer_stop", { slot: t.id }); this.flash(t.label + (t.rang ? ": got it." : " timer stopped.")); }} aria-label=${t.label + (t.rang ? ", done. Dismiss" : ". Stop")}>
+${ring(t)}<div class="tl"><b>${t.rang ? "Done" : this.left(t)}</b><span>${t.label}</span></div></button>`)}</div></div>`;
+  }
+
   private cellarTile(): TemplateResult {
     const ws = this.wines();
     const n = ws.reduce((a, w) => a + w.count, 0);
@@ -1072,16 +1110,6 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     const order = cand.map((c) => c.id);
     const pick = cand.filter((c) => c.score > -50).sort((a, b) => b.score - a.score).slice(0, 5);
     return pick.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-  }
-
-  private smokeTile(): TemplateResult {
-    const sm = this.C.smoke!;
-    const ps = sm.probes.map((id, i) => ({ v: this.S(id)?.state, n: this.S("input_text.smoke_probe_" + (i + 1) + "_food")?.state || "Probe " + (i + 1) })).filter((p) => p.v && /^-?[\d.]+$/.test(p.v));
-    return html`<button type="button" class="tile smoke" @click=${() => this.open("smoker", () => sm.path && this.navigate(sm.path))}>
-<span class="eb">Smoker</span>${ps.length ? ps.slice(0, 3).map((p) => html`<div class="trow"><span>${p.n}</span><b>${Math.round(+p.v!)}°</b></div>`) : html`<div class="sub">Waiting for the Inkbird</div>`}</button>`;
-  }
-  private timersTile(ts: PoolTimer[]): TemplateResult {
-    return html`<div class="tile tmr"><span class="eb">Timers</span>${ts.slice(0, 3).map((t) => html`<button type="button" class=${"trow" + (t.rang ? " rang" : "")} style="background: none; border: 0; padding: 0; color: inherit; width: 100%" @click=${() => { this.svc("script", "kitchen_timer_stop", { slot: t.id }); this.flash(t.label + (t.rang ? " — got it." : " timer stopped.")); }}><span>${t.label}</span><b>${t.rang ? "Done" : this.left(t)}</b></button>`)}</div>`;
   }
 
   private homeLayer(): TemplateResult {
