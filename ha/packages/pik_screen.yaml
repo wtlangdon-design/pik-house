@@ -1,0 +1,310 @@
+# Pik screen: what the kitchen screen learns, the rules you give it, and Pik's line for the day.
+#
+# The screen (custom:pik-home-card) has three layers: Home (the everyday screen), Ambient (full-screen
+# stories when nobody's touching it) and Moments (time to go, the doorbell, a timer, a storm, cooking)
+# that take over and step aside. This package is the part that adapts:
+#
+#   event pik_screen              the card fires one for every tap, open, dismiss and skip:
+#                                 { topic, action, who }
+#   sensor.pik_screen_learning    a score per topic, and per topic and part of day, that fades by half
+#                                 every two weeks; the card ranks stories and panels with it
+#   todo.pik_screen_rules         rules in plain words ("Less cellar in the morning"). Description JSON:
+#                                 { topic, effect: more|less|never|always, when: any|morning|midday|evening|night,
+#                                   until, state: on|suggested, by }. A "suggested" rule waits for a yes on the screen.
+#   script.pik_screen_rule        Pik adds a rule ("Hey Pik, show less wine stuff in the morning")
+#   script.pik_screen_rule_remove Pik removes one
+#   script.pik_screen_report      what the screen has learned (the weekly review reads this)
+#   input_text.pik_headline       Pik's one line for the day, written by Claude every two hours
+#   input_text.pik_leave_moment   the next "time to go" (written by "Pik: time to leave" in pik_together.yaml)
+#   script.pik_leaving            the "We're leaving" button: lights off, heat down 4°
+#
+# Moments are never learned away: dismissing the doorbell is logged but never lowers it.
+#
+# Topics: calendar, piks, energy, plants, cellar, weather, inside, music, doorbell, deliveries, smoker,
+#         timers, cooking, lights
+# Parts of the day: morning 5–11, midday 11–4, evening 4–9, night 9–5.
+#
+# One-time setup: Settings → Devices & services → Add integration → Local To-do → "Pik screen rules".
+
+input_text:
+  pik_leave_moment: { name: "Pik screen: next time to go (JSON)", max: 255 }
+  pik_headline: { name: "Pik screen: Pik's line for the day", max: 255 }
+
+template:
+  - trigger:
+      - trigger: event
+        event_type: pik_screen
+    sensor:
+      - name: "Pik screen learning"
+        unique_id: pik_screen_learning
+        icon: mdi:school-outline
+        state: "{{ (this.attributes.log | default([]) | count) + 1 }}"
+        attributes:
+          at: "{{ now().isoformat() }}"
+          scores: >-
+            {% set w = {'tap': 1.0, 'open': 1.5, 'voice': 2.0, 'dwell': 0.3, 'dismiss': -1.5, 'skip': -0.4} %}
+            {% set old = this.attributes.scores | default({}) %}
+            {% set last = as_datetime(this.attributes.at | default(now().isoformat())) %}
+            {% set f = 0.5 ** ((((now() - last).total_seconds()) / 86400) / 14) %}
+            {% set ns = namespace(d={}) %}
+            {% for k, v in old.items() %}{% set x = (v * f) | round(3) %}{% if x | abs > 0.05 %}{% set ns.d = dict(ns.d, **{k: x}) %}{% endif %}{% endfor %}
+            {% set t = trigger.event.data.topic | default('') | string | lower | regex_replace('[^a-z_]', '') %}
+            {% set a = w.get(trigger.event.data.action | default('') | string, 0) %}
+            {% set h = now().hour %}
+            {% set part = 'morning' if 5 <= h < 11 else 'midday' if h < 16 and h >= 11 else 'evening' if 16 <= h < 21 else 'night' %}
+            {% if t and a != 0 and not (trigger.event.data.moment | default(false)) %}
+              {% for k in [t, t ~ '@' ~ part] %}{% set ns.d = dict(ns.d, **{k: ([-20, [20, (ns.d.get(k, 0) + a)] | min] | max) | round(3)}) %}{% endfor %}
+            {% endif %}
+            {{ ns.d }}
+          log: >-
+            {% set t = trigger.event.data.topic | default('') | string | lower | regex_replace('[^a-z_]', '') %}
+            {% set a = trigger.event.data.action | default('') | string | lower | regex_replace('[^a-z_]', '') %}
+            {% set who = trigger.event.data.who | default('') | string | lower | regex_replace('[^a-z]', '') %}
+            {% set e = now().strftime('%y%m%d%H%M') ~ '|' ~ t ~ '|' ~ a ~ '|' ~ who %}
+            {{ ((this.attributes.log | default([])) + ([e] if t and a else []))[-150:] }}
+
+script:
+  # The screen fires pik_screen events directly; this is the fallback for a screen signed in without admin rights.
+  pik_screen_log:
+    alias: "Pik screen: log a tap"
+    mode: queued
+    max: 50
+    fields:
+      topic: { selector: { text: null } }
+      action: { selector: { text: null } }
+      who: { selector: { text: null } }
+      moment: { selector: { boolean: null } }
+    sequence:
+      - event: pik_screen
+        event_data:
+          topic: "{{ topic | default('') }}"
+          action: "{{ action | default('') }}"
+          who: "{{ who | default('') }}"
+          moment: "{{ moment | default(false) }}"
+
+  pik_screen_rule:
+    alias: "Pik screen: add a rule"
+    description: >-
+      Change what the kitchen screen shows, when Tyler or Charlie asks ("show less wine stuff in the
+      morning", "always show the doorbell at night", "no hike ideas until spring"). Pick the closest
+      topic: calendar (plans), piks (what you two send Pik), energy (solar, Powerwall), plants, cellar
+      (wine), weather, inside (heat, lights), music, doorbell, deliveries, smoker, timers, cooking.
+      effect: more, less, never or always. when: any, morning, midday, evening or night. days: how long
+      (leave out for good). Read back the message.
+    mode: queued
+    fields:
+      topic:
+        description: "calendar, piks, energy, plants, cellar, weather, inside, music, doorbell, deliveries, smoker, timers or cooking"
+        required: true
+        selector:
+          select: { options: [calendar, piks, energy, plants, cellar, weather, inside, music, doorbell, deliveries, smoker, timers, cooking] }
+      effect:
+        description: "more, less, never or always"
+        required: true
+        selector:
+          select: { options: [more, less, never, always] }
+      when:
+        description: "any (default), morning, midday, evening or night"
+        selector:
+          select: { options: [any, morning, midday, evening, night] }
+      days:
+        description: "How many days the rule lasts (leave out for good)"
+        selector:
+          number: { min: 1, max: 365 }
+      words:
+        description: "The rule in a few plain words, as they said it, e.g. 'Less wine in the morning'"
+        selector:
+          text:
+      who:
+        description: "Who asked: tyler or charlie"
+        selector:
+          select: { options: [tyler, charlie] }
+    sequence:
+      - variables:
+          w: "{{ when | default('any', true) }}"
+          label: >-
+            {% set say = {'more': 'More', 'less': 'Less', 'never': 'No', 'always': 'Always show'} %}
+            {{ words | default('', true) or (say[effect] ~ ' ' ~ topic ~ ('' if w == 'any' else ' in the ' ~ w if w != 'night' else ' at night')) }}
+          until: "{{ (now() + timedelta(days=days | int)).isoformat() if days | default(0, true) | int > 0 else '' }}"
+          sender: >-
+            {% set x = who | default('', true) | lower %}
+            {% if x in ['tyler', 'charlie'] %}{{ x }}{% else %}
+              {% set p = states.person | selectattr('attributes.user_id', 'defined') | selectattr('attributes.user_id', 'eq', context.user_id) | map(attribute='name') | first | default('') | lower %}
+              {{ 'tyler' if 'tyler' in p else 'charlie' if 'charlie' in p else '' }}{% endif %}
+      - action: todo.add_item
+        target: { entity_id: todo.pik_screen_rules }
+        data:
+          item: "{{ label | trim }}"
+          description: "{{ {'topic': topic, 'effect': effect, 'when': w, 'until': until, 'state': 'on', 'by': sender | trim} | to_json }}"
+      - variables:
+          result: { message: "Okay, the screen will follow that: {{ label | trim }}." }
+      - stop: ""
+        response_variable: result
+
+  pik_screen_rule_remove:
+    alias: "Pik screen: remove a rule"
+    description: >-
+      Undo a screen rule ("bring the wine back in the morning", "forget the hike rule"). Give the topic,
+      or a word from the rule. Read back the message.
+    mode: queued
+    fields:
+      topic:
+        description: "The rule's topic, e.g. cellar"
+        selector:
+          text:
+      words:
+        description: "A word from the rule"
+        selector:
+          text:
+    sequence:
+      - action: todo.get_items
+        target: { entity_id: todo.pik_screen_rules }
+        data: { status: [needs_action] }
+        response_variable: got
+      - variables:
+          hits: >-
+            {% set ns = namespace(l=[]) %}
+            {% for it in got['todo.pik_screen_rules']['items'] %}
+              {% set d = (it.description | default('{}', true)) %}{% set j = d | from_json if d.startswith('{') else {} %}
+              {% if (topic | default('', true) and j.topic | default('') == topic | lower) or (words | default('', true) and (words | lower) in (it.summary | lower)) %}{% set ns.l = ns.l + [it.uid] %}{% endif %}
+            {% endfor %}{{ ns.l }}
+      - if: "{{ hits | count > 0 }}"
+        then:
+          - action: todo.remove_item
+            target: { entity_id: todo.pik_screen_rules }
+            data: { item: "{{ hits }}" }
+      - variables:
+          result: { message: "{{ 'Done, I took that rule off.' if hits | count == 1 else ('Done, I took ' ~ hits | count ~ ' rules off.' if hits | count > 1 else 'I couldn\\'t find a rule like that.') }}" }
+      - stop: ""
+        response_variable: result
+
+  pik_screen_report:
+    alias: "Pik screen: what it has learned"
+    description: >-
+      What the kitchen screen has learned: the score per topic (higher = shown more), the same by part
+      of day, the rules, and what happened in the last 7 days (taps, opens, dismissals and skips per topic).
+    mode: parallel
+    sequence:
+      - action: todo.get_items
+        target: { entity_id: todo.pik_screen_rules }
+        data: { status: [needs_action] }
+        response_variable: got
+      - variables:
+          result: >-
+            {% set s = state_attr('sensor.pik_screen_learning', 'scores') or {} %}
+            {% set lg = state_attr('sensor.pik_screen_learning', 'log') or [] %}
+            {% set since = (now() - timedelta(days=7)).strftime('%y%m%d%H%M') %}
+            {% set ns = namespace(c={}) %}
+            {% for e in lg %}{% set p = e.split('|') %}{% if p | count >= 3 and p[0] >= since %}{% set k = p[1] ~ ':' ~ p[2] %}{% set ns.c = dict(ns.c, **{k: ns.c.get(k, 0) + 1}) %}{% endif %}{% endfor %}
+            {{ {'scores': s, 'last_7_days': ns.c, 'events_logged': lg | count,
+                'rules': got['todo.pik_screen_rules']['items'] | map(attribute='summary') | list,
+                'rule_details': got['todo.pik_screen_rules']['items'] | map(attribute='description') | list} }}
+      - stop: ""
+        response_variable: result
+
+  pik_screen_suggest:
+    alias: "Pik screen: suggest a rule"
+    description: >-
+      Propose a screen rule for Tyler and Charlie to approve on the kitchen screen (the weekly review
+      uses this). Same fields as pik_screen_rule plus why (one short sentence they'll see).
+    mode: queued
+    fields:
+      topic: { description: "Topic", required: true, selector: { text: null } }
+      effect: { description: "more, less, never or always", required: true, selector: { text: null } }
+      when: { description: "any, morning, midday, evening or night", selector: { text: null } }
+      words: { description: "The rule in a few plain words", required: true, selector: { text: null } }
+      why: { description: "Why, e.g. 'You dismissed the plant card 9 times this week.'", selector: { text: null } }
+    sequence:
+      - action: todo.add_item
+        target: { entity_id: todo.pik_screen_rules }
+        data:
+          item: "{{ words }}"
+          description: "{{ {'topic': topic | lower, 'effect': effect | lower, 'when': when | default('any', true) | lower, 'until': '', 'state': 'suggested', 'why': why | default('', true)} | to_json }}"
+
+  pik_leaving:
+    alias: "Pik: we're leaving"
+    description: >-
+      When Tyler and Charlie head out: turns off the house lights (the front door light stays as it is)
+      and lowers the heat 4 degrees. Read back the message.
+    mode: single
+    sequence:
+      - action: light.turn_off
+        target:
+          entity_id: >-
+            {{ states.light | map(attribute='entity_id') | reject('eq', 'light.front_door') | select('is_state', 'on') | list }}
+        continue_on_error: true
+      - action: switch.turn_off
+        target: { entity_id: [switch.nightstand1, switch.nightstand2] }
+        continue_on_error: true
+      - variables:
+          sp: "{{ state_attr('climate.hallway_thermostat', 'temperature') }}"
+      - if: "{{ sp is number }}"
+        then:
+          - action: climate.set_temperature
+            target: { entity_id: climate.hallway_thermostat }
+            data: { temperature: "{{ sp - 4 }}" }
+            continue_on_error: true
+      - variables:
+          result: { message: "Lights are off{{ ' and the heat is down to ' ~ ((sp - 4) | int) ~ '°' if sp is number else '' }}. Have fun." }
+      - stop: ""
+        response_variable: result
+
+automation:
+  - id: pik_screen_headline
+    alias: "Pik screen: Pik's line for the day"
+    description: "Every two hours from 6 AM to 10 PM, Claude writes the one line the screen leads with."
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        hours: "/2"
+        minutes: 2
+      - trigger: time
+        at: "05:55:00"
+    conditions:
+      - condition: time
+        after: "05:50:00"
+        before: "22:30:00"
+    actions:
+      - action: calendar.get_events
+        target: { entity_id: calendar.tyler_charlie }
+        data:
+          start_date_time: "{{ now() }}"
+          end_date_time: "{{ (now() + timedelta(hours=20)).isoformat() }}"
+        response_variable: cal
+        continue_on_error: true
+      - action: weather.get_forecasts
+        target: { entity_id: weather.hallway_thermostat }
+        data: { type: daily }
+        response_variable: fc
+        continue_on_error: true
+      - variables:
+          lines: >-
+            {% set ev = ((cal | default({})).get('calendar.tyler_charlie', {})).get('events', []) %}
+            {% set pairs = [['Kitchen', 'sensor.gw1200b_soil_moisture_1', 'input_number.pik_dry_kitchen'], ['Big aroids', 'sensor.gw1200b_soil_moisture_2', 'input_number.pik_dry_big_aroids'], ['Bedroom & office', 'sensor.gw1200b_soil_moisture_3', 'input_number.pik_dry_bedroom_office'], ['Trees & palms', 'sensor.gw1200b_soil_moisture_4', 'input_number.pik_dry_trees_palms'], ['Tough guys', 'sensor.gw1200b_soil_moisture_5', 'input_number.pik_dry_tough_guys'], ['Jungle cacti', 'sensor.gw1200b_soil_moisture_6', 'input_number.pik_dry_jungle_cacti'], ['Desert cacti', 'sensor.gw1200b_soil_moisture_7', 'input_number.pik_dry_desert_cacti']] %}
+            {% set ns = namespace(dry=[]) %}{% for p in pairs %}{% if states(p[1]) | is_number and states(p[1]) | float <= states(p[2]) | float(0) %}{% set ns.dry = ns.dry + [p[0]] %}{% endif %}{% endfor %}
+            {% set f = ((fc | default({})).get('weather.hallway_thermostat', {})).get('forecast', [{}]) %}
+            Now: {{ now().strftime('%A %-I:%M %p') }}.
+            Plans in the next 20 hours: {% for e in ev %}{{ e.summary }} ({{ e.start }}{{ ', ' ~ e.location if e.location is defined and e.location else '' }}{{ '; ' ~ (e.description | default('', true)).split('\n')[0] if e.description is defined and e.description else '' }}); {% else %}none; {% endfor %}
+            Tyler is {{ states('person.tyler_langdon') | replace('not_home', 'out') }}, Charlie is {{ states('person.charlie_finlayson') | replace('not_home', 'out') }}.
+            Weather today: {{ states('weather.hallway_thermostat') }}, high {{ f[0].temperature | default('?') }}, low {{ f[0].templow | default('?') }}. Alerts: {{ states('sensor.weather_alerts') }}.
+            Plant groups that need water: {{ ns.dry | join(', ') or 'none' }}.
+            Powerwall {{ states('sensor.home_percentage_charged') }}%, solar {{ states('sensor.home_solar_power') }} kW, grid {{ 'down' if is_state('binary_sensor.home_grid_status', 'off') else 'up' }}.
+            Smoker cook going: {{ 'yes' if is_state('input_boolean.smoke_on', 'on') else 'no' }}.
+      - action: ai_task.generate_data
+        data:
+          task_name: "Pik screen line"
+          entity_id: ai_task.claude_ai_task
+          instructions: |-
+            You are Pik, the warm, slightly dry little yellow house character on Tyler and Charlie's kitchen screen in Reno.
+            Write ONE line (max 90 characters) that leads the screen right now: the single most useful thing about the
+            rest of their day, in plain, friendly words. Prefer what's next for the two of them; otherwise weather, plants
+            or the Powerwall if something matters. No emoji, no greeting, no exclamation marks, no quotes.
+            {{ lines }}
+        response_variable: out
+        continue_on_error: true
+      - if: "{{ (out | default({})).data | default('') | string | trim != '' }}"
+        then:
+          - action: input_text.set_value
+            target: { entity_id: input_text.pik_headline }
+            data:
+              value: "{{ (out.data | string | trim | replace('\"', ''))[:250] }}"

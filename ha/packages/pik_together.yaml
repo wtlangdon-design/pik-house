@@ -101,8 +101,25 @@ script:
         selector:
           text:
             multiline: true
+      for_who:
+        description: "Whose plan it is: tyler, charlie or both (default both). A haircut is one person's; dinner out together is both."
+        selector:
+          select: { options: [both, tyler, charlie] }
+      who:
+        description: "Who asked Pik: tyler or charlie (Pik fills this in from whoever is talking to it)"
+        selector:
+          select: { options: [tyler, charlie] }
     sequence:
       - variables:
+          sender: >-
+            {% set w = who | default('', true) | lower %}
+            {% if w in ['tyler', 'charlie'] %}{{ w }}{% else %}
+              {% set p = states.person | selectattr('attributes.user_id', 'defined') | selectattr('attributes.user_id', 'eq', context.user_id) | map(attribute='name') | first | default('') | lower %}
+              {{ 'tyler' if 'tyler' in p else 'charlie' if 'charlie' in p else '' }}{% endif %}
+          fw: "{{ for_who | default('both', true) | lower if for_who | default('', true) | lower in ['tyler', 'charlie', 'both'] else 'both' }}"
+          # The first line tells the screens whose plan it is and who sent it: "For: Charlie · from Tyler".
+          desc_full: >-
+            For: {{ fw | capitalize }}{{ ' · from ' ~ (sender | trim | capitalize) if sender | trim else '' }}{{ '\n' ~ description if description | default('', true) else '' }}
           cals: >-
             {{ (states('input_text.pik_calendars') | replace(' ', '') | lower).split(',') | select('match', '^calendar\.') | list }}
           all_day: "{{ start_date | default('', true) != '' and start_date_time | default('', true) == '' }}"
@@ -126,7 +143,7 @@ script:
                     start_date: "{{ start_date }}"
                     end_date: "{{ end_d }}"
                     location: "{{ location | default('', true) }}"
-                    description: "{{ description | default('', true) }}"
+                    description: "{{ desc_full }}"
               else:
                 - action: calendar.create_event
                   target: { entity_id: "{{ repeat.item }}" }
@@ -135,9 +152,10 @@ script:
                     start_date_time: "{{ start_date_time }}"
                     end_date_time: "{{ end_dt | trim }}"
                     location: "{{ location | default('', true) }}"
-                    description: "{{ description | default('', true) }}"
+                    description: "{{ desc_full }}"
       - action: script.feed_post
         data:
+          who: "{{ sender | trim }}"
           id: "cal-{{ summary | slugify }}"
           title: "On both calendars: {{ summary }}"
           category: reminder
@@ -261,6 +279,12 @@ automation:
                     detail: "{{ repeat.item.summary }}. It's {{ drive }} with traffic right now.{{ parking }}"
                     primary_label: On our way
                     expires_hours: 2
+                # The kitchen screen's "Time to go" moment reads this (see pik_screen.yaml).
+                - action: input_text.set_value
+                  target: { entity_id: input_text.pik_leave_moment }
+                  data:
+                    value: >-
+                      {{ {'t': repeat.item.summary[:70], 'at': as_datetime(leave_at).isoformat(), 'start': repeat.item.start, 'drive': drive, 'f': 1 if flight else 0} | to_json }}
                 - action: input_text.set_value
                   target: { entity_id: input_text.pik_leave_sent }
                   data:

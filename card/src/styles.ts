@@ -342,3 +342,35 @@ export const adjustStyles = css`
 .top .demo{pointer-events:auto}
 @media (prefers-reduced-motion: reduce){.bfill{animation:none!important}}
 `;
+
+/** Pik's face states on their own (the new kitchen screen uses these without the rest of the daylight theme). */
+export const pikStyles = css`
+.pik svg{display:block;overflow:visible}
+.pik .ring{fill:none;stroke:#A99070;stroke-width:1.45;opacity:.58;transform-origin:128px 128px;transition:stroke .4s,opacity .4s,stroke-width .4s}
+.pik .hs{stop-color:#A99070;transition:stop-color .5s}
+.pik .mute,.pik .badge2{opacity:0;transition:opacity .4s}
+.pik .light{transition:opacity .4s}
+.pik .f{opacity:0;transition:opacity .28s}
+.pik .body{transform-origin:128px 128px}
+.pik .mouth{transform-origin:135px 145px}
+.p-rest .f-rest,.p-listen .f-listen,.p-think .f-think,.p-speak .f-speak,.p-muted .f-muted,.p-alert .f-alert{opacity:1}
+.p-listen .ring{stroke:#ADDFB9;stroke-width:2.4;opacity:.96;animation:pkPulse 1.8s ease-in-out infinite}
+.p-listen .hs{stop-color:#ADDFB9}
+.p-think .ring{stroke:#C1AFF6;opacity:.96;stroke-dasharray:1 9;stroke-linecap:round;animation:pkSpin 8s linear infinite}
+.p-think .hs{stop-color:#C1AFF6}
+.p-speak .ring{stroke:#FFD28D;stroke-width:2.4;opacity:.96}
+.p-speak .hs{stop-color:#FFD28D}
+.p-speak .body{animation:pkBob 1.6s ease-in-out infinite}
+.p-speak .mouth{animation:pkTalk .34s ease-in-out infinite alternate}
+.p-muted .ring{stroke:#A9AAA1;opacity:.96;stroke-dasharray:4 8}
+.p-muted .hs{stop-color:#A9AAA1}
+.p-muted .mute,.p-muted .badge2{opacity:1}
+.p-muted .light{opacity:.4}
+.p-alert .ring{stroke:#FF8F6B;stroke-width:2.8;opacity:1;animation:pkPulse 1.1s ease-in-out infinite}
+.p-alert .hs{stop-color:#FF8F6B}
+@keyframes pkPulse{0%,100%{transform:scale(1);opacity:.96}50%{transform:scale(1.045);opacity:.5}}
+@keyframes pkSpin{to{transform:rotate(360deg)}}
+@keyframes pkBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes pkTalk{from{transform:scaleY(.35)}to{transform:scaleY(1.1)}}
+@media (prefers-reduced-motion: reduce){.pik *{animation:none!important}}
+`;

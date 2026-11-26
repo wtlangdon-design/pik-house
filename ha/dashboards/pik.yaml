@@ -1,0 +1,76 @@
+# The kitchen screen redesign: the Pik House system (custom:pik-home-card).
+# Home (the two of you, today together, what your Piks sent, the house), Ambient stories when nobody's
+# touching it, and Moments that take over: time to go, the doorbell, a finished timer, a storm, a cooking step.
+# It learns from what you tap and clear (ha/packages/pik_screen.yaml) and follows the rules you tell Pik.
+# Same house config as the House dashboard, plus the people and the learning pieces at the bottom.
+title: Pik
+views:
+  - title: Pik
+    path: home
+    panel: true
+    cards:
+      - type: custom:pik-home-card
+        weather: weather.hallway_thermostat   # the Ecobee's forecast (Met.no reads ~15° warm here: the hub's elevation is set to 0)
+        sun: sun.sun
+        thermostat: climate.hallway_thermostat
+        feed_list: todo.house_feed
+        plants_list: todo.plants
+        plants_quiet: input_text.pik_plants_quiet
+        timers: 12
+        calendar: calendar.tyler_charlie   # the shared calendar; until it's connected the header shows a placeholder
+        cellar: { list: todo.wine_cellar, path: /dashboard-cellar/cellar }
+        airport:
+          name: RNO
+          lots:
+            - { name: Long-Term Garage, short: Garage, entity: sensor.rno_parking_long_term_garage }
+            - { name: Park & Walk, entity: sensor.rno_parking_park_walk }
+            - { name: Long-Term Surface, short: Surface, entity: sensor.rno_parking_long_term_surface }
+            - { name: Short-Term, entity: sensor.rno_parking_short_term_garage }
+        plant_groups:
+          - { name: Kitchen, indicator: nerve plant, sensor: sensor.gw1200b_soil_moisture_1, dry: 15, dry_entity: input_number.pik_dry_kitchen }
+          - { name: Big aroids, indicator: entry monstera, sensor: sensor.gw1200b_soil_moisture_2, dry: 25, dry_entity: input_number.pik_dry_big_aroids }
+          - { name: Bedroom & office, indicator: spider plant, sensor: sensor.gw1200b_soil_moisture_3, dry: 25, dry_entity: input_number.pik_dry_bedroom_office }
+          - { name: Trees & palms, indicator: bedroom fiddle leaf fig, sensor: sensor.gw1200b_soil_moisture_4, dry: 22, dry_entity: input_number.pik_dry_trees_palms }
+          - { name: Tough guys, indicator: big ZZ in the yellow pot, sensor: sensor.gw1200b_soil_moisture_5, dry: 10, dry_entity: input_number.pik_dry_tough_guys }
+          - { name: Jungle cacti, indicator: blooming Christmas cactus, sensor: sensor.gw1200b_soil_moisture_6, dry: 18, dry_entity: input_number.pik_dry_jungle_cacti }
+          - { name: Desert cacti, indicator: tall euphorbia, sensor: sensor.gw1200b_soil_moisture_7, dry: 5, dry_entity: input_number.pik_dry_desert_cacti }
+        lights:   # every Leviton light plus the Wemo nightstand lamps, by room (the tile counts single lights)
+          - { name: Kitchen, entities: [light.kitchen_cans, light.kitchen_chandelier, light.bar] }
+          - { name: Living room, entities: [light.living_room_chandelier, light.living_room_cans] }
+          - { name: Dining room, entities: [light.dining_room_chandelier, light.dining_room_cans] }
+          - { name: Bedroom, entities: [light.master_bedroom, light.master_closet, switch.nightstand1, switch.nightstand2] }   # the Wemo nightstand lamps
+          - { name: Master bath, entities: [light.bathroom, light.vanity, light.shower] }
+          - { name: Office, entities: [light.office, light.office_cans] }
+          - { name: Entry & hall, entities: [light.entryway, light.hallway] }
+          - { name: Front door, entities: [light.front_door] }
+        watering:
+          yard: { name: Rachio, standby: switch.outside_home_controller_standby }
+        doorbell: { name: Gate, camera: camera.outside_gate_live_view }
+        echo: { media_player: media_player.tyler_s_echo_show_15 }
+        voice: { satellite: assist_satellite.kitchen_screen }   # only on the browser bound to it in the Voice Satellite panel
+        energy:   # Teslemetry: battery > 0 = discharging, grid > 0 = importing (the card flips them)
+          solar_power: sensor.home_solar_power
+          load_power: sensor.home_load_power
+          battery_power: sensor.home_battery_power
+          grid_power: sensor.home_grid_power
+          battery_level: sensor.home_percentage_charged
+          grid_status: binary_sensor.home_grid_status
+          capacity_kwh: 13.5
+        holiday:
+          - { name: Thanksgiving, path: /dashboard-thanksgiving/kitchen, from: "2026-11-24", to: "2026-11-26" }
+        people:
+          - { key: tyler, name: Tyler, person: person.tyler_langdon, color: "#B5602F" }
+          - { key: charlie, name: Charlie, person: person.charlie_finlayson, color: "#3F6E9A" }
+        learning: sensor.pik_screen_learning
+        rules: todo.pik_screen_rules
+        headline: input_text.pik_headline
+        leave: input_text.pik_leave_moment
+        leaving_script: script.pik_leaving
+        storm: { alert: sensor.weather_alert_storm, ends: sensor.weather_alert_storm_ends, watch: switch.home_storm_watch }
+        ring: { ding: event.outside_gate_ding, camera: camera.outside_gate_live_view, name: Gate, light: light.front_door }
+        smoke: { active: input_boolean.smoke_on, probes: [sensor.smoke_probe_1, sensor.smoke_probe_2, sensor.smoke_probe_3, sensor.smoke_probe_4], path: /dashboard-smoking/probes }
+        cooking: { script: script.holiday_whats_next, done_script: script.holiday_task_done }
+        plants_path: /dashboard-plants/plants
+        ambient_after: 120   # seconds untouched before the stories start
+        story_seconds: 12
+        quiet_hours: [23, 7]
