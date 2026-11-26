@@ -1,16 +1,15 @@
-# The house feed: Pik on the kitchen Chromebook, live (1280×800).
-# Data: the House feed list (todo.house_feed, filled by script.feed_post), the plant catalog and soil sensors,
-# the Ecobee, Leviton lights, Rachio, Ring, the Echo Show, the shared kitchen timers, the wine cellar
-# (todo.wine_cellar) and RNO's live parking counts; an active Instacart/Grubhub/DoorDash delivery takes the parking tile's place.
-# The Energy tile reads the Powerwall 3 through Teslemetry (cloud; Tesla shut off the Powerwall 3's local API).
-# A tile with nothing behind it hides.
+# The kitchen screen redesign: the Pik House system (custom:pik-home-card).
+# Home (the two of you, today together, what your Piks sent, the house), Ambient stories when nobody's
+# touching it, and Moments that take over: time to go, the doorbell, a finished timer, a storm, a cooking step.
+# It learns from what you tap and clear (ha/packages/pik_screen.yaml) and follows the rules you tell Pik.
+# On a phone (narrower than 900px) the card shows the original House card's phone layout with the same config.
 title: House
 views:
   - title: House
     path: house
     panel: true
     cards:
-      - type: custom:pik-house-card
+      - type: custom:pik-home-card
         weather: weather.hallway_thermostat   # the Ecobee's forecast (Met.no reads ~15° warm here: the hub's elevation is set to 0)
         sun: sun.sun
         thermostat: climate.hallway_thermostat
@@ -59,3 +58,19 @@ views:
           capacity_kwh: 13.5
         holiday:
           - { name: Thanksgiving, path: /dashboard-thanksgiving/kitchen, from: "2026-11-24", to: "2026-11-26" }
+        people:
+          - { key: tyler, name: Tyler, person: person.tyler_langdon, color: "#B5602F" }
+          - { key: charlie, name: Charlie, person: person.charlie_finlayson, color: "#3F6E9A" }
+        learning: sensor.pik_screen_learning
+        rules: todo.pik_screen_rules
+        headline: input_text.pik_headline
+        leave: input_text.pik_leave_moment
+        leaving_script: script.pik_leaving
+        storm: { alert: sensor.weather_alert_storm, ends: sensor.weather_alert_storm_ends, watch: switch.home_storm_watch }
+        ring: { ding: event.outside_gate_ding, camera: camera.outside_gate_live_view, name: Gate, light: light.front_door }
+        smoke: { active: input_boolean.smoke_on, probes: [sensor.smoke_probe_1, sensor.smoke_probe_2, sensor.smoke_probe_3, sensor.smoke_probe_4], path: /dashboard-smoking/probes }
+        cooking: { script: script.holiday_whats_next, done_script: script.holiday_task_done }
+        plants_path: /dashboard-plants/plants
+        ambient_after: 120   # seconds untouched before the stories start
+        story_seconds: 12
+        quiet_hours: [23, 7]
