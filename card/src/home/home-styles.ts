@@ -293,15 +293,17 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .flink.on.rev{animation-direction:reverse}
 @keyframes flowx{from{background-position:0 0}to{background-position:60px 0}}
 .sheet.esheet{padding:26px 34px}
-.tile.ptile{gap:5px;padding:11px 14px}
+.tile.ptile{position:relative;gap:5px;padding:11px 14px;border:0;color:#EAF3E4;background:radial-gradient(120% 100% at 100% 100%,#3E6B3C 0%,#22402A 45%,#152A1C 100%)}
+.leaves{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ptile .prows{position:relative}
 .prows{display:flex;flex-direction:column;gap:1px;flex:1;justify-content:space-between;min-height:0}
 .prow2{display:grid;grid-template-columns:15px minmax(0,1fr) 60px 30px;align-items:center;gap:6px;font-size:12px;line-height:16px}
-.prow2 .pn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
-.prow2 .pb{position:relative;height:7px;border-radius:4px;background:rgba(94,138,90,.15)}
-.prow2 .pb i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--green)}
-.prow2 .pb u{position:absolute;top:-3px;bottom:-3px;width:2px;background:#E3893B;border-radius:1px}
+.prow2 .pn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#EAF3E4}
+.prow2 .pb{position:relative;height:7px;border-radius:4px;background:rgba(255,255,255,.12)}
+.prow2 .pb i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,#6FB36A,#A8D99A)}
+.prow2 .pb u{position:absolute;top:-3px;bottom:-3px;width:2px;background:#FFB27A;border-radius:1px}
 .prow2 b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
-.prow2.dry .pn,.prow2.dry b{color:#C2671F;font-weight:600}.prow2.dry .pb i{background:#E3893B}
+.prow2.dry .pn,.prow2.dry b{color:#FFB27A;font-weight:600}.prow2.dry .pb i{background:linear-gradient(90deg,#E3893B,#FFB27A);box-shadow:0 0 8px rgba(255,178,122,.6)}
 .gring{position:relative;flex:none}
 .gring svg{display:block}
 .gring .gicon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
@@ -313,12 +315,13 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .namechips{display:flex;flex-wrap:wrap;gap:6px}.namechips span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
 
 /* ---------- Inside & music ---------- */
-.tile.itile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:2px;padding:11px 10px 12px;border:0;background:radial-gradient(120% 100% at 0% 0%,#FFFFFF 0%,#F6EEE3 60%,#EDE2D3 100%)}
-.tile.itile.heat{background:radial-gradient(120% 100% at 0% 0%,#FFF6EA 0%,#FBE3C8 55%,#F3CFA9 100%)}
-.tile.itile.cool{background:radial-gradient(120% 100% at 0% 0%,#F4F9FD 0%,#DCEAF6 60%,#C9DDEF 100%)}
+.tile.itile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:2px;padding:11px 10px 12px;border:0;color:#F3EDE3;background:radial-gradient(110% 90% at 50% 45%,#2C3344 0%,#1B2130 55%,#121722 100%)}
+.itile .eb{color:#AEB7C8}.itile .isub{color:#C9D0DC}.itile .dialnum{color:#fff}
+.tile.itile.heat{background:radial-gradient(110% 90% at 50% 45%,#5A2E1C 0%,#2E1C16 50%,#17110F 100%)}
+.tile.itile.cool{background:radial-gradient(110% 90% at 50% 45%,#1E3A55 0%,#152536 50%,#0F1824 100%)}
 .itile .eb{align-self:flex-start;margin-left:4px}
 .dialrow{display:flex;align-items:center;justify-content:center;gap:2px}
-.nudge{width:34px;height:34px;border-radius:50%;border:1px solid rgba(42,34,27,.18);background:rgba(255,255,255,.6);font-size:20px;line-height:1;color:var(--ink);padding:0;flex:none}
+.nudge{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);font-size:20px;line-height:1;color:#fff;padding:0;flex:none}
 .dialbtn{position:relative;border:0;background:none;padding:0;width:118px;height:118px;flex:none}
 .dialbtn svg{position:absolute;inset:0}
 .dialnum{position:absolute;left:0;right:0;top:37px;text-align:center;font-family:var(--serif);font-size:40px;line-height:1}
