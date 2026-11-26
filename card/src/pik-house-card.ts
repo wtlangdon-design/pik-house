@@ -13,6 +13,8 @@ import "./holiday/holiday-card";
 import "./smoke/smoke-card";
 import "./plants/plants-card";
 import "./cellar/cellar-card";
+// The kitchen screen redesign (Home, Ambient stories, Moments): <pik-home-card>.
+import "./home/pik-home-card";
 import { energySheet, plantsSheet, homeSheet } from "./views";
 import { ALL, CAP, GROUPS, INITIAL, PLANT_TOTAL, LABELS, PAUSE, PLAY, QUESTIONS, QUEUE, type FeedCard, type Group, type PikState } from "./mock-data";
 import { cellarTotals, condWord, fetchEvents, whenWord, type CalEvent, liveGroups, localStamp, num, parseDesc, parseQuiet, plantTotal, poolTimers, today, writeQuiet, type Hass, type LiveConfig, type TodoItem } from "./live";
