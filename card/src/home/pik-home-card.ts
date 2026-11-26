@@ -12,7 +12,7 @@
 import { LitElement, html, nothing, svg, type TemplateResult } from "lit";
 import { repeat } from "lit/directives/repeat.js";
 import { homeStyles } from "./home-styles";
-import { energyScene, niche, photoUrl, plantRing, type PlantPic, type SceneIn, type Wine } from "./art";
+import { batteryGauge, energyChart, groupRing, niche, plantIcon, type DayHist, type Pt, type Wine } from "./art";
 import { pikStyles } from "../styles";
 import { pikArt } from "../pik-art";
 import { condWord, fetchEvents, liveGroups, num, parseDesc, parseQuiet, poolTimers, whenWord, type CalEvent, type Hass, type HState, type LiveConfig, type PoolTimer, type TodoItem } from "../live";
@@ -97,6 +97,8 @@ export class PikHomeCard extends LitElement {
   private low: number | null = null;
   private cook: Record<string, unknown> | null = null;
   private cookAt = 0;
+  private hist: DayHist | null = null;
+  private histAt = 0;
   private unsubs: Array<() => void> = [];
   private subscribing = false;
 
@@ -230,6 +232,29 @@ export class PikHomeCard extends LitElement {
   }
 
   /** Holiday cooking mode: what's due, from the plan's own script, once a minute while a holiday is on. */
+  /** Today's solar, house and Powerwall history for the energy chart, every 5 minutes. */
+  private refreshHist(): void {
+    const en = this.C.energy;
+    if (!en || !this.H.callWS || Date.now() - this.histAt < 300000) return;
+    this.histAt = Date.now();
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+    const t0 = d0.getTime();
+    const ids = [en.solar_power, en.load_power, en.battery_level].filter(Boolean) as string[];
+    // from yesterday's midnight: today draws bright, yesterday's sun is the faint ghost behind it
+    this.H.callWS<Record<string, Array<{ s: string; lu: number }>>>({ type: "history/history_during_period", start_time: new Date(t0 - 864e5).toISOString(), entity_ids: ids, minimal_response: true, no_attributes: true, significant_changes_only: false })
+      .then((r) => {
+        const pts = (id?: string): Pt[] => ((id && r[id]) || []).map((x) => [x.lu * 1000, parseFloat(x.s)] as Pt).filter((p) => isFinite(p[1]));
+        const kw = (l: Pt[]) => (l.some((p) => Math.abs(p[1]) > 50) ? l.map((p) => [p[0], p[1] / 1000] as Pt) : l);
+        const pos = (l: Pt[]) => l.map((p) => [p[0], Math.max(0, p[1])] as Pt);
+        /** Today's points, starting from the last value before midnight. */
+        const today = (l: Pt[]): Pt[] => { const before = l.filter((p) => p[0] < t0); const after = l.filter((p) => p[0] >= t0); return before.length ? ([[t0, before[before.length - 1][1]]] as Pt[]).concat(after) : after; };
+        const sol = pos(kw(pts(en.solar_power)));
+        this.hist = { solar: today(sol), load: today(pos(kw(pts(en.load_power)))), pct: today(pts(en.battery_level)), ysolar: sol.filter((p) => p[0] < t0).map((p) => [p[0] + 864e5, p[1]] as Pt) };
+        this.requestUpdate();
+      })
+      .catch(() => { this.histAt = Date.now() - 240000; });
+  }
+
   private refreshCook(): void {
     const ck = this.C.cooking;
     if (!ck || !this.holiday() || !this.H.callWS || Date.now() - this.cookAt < 60000) return;
@@ -293,7 +318,7 @@ export class PikHomeCard extends LitElement {
     if (!this.narrow && this.layer === "home" && !this.talk && !this.sheet && idle > (this.C.ambient_after || 120)) { this.layer = "ambient"; this.storyIdx = 0; this.storyAt = this.now; }
     if (this.layer === "ambient" && this.now - this.storyAt > (this.C.story_seconds || 12) * 1000) { this.storyIdx++; this.storyAt = this.now; }
     if (this.sheet && idle > 90) this.sheet = "";
-    if (this.H) { this.refreshCal(); this.refreshCook(); }
+    if (this.H) { this.refreshCal(); this.refreshCook(); this.refreshHist(); }
     this.requestUpdate();
   }
   private wake(): void { this.touched = Date.now(); if (this.layer !== "home") { this.layer = "home"; this.requestUpdate(); } }
@@ -751,13 +776,6 @@ ${!evs.length ? html`<div class="empty" style="padding-bottom: 0">Nothing on the
 
   // ---------------- illustrated pieces ----------------
 
-  private sceneIn(e: Energy): SceneIn {
-    const sun = this.S(this.C.sun);
-    const sk = this.S(this.C.sky || this.C.weather);
-    const n = (v: unknown) => (typeof v === "number" ? v : null);
-    return { solar: e.solar, house: e.house, bat: e.bat, grid: e.grid, pct: e.pct, out: e.out, elevation: sun ? n(sun.attributes.elevation) : null, azimuth: sun ? n(sun.attributes.azimuth) : null, clouds: sk ? n(sk.attributes.cloud_coverage) : null };
-  }
-
   /** Today's energy totals (kWh) from the Powerwall, when configured. */
   private energyToday(): { solar: number; usage: number; imported: number; exported: number; self: number } | null {
     const t = this.C.energy_today;
@@ -770,15 +788,15 @@ ${!evs.length ? html`<div class="empty" style="padding-bottom: 0">Nothing on the
   }
 
   /** Every plant with a photo, and each group's sensor plant. */
-  private plantPics(): { all: Array<PlantPic & { group: string; room: string }>; sensor: Record<string, string> } {
-    const all: Array<PlantPic & { group: string; room: string }> = [];
+  private plantPics(): { all: Array<{ name: string; photo: string; spot: string; notes: string; group: string; room: string }>; sensor: Record<string, string> } {
+    const all: Array<{ name: string; photo: string; spot: string; notes: string; group: string; room: string }> = [];
     const sensor: Record<string, string> = {};
     this.plantItems.filter((i) => i.status === "needs_action").forEach((i) => {
       const d = i.description || "";
       const f = (k: string) => { const m = new RegExp("^" + k + ":\\s*(.+)$", "m").exec(d); return m ? m[1].trim() : ""; };
       const g = f("Group"), photo = f("Photo");
       if (f("Sensor") && g) sensor[g] = photo;
-      if (photo) all.push({ name: i.summary.split(" · ")[0], photo, spot: [f("Room"), f("Spot")].filter(Boolean).join(", "), notes: f("Notes"), group: g, room: f("Room") });
+      all.push({ name: i.summary.split(" · ")[0], photo, spot: [f("Room"), f("Spot")].filter(Boolean).join(", "), notes: f("Notes"), group: g, room: f("Room") });
     });
     return { all, sensor };
   }
@@ -807,22 +825,52 @@ ${!evs.length ? html`<div class="empty" style="padding-bottom: 0">Nothing on the
   }
 
   private energyTile(e: Energy): TemplateResult {
-    return html`<button type="button" class="tile scene" @click=${() => this.open("energy", () => { this.sheet = "energy"; })}>
-${energyScene(this.sceneIn(e))}
-<div class="sov"><span class="eb">Energy</span><div class="big">${e.solar > 0.1 ? e.solar.toFixed(1) + " kW sun" : e.out ? "Grid down" : e.pct + "% stored"}</div><div class="sub">${e.main}</div></div></button>`;
+    const t = this.energyToday();
+    const big = e.solar > 0.1 ? e.solar.toFixed(1) + " kW" : e.out ? "Grid down" : e.pct + "%";
+    const lbl = e.solar > 0.1 ? "from the sun" : e.out ? "on the Powerwall" : "in the Powerwall";
+    return html`<button type="button" class="tile etile" @click=${() => this.open("energy", () => { this.sheet = "energy"; })}>
+<div class="etop"><div style="min-width: 0"><span class="eb">Energy${t ? " · " + t.solar.toFixed(1) + " kWh today" : ""}</span><div class="enum">${big} <small>${lbl}</small></div><div class="esub">${e.main}</div></div>
+<div class="egauge">${batteryGauge(e.pct, e.bat > 0.05, 20, 54)}<span>${e.pct}%</span></div></div>
+<div class="echart">${energyChart(this.hist, this.now, 300, 86)}</div></button>`;
+  }
+
+  /** Sun → home ← Powerwall / grid, as live nodes with moving connectors. */
+  private flowRow(e: Energy): TemplateResult {
+    const node = (cls: string, icon: TemplateResult, k: string, v: string, s: string) => html`<div class=${"fnode " + cls}><span class="fi">${icon}</span><div><span class="fk">${k}</span><b>${v}</b><span class="fs2">${s}</span></div></div>`;
+    const link = (on: boolean, rev: boolean, color: string) => html`<span class=${"flink" + (on ? " on" : "") + (rev ? " rev" : "")} style=${"--fc: " + color}></span>`;
+    const sunI = html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"></path></svg>`;
+    const homeI = html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path><path d="M10 20v-5h4v5"></path></svg>`;
+    const batI = html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="7" y="4" width="10" height="17" rx="2.5"></rect><path d="M10 2h4"></path><rect x="9.5" y=${8 + 10 * (1 - e.pct / 100)} width="5" height=${Math.max(1, 10 * (e.pct / 100))} fill="currentColor" stroke="none"></rect></svg>`;
+    const gridI = html`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3 7 21M12 3l5 18M8.5 15h7M9.8 10h4.4M5 7h14"></path></svg>`;
+    const g = e.grid;
+    return html`<div class="flowrow">
+${node("fn-sun", sunI, "Solar", e.solar.toFixed(1) + " kW", e.solar > 0.1 ? "producing" : "resting")}
+${link(e.solar > 0.1, false, "#FFC861")}
+${node("fn-home", homeI, "Home", e.house.toFixed(1) + " kW", "using now")}
+${link(Math.abs(e.bat) > 0.05, e.bat < 0, "#8EDB9A")}
+${node("fn-bat", batI, "Powerwall", e.pct + "%", e.bat > 0.05 ? "charging " + e.bat.toFixed(1) : e.bat < -0.05 ? "powering home" : "holding")}
+${link(g !== null && Math.abs(g) > 0.05, !!g && g < 0, "#8FC2F0")}
+${node("fn-grid", gridI, "Grid", g === null ? "Down" : Math.abs(g) < 0.05 ? "Idle" : Math.abs(g).toFixed(1) + " kW", g === null ? "outage" : g > 0.05 ? "selling" : g < -0.05 ? "buying" : "")}
+</div>`;
+  }
+
+  private energyBig(e: Energy, closeBtn: boolean): TemplateResult {
+    const t = this.energyToday();
+    return html`<div class="ebig">
+<div class="ebhead"><div style="flex: 1; min-width: 0"><div class="kicker" style="color: #9FB0C4">Energy · today</div><div class="h1" style="color: #fff; font-size: 48px">${e.main}.</div><div style="font-size: 18px; color: #C9D3DE; margin-top: 6px">${e.sub}.</div></div>
+${closeBtn ? html`<button type="button" class="done" style="color: #fff" @click=${() => { this.sheet = ""; }}>Done</button>` : nothing}</div>
+<div class="ebchart">${energyChart(this.hist, this.now, 1100, 300, { big: true })}
+<div class="elegend"><span><i style="background: #FFC861"></i>Sun today</span><span><i class="ghost"></i>Yesterday</span><span><i class="dash"></i>House</span><span><i style="background: #8EDB9A"></i>Powerwall</span></div></div>
+${this.flowRow(e)}
+${t ? html`<div class="chips"><span class="echip"><b>${t.solar.toFixed(1)}</b> kWh from the sun</span><span class="echip"><b>${t.usage.toFixed(1)}</b> kWh used</span><span class="echip"><b>${t.self}%</b> on your own power</span><span class="echip"><b>${t.exported.toFixed(1)}</b> kWh sold back</span></div>` : nothing}
+</div>`;
   }
 
   private plantsTile(): TemplateResult {
     const gs = this.groups(), dry = gs.filter((g) => g.dry);
-    const pics = this.plantPics();
-    const thirstyPic = dry.length ? pics.all.find((p) => p.photo === pics.sensor[dry[0].room]) : undefined;
-    const pool = pics.all;
-    const hero = thirstyPic || (pool.length ? pool[Math.floor(this.now / 90000) % pool.length] : undefined);
-    return html`<button type="button" class="tile photo" @click=${() => this.open("plants", () => this.C.plants_path && this.navigate(this.C.plants_path))}>
-${hero ? html`<img class="hero" src=${photoUrl(hero.photo, 512)} alt="" loading="lazy">` : nothing}
-<div class="pshade"></div>
-<div class="prow">${gs.map((g) => plantRing({ photo: pics.sensor[g.room] || "", m: g.m, thr: g.thr, dry: g.dry, live: g.live }, 34))}</div>
-<div class="sov low"><span class="eb">${dry.length ? "Water today" : "Plants · all happy"}</span><div class="big" style="font-size: 22px">${dry.length ? dry.map((g) => g.room).join(", ") : hero ? hero.name : "Everyone's fine"}</div>${!dry.length && hero && hero.spot ? html`<div class="sub">${hero.spot}</div>` : nothing}</div></button>`;
+    return html`<button type="button" class="tile ptile" @click=${() => this.open("plants", () => this.C.plants_path && this.navigate(this.C.plants_path))}>
+<span class="eb" style=${"color: " + (dry.length ? "#C2671F" : "var(--green)")}>${dry.length ? "Water: " + dry.map((g) => g.room).join(", ") : "Plants · all happy"}</span>
+<div class="prows">${gs.map((g) => html`<div class=${"prow2" + (g.dry ? " dry" : "")}><span class="pi">${plantIcon(g.room, 15, g.dry ? "#E3893B" : "#5E8A5A")}</span><span class="pn">${g.room}</span><span class="pb"><i style=${"width: " + (g.live ? Math.min(100, (g.m / 60) * 100) : 0) + "%"}></i><u style=${"left: " + Math.min(100, (g.thr / 60) * 100) + "%"}></u></span><b>${g.live ? g.m + "%" : "—"}</b></div>`)}</div></button>`;
   }
 
   private cellarTile(): TemplateResult {
@@ -837,44 +885,27 @@ ${hero ? html`<img class="hero" src=${photoUrl(hero.photo, 512)} alt="" loading=
   private energyStory(): TemplateResult {
     const e = this.energy();
     if (!e) return html``;
-    const t = this.energyToday();
-    return html`<div class="story scenestory">
-<div class="scenebg">${energyScene(this.sceneIn(e), { labels: true, wide: true })}</div>
-<div class="sceneov">
-<div class="kicker" style="color: #F3EDE3; opacity: .85">Energy · right now</div>
-<div class="h1" style="color: #fff">${e.main}.</div>
-<div style="font-size: 19px; color: #F3EDE3">${e.sub}.</div>
-${t ? html`<div class="chips">
-<span class="echip"><b>${t.solar.toFixed(1)}</b> kWh from the sun today</span>
-<span class="echip"><b>${t.self}%</b> of today on your own power</span>
-${t.exported > 0.1 ? html`<span class="echip"><b>${t.exported.toFixed(1)}</b> kWh sold back</span>` : nothing}
-</div>` : nothing}
-</div></div>`;
+    return html`<div class="story" style="padding: 40px 56px 0">${this.energyBig(e, false)}</div>`;
   }
-
   private plantStory(): TemplateResult {
     const gs = this.groups();
     const dry = gs.filter((g) => g.dry);
-    const pics = this.plantPics();
-    const focusG = dry[0];
-    const route = focusG ? pics.all.filter((p) => p.group === focusG.room) : [];
-    const spot = focusG ? pics.all.find((p) => p.photo === pics.sensor[focusG.room]) : pics.all.length ? pics.all[Math.floor(this.now / 60000) % pics.all.length] : undefined;
-    const sg = spot ? gs.find((g) => g.room === spot.group) : undefined;
-    return html`<div class="story" style="flex-direction: row; gap: 44px; align-items: stretch">
-<div style="width: 400px; flex: none; display: flex; flex-direction: column; gap: 18px; align-items: center; text-align: center">
-${spot ? plantRing({ photo: spot.photo, m: sg ? sg.m : 30, thr: sg ? sg.thr : 0, dry: !!sg && sg.dry, live: !!sg && sg.live }, 340) : nothing}
-<div><div class="kicker" style="color: var(--green)">${focusG ? "Thirstiest right now" : "Plant of the minute"}</div>
-<div class="h1" style="font-size: 44px">${spot ? spot.name : "Your plants"}</div>
-<div style="font-size: 16px; color: var(--mute2); margin-top: 6px">${spot ? [spot.spot, spot.notes].filter(Boolean).join(" · ") : ""}</div></div>
+    const live = gs.filter((g) => g.live);
+    const focus = dry[0] || live.slice().sort((a, b) => (a.m - a.thr) - (b.m - b.thr))[0];
+    const names = focus ? this.plantPics().all.filter((p) => p.group === focus.room).map((p) => p.name) : [];
+    return html`<div class="story" style="flex-direction: row; gap: 48px; align-items: stretch">
+<div style="width: 380px; flex: none; display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center; padding-top: 10px">
+${focus ? html`${groupRing(focus, 260)}<div class="bigpct">${focus.m}%<small> soil moisture</small></div>
+<div><div class="kicker" style=${"color: " + (focus.dry ? "#C2671F" : "var(--green)")}>${focus.dry ? "Thirstiest right now" : "Next to need water"}</div>
+<div class="h1" style="font-size: 44px">${focus.room}</div>
+<div style="font-size: 16px; color: var(--mute2); margin-top: 6px">${focus.dry ? focus.plants + " plants. Start with the " + focus.ind + "." : (focus.m - focus.thr) + " points above its thirst line. The " + focus.ind + " tells you first."}</div></div>` : nothing}
 </div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 22px">
 <div class="h1" style="font-size: 50px">${dry.length ? dry.map((g) => g.room).join(" and ") + (dry.length === 1 ? " needs" : " need") + " water." : "Everyone's happy. No watering today."}</div>
-<div class="ringgrid">${gs.map((g) => plantRing({ photo: pics.sensor[g.room] || "", m: g.m, thr: g.thr, dry: g.dry, live: g.live }, 112, html`<span class="rlab"><b>${g.room}</b>${g.live ? g.m + "%" : "—"}</span>`))}</div>
-${!route.length && pics.all.length ? html`<div class="mosaic">${Array.from({ length: Math.min(10, pics.all.length) }, (_x, k) => pics.all[(Math.floor(this.now / 60000) * 7 + k * 5) % pics.all.length]).map((p) => html`<div class="thumb big"><img src=${photoUrl(p.photo, 256)} alt="" loading="lazy"><span>${p.name}</span></div>`)}</div>` : nothing}
-${route.length ? html`<div class="glass" style="padding: 16px 20px"><div class="eb" style="margin-bottom: 10px">The ${focusG!.room.toLowerCase()} route · ${route.length} plants</div><div class="thumbs">${route.slice(0, 9).map((p) => html`<div class="thumb"><img src=${photoUrl(p.photo, 256)} alt="" loading="lazy"><span>${p.name}</span></div>`)}</div></div>` : nothing}
+<div class="ringgrid">${gs.map((g) => html`<div class="gcell">${groupRing(g, 110)}<b>${g.room}</b><span class=${g.dry ? "hot" : ""}>${g.live ? g.m + "%" : "—"}</span></div>`)}</div>
+${focus && focus.dry && names.length ? html`<div class="glass" style="padding: 16px 20px"><div class="eb" style="margin-bottom: 10px">The ${focus.room.toLowerCase()} route · ${names.length} plants</div><div class="namechips">${names.slice(0, 14).map((n) => html`<span>${n}</span>`)}</div></div>` : nothing}
 </div></div>`;
   }
-
   private cellarStory(): TemplateResult {
     const ws = this.wines();
     const n = ws.reduce((a, w) => a + w.count, 0);
@@ -943,7 +974,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
       { id: "timers", topic: "timers" as Topic, score: timers.length ? 100 : -99, fr: "1.2fr", body: () => this.timersTile(timers) },
       { id: "smoker", topic: "smoker" as Topic, score: smokeOn ? this.rank("smoker", 60) : -99, fr: "1.2fr", body: () => this.smokeTile() },
       { id: "energy", topic: "energy" as Topic, score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, fr: "1.6fr", body: () => this.energyTile(e!) },
-      { id: "plants", topic: "plants" as Topic, score: this.groups().length ? this.rank("plants", 1.5 + (dry.length ? 3 : 0)) : -99, fr: "1.5fr", body: () => this.plantsTile() },
+      { id: "plants", topic: "plants" as Topic, score: this.groups().length ? this.rank("plants", 1.5 + (dry.length ? 3 : 0)) : -99, fr: "1.4fr", body: () => this.plantsTile() },
       { id: "inside", topic: "inside" as Topic, score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, fr: "1fr", body: () => this.insideTile() },
       { id: "music", topic: "music" as Topic, score: mp ? this.rank("music", 1 + (playing ? 2.5 : 0)) : -99, fr: "1fr", body: () => this.musicTile() },
       { id: "cellar", topic: "cellar" as Topic, score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, fr: "1.4fr", body: () => this.cellarTile() },
@@ -1045,19 +1076,7 @@ ${p ? html`<div class="av sm" style=${"background: " + p.color}>${p.name[0]}</di
 
   private energySheet(): TemplateResult {
     const e = this.energy();
-    const t = this.energyToday();
-    return html`<div class="scrim" @click=${() => { this.sheet = ""; }}></div><div class="sheet darkx" style="padding: 0">
-<div class="scenebg" style="border-radius: 30px 30px 0 0; overflow: hidden">${e ? energyScene(this.sceneIn(e), { labels: true, wide: true }) : nothing}</div>
-<div class="sceneov" style="padding: 26px 34px">
-<div class="shtop"><h2 style="color: #fff">${e ? e.main : "Energy"}</h2><button type="button" class="done" style="color: #fff" @click=${() => { this.sheet = ""; }}>Done</button></div>
-${e ? html`<div style="font-size: 18px; color: #F3EDE3">${e.sub}.${e.hours ? " About " + e.hours + " hours of Powerwall at this rate." : ""}</div>` : html`<div class="empty" style="color: #fff">The Powerwall isn't reporting right now.</div>`}
-${t ? html`<div class="chips" style="margin-top: auto">
-<span class="echip"><b>${t.solar.toFixed(1)}</b> kWh from the sun today</span>
-<span class="echip"><b>${t.usage.toFixed(1)}</b> kWh used</span>
-<span class="echip"><b>${t.self}%</b> on your own power</span>
-<span class="echip"><b>${t.exported.toFixed(1)}</b> kWh sold back</span>
-</div>` : nothing}
-</div></div>`;
+    return html`<div class="scrim" @click=${() => { this.sheet = ""; }}></div><div class="sheet darkx esheet">${e ? this.energyBig(e, true) : html`<div class="shtop"><h2>Energy</h2><button type="button" class="done" @click=${() => { this.sheet = ""; }}>Done</button></div><div class="empty" style="color: #fff">The Powerwall isn't reporting right now.</div>`}</div>`;
   }
   private notesSheet(): TemplateResult {
     const rs = this.rules();
@@ -1204,7 +1223,7 @@ ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : noth
         const s = list[i];
         const dark = ["energy", "cellar", "night"].includes(s.theme);
         const BG: Record<string, string> = { morning: "linear-gradient(180deg, #F7E3C8 0%, #F3EADD 70%)", energy: "#0F1720", garden: "#EEF0E4", cellar: "radial-gradient(ellipse at 70% 30%, #4A2A22 0%, #2B1A16 55%, #1C110E 100%)", night: "radial-gradient(ellipse at 30% 20%, #26305A 0%, #1B2240 45%, #121730 100%)" };
-        body = html`<div class=${"amb" + (s.theme === "energy" ? " over" : "")} style=${"background: " + (BG[s.theme] || "#F3EADD")} @click=${() => this.wake()}>${s.render()}${s.id !== "night" ? this.sfoot(list, i, dark) : nothing}</div>`;
+        body = html`<div class="amb" style=${"background: " + (BG[s.theme] || "#F3EADD")} @click=${() => this.wake()}>${s.render()}${s.id !== "night" ? this.sfoot(list, i, dark) : nothing}</div>`;
       }
     } else body = this.homeLayer();
     return html`<div class="root" @pointerdown=${() => { this.touched = Date.now(); }}>
