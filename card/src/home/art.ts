@@ -63,7 +63,7 @@ function smooth(p: Array<[number, number]>): string {
 const avg = (pts: Pt[], k: number) => pts.map((p, i) => { const s = pts.slice(Math.max(0, i - k), i + k + 1); return [p[0], s.reduce((a, q) => a + q[1], 0) / s.length] as Pt; });
 
 /** Today's sun against the house: glowing solar area, the house's use as a line, the Powerwall level, and now. */
-export function energyChart(h: DayHist | null, now: number, w: number, ht: number, opts: { big?: boolean; solarNow?: number } = {}): TemplateResult {
+export function energyChart(h: DayHist | null, now: number, w: number, ht: number, opts: { big?: boolean; solarNow?: number; noLoad?: boolean; pctLine?: boolean } = {}): TemplateResult {
   const id = "ec" + ++uid;
   const d0 = new Date(now); d0.setHours(0, 0, 0, 0);
   const a = d0.getTime() + 6 * 3600e3, b = d0.getTime() + 21 * 3600e3;
@@ -71,7 +71,7 @@ export function energyChart(h: DayHist | null, now: number, w: number, ht: numbe
   const X = (t: number) => padL + ((t - a) / (b - a)) * (w - padL - padR);
   const end = Math.min(now, b);
   const sol = h ? avg(grid(h.solar, a, end), 1) : [];
-  const lod = h ? avg(grid(h.load, a, end), 1) : [];
+  const lod = h && !opts.noLoad ? avg(grid(h.load, a, end), 3) : [];
   const pct = h ? grid(h.pct, a, end, 900000) : [];
   const peak = Math.max(1, ...sol.map((p) => p[1]), ...lod.map((p) => p[1]), ...(h && h.ysolar ? h.ysolar.map((p) => p[1]) : [])) * 1.15;
   const Y = (v: number) => ht - padB - (Math.max(0, v) / peak) * (ht - padT - padB);
@@ -98,7 +98,8 @@ ${area ? svg`<path d=${area} fill=${`url(#${id}a)`}></path>
 <path d=${smooth(sp)} fill="none" stroke="#FFC861" stroke-width=${opts.big ? 7 : 5} stroke-opacity=".55" filter=${`url(#${id}g)`}></path>
 <path d=${smooth(sp)} fill="none" stroke=${`url(#${id}s)`} stroke-width=${opts.big ? 2.6 : 2} stroke-linecap="round"></path>` : nothing}
 ${lp.length ? svg`<path d=${smooth(lp)} fill="none" stroke="#DDE7F3" stroke-opacity=".75" stroke-width=${opts.big ? 1.8 : 1.4} stroke-dasharray=${opts.big ? "5 5" : "3 4"}></path>` : nothing}
-${opts.big && pp.length ? svg`<path d=${smooth(pp)} fill="none" stroke="#8EDB9A" stroke-width="2" stroke-opacity=".9"></path>
+${(opts.big || opts.pctLine) && pp.length ? svg`<path d=${smooth(pp)} fill="none" stroke="#8EDB9A" stroke-width=${opts.big ? 2 : 1.4} stroke-opacity=${opts.big ? 0.9 : 0.6}></path>`: nothing}
+${opts.big && pp.length ? svg`
 ${[0, 50, 100].map((v) => svg`<text x=${w - padR + 6} y=${YP(v) + 4} font-family="Instrument Sans, sans-serif" font-size="11" fill="#8EDB9A" fill-opacity=".8">${v}%</text>`)}
 ${[0, peak / 1.15 / 2, peak / 1.15].map((v) => svg`<text x=${padL - 6} y=${Y(v) + 4} text-anchor="end" font-family="Instrument Sans, sans-serif" font-size="11" fill="#9FB0C4">${v.toFixed(v < 10 ? 1 : 0)}</text>`)}
 <text x=${padL - 6} y=${padT - 4} text-anchor="end" font-family="Instrument Sans, sans-serif" font-size="10" fill="#9FB0C4">kW</text>` : nothing}

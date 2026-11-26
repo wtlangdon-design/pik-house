@@ -290,9 +290,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .flink.on.rev{animation-direction:reverse}
 @keyframes flowx{from{background-position:0 0}to{background-position:60px 0}}
 .sheet.esheet{padding:26px 34px}
-.tile.ptile{gap:7px;padding:13px 15px}
-.prows{display:flex;flex-direction:column;gap:4px;flex:1;justify-content:center}
-.prow2{display:grid;grid-template-columns:16px minmax(0,1fr) 64px 32px;align-items:center;gap:6px;font-size:12.5px}
+.tile.ptile{gap:5px;padding:11px 14px}
+.prows{display:flex;flex-direction:column;gap:1px;flex:1;justify-content:space-between;min-height:0}
+.prow2{display:grid;grid-template-columns:15px minmax(0,1fr) 60px 30px;align-items:center;gap:6px;font-size:12px;line-height:16px}
 .prow2 .pn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
 .prow2 .pb{position:relative;height:7px;border-radius:4px;background:rgba(94,138,90,.15)}
 .prow2 .pb i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--green)}
