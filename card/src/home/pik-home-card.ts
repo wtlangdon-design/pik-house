@@ -886,8 +886,9 @@ ${t ? html`<div class="chips"><span class="echip"><b>${t.solar.toFixed(1)}</b> k
   private plantsTile(): TemplateResult {
     const gs = this.groups(), dry = gs.filter((g) => g.dry);
     return html`<button type="button" class="tile ptile" @click=${() => this.open("plants", () => this.C.plants_path && this.navigate(this.C.plants_path))}>
-<span class="eb" style=${"color: " + (dry.length ? "#C2671F" : "var(--green)")}>${dry.length ? "Water: " + dry.map((g) => g.room).join(", ") : "Plants · all happy"}</span>
-<div class="prows">${gs.map((g) => html`<div class=${"prow2" + (g.dry ? " dry" : "")}><span class="pi">${plantIcon(g.room, 15, g.dry ? "#E3893B" : "#5E8A5A")}</span><span class="pn">${g.room}</span><span class="pb"><i style=${"width: " + (g.live ? Math.min(100, (g.m / 60) * 100) : 0) + "%"}></i><u style=${"left: " + Math.min(100, (g.thr / 60) * 100) + "%"}></u></span><b>${g.live ? g.m + "%" : "—"}</b></div>`)}</div></button>`;
+<svg class="leaves" viewBox="0 0 200 200" preserveAspectRatio="xMaxYMax slice" aria-hidden="true">${svg`<g fill="#9FD18B" fill-opacity=".07"><path d="M200 60 C150 70 120 110 130 170 C170 160 200 120 200 60Z"></path><path d="M170 200 C160 150 180 110 230 95 C235 140 215 180 170 200Z"></path><path d="M120 200 C105 165 120 130 160 120 C165 155 150 185 120 200Z"></path></g>`}</svg>
+<span class="eb" style=${"position: relative; color: " + (dry.length ? "#FFB27A" : "#A8D99A")}>${dry.length ? "Water: " + dry.map((g) => g.room).join(", ") : "Plants · all happy"}</span>
+<div class="prows">${gs.map((g) => html`<div class=${"prow2" + (g.dry ? " dry" : "")}><span class="pi">${plantIcon(g.room, 15, g.dry ? "#FFB27A" : "#A8D99A")}</span><span class="pn">${g.room}</span><span class="pb"><i style=${"width: " + (g.live ? Math.min(100, (g.m / 60) * 100) : 0) + "%"}></i><u style=${"left: " + Math.min(100, (g.thr / 60) * 100) + "%"}></u></span><b>${g.live ? g.m + "%" : "—"}</b></div>`)}</div></button>`;
   }
 
   private insideTile(): TemplateResult {
@@ -910,9 +911,9 @@ ${t ? html`<div class="chips"><span class="echip"><b>${t.solar.toFixed(1)}</b> k
 <button type="button" class="dialbtn" @click=${() => this.open("inside", () => this.moreInfo(this.C.thermostat!))} aria-label="Thermostat">
 <svg width="118" height="118" viewBox="0 0 88 88" aria-hidden="true">${svg`
 <defs><linearGradient id="ig1" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#7FB2D9"></stop><stop offset=".55" stop-color="#F0B25E"></stop><stop offset="1" stop-color="#E0643A"></stop></linearGradient></defs>
-<path d=${arc(hi)} fill="none" stroke="rgba(42,34,27,.1)" stroke-width="7" stroke-linecap="round"></path>
+<path d=${arc(hi)} fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7" stroke-linecap="round"></path>
 ${isNum(cur) ? svg`<path d=${arc(cur)} fill="none" stroke="url(#ig1)" stroke-width="7" stroke-linecap="round"></path>` : nothing}
-${isNum(sp) ? svg`<circle cx=${pt(sp)[0]} cy=${pt(sp)[1]} r="5.5" fill="#FCF8F1" stroke="#2A221B" stroke-width="2"></circle>` : nothing}
+${isNum(sp) ? svg`<circle cx=${pt(sp)[0]} cy=${pt(sp)[1]} r="5.5" fill="#fff" stroke="#1B2130" stroke-width="2"></circle>` : nothing}
 ${heat ? svg`<path d="M44 64 c-5 0 -8 -3 -8 -7 c0 -4 4 -6 5 -10 c3 3 2 5 2 6 c1 -1 2 -3 2 -5 c4 3 7 6 7 9 c0 4 -3 7 -8 7z" fill="#E0643A" transform="translate(8.8 17) scale(.8)"><animate attributeName="opacity" values="1;.6;1" dur="1.2s" repeatCount="indefinite"></animate></path>` : cool ? svg`<path d="M44 52 v16 M37 56 l14 8 M37 64 l14 -8" stroke="#5E95C2" stroke-width="2" stroke-linecap="round"></path>` : nothing}`}</svg>
 <span class="dialnum">${isNum(cur) ? Math.round(cur) + "°" : "—"}</span></button>
 <button type="button" class="nudge" aria-label="Warmer" @click=${() => nudge(0.5)}>+</button>
