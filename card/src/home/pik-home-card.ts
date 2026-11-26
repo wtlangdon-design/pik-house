@@ -899,21 +899,23 @@ ${t ? html`<div class="chips"><span class="echip"><b>${t.solar.toFixed(1)}</b> k
     const ang = (t: number) => (135 + (Math.max(lo, Math.min(hi, t)) - lo) / (hi - lo) * 270) * Math.PI / 180;
     const pt = (t: number, r = R) => [cx + r * Math.cos(ang(t)), cy + r * Math.sin(ang(t))];
     const arc = (t: number) => { const [x0, y0] = pt(lo), [x1, y1] = pt(t); const large = (t - lo) / (hi - lo) * 270 > 180 ? 1 : 0; return `M${x0} ${y0} A${R} ${R} 0 ${large} 1 ${x1} ${y1}`; };
-    const groups = (this.C.lights || []).map((g) => ({ name: g.name, ids: g.entities.filter((id) => this.S(id)), on: g.entities.filter((id) => this.S(id)?.state === "on").length }));
-    const lightsOn = groups.reduce((a, g) => a + g.on, 0);
-    const toggle = (g: { ids: string[]; on: number }) => { this.log("inside", "tap"); g.ids.forEach((id) => this.svc(id.split(".")[0], g.on ? "turn_off" : "turn_on", {}, { entity_id: id })); };
+    const nudge = (d: number) => { if (!isFinite(sp)) return; this.log("inside", "tap"); this.svc("climate", "set_temperature", { temperature: Math.round((sp + d) * 2) / 2 }, { entity_id: this.C.thermostat }); };
     const isNum = (x: number) => isFinite(x);
     return html`<div class=${"tile itile" + (heat ? " heat" : cool ? " cool" : "")}>
+<span class="eb">Inside</span>
+<div class="dialrow">
+<button type="button" class="nudge" aria-label="Cooler" @click=${() => nudge(-0.5)}>−</button>
 <button type="button" class="dialbtn" @click=${() => this.open("inside", () => this.moreInfo(this.C.thermostat!))} aria-label="Thermostat">
-<svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true">${svg`
+<svg width="118" height="118" viewBox="0 0 88 88" aria-hidden="true">${svg`
 <defs><linearGradient id="ig1" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#7FB2D9"></stop><stop offset=".55" stop-color="#F0B25E"></stop><stop offset="1" stop-color="#E0643A"></stop></linearGradient></defs>
 <path d=${arc(hi)} fill="none" stroke="rgba(42,34,27,.1)" stroke-width="7" stroke-linecap="round"></path>
 ${isNum(cur) ? svg`<path d=${arc(cur)} fill="none" stroke="url(#ig1)" stroke-width="7" stroke-linecap="round"></path>` : nothing}
 ${isNum(sp) ? svg`<circle cx=${pt(sp)[0]} cy=${pt(sp)[1]} r="5.5" fill="#FCF8F1" stroke="#2A221B" stroke-width="2"></circle>` : nothing}
 ${heat ? svg`<path d="M44 64 c-5 0 -8 -3 -8 -7 c0 -4 4 -6 5 -10 c3 3 2 5 2 6 c1 -1 2 -3 2 -5 c4 3 7 6 7 9 c0 4 -3 7 -8 7z" fill="#E0643A" transform="translate(8.8 17) scale(.8)"><animate attributeName="opacity" values="1;.6;1" dur="1.2s" repeatCount="indefinite"></animate></path>` : cool ? svg`<path d="M44 52 v16 M37 56 l14 8 M37 64 l14 -8" stroke="#5E95C2" stroke-width="2" stroke-linecap="round"></path>` : nothing}`}</svg>
 <span class="dialnum">${isNum(cur) ? Math.round(cur) + "°" : "—"}</span></button>
-<div class="itext"><span class="eb">Inside</span><div class="isub">${heat ? "Heating to " + sp + "°" : cool ? "Cooling to " + sp + "°" : isNum(sp) ? "Holding " + sp + "°" : ""}${isNum(out) ? html`<br><span style="opacity: .75">${Math.round(out)}° outside</span>` : nothing}</div></div>
-<div class="bulbs" aria-label=${lightsOn + " lights on"}>${groups.slice(0, 8).map((g) => html`<button type="button" class=${"bulb" + (g.on ? " on" : "")} title=${g.name + (g.on ? " · on" : " · off")} aria-label=${g.name + (g.on ? ", on. Turn off" : ", off. Turn on")} @click=${() => toggle(g)}><i></i></button>`)}<span>${lightsOn ? lightsOn + " on" : "lights off"}</span></div>
+<button type="button" class="nudge" aria-label="Warmer" @click=${() => nudge(0.5)}>+</button>
+</div>
+<div class="isub">${heat ? "Heating to " + sp + "°" : cool ? "Cooling to " + sp + "°" : isNum(sp) ? "Set to " + sp + "°" : ""}${isNum(out) ? " · " + Math.round(out) + "° out" : ""}</div>
 </div>`;
   }
 
