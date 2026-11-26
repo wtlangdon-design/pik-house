@@ -552,7 +552,7 @@ export class PikHomeCard extends LitElement {
 
   private timerMoment(t: PoolTimer, key: string): TemplateResult {
     return html`<div class="mom paper"><div class="mpad" style="justify-content: center; align-items: center; text-align: center; gap: 26px">
-<div class="pikbtn pik p-alert" style="pointer-events: none">${pikArt("Pik")}</div>
+${this.pikFace(184, "p-alert")}
 <div class="kicker" style="color: var(--clay)">Timer done</div>
 <div class="h1" style="font-size: 76px">${t.label}</div>
 <div class="mbar" style="justify-content: center"><button type="button" class="pill ink" @click=${() => { this.svc("script", "kitchen_timer_stop", { slot: t.id }); this.hide(key); this.wake(); }}>Got it</button>
@@ -566,7 +566,7 @@ export class PikHomeCard extends LitElement {
     const pic = cam && cam.attributes.entity_picture ? String(cam.attributes.entity_picture) + "&t=" + Math.floor(this.now / 2000) : "";
     const light = rg.light && this.S(rg.light);
     return html`<div class="mom ring"><div class="mpad">
-<div class="mbar"><div class="pikbtn pik p-alert" style="pointer-events: none"><span class="mini" style="width: 72px; height: 72px">${pikArt("Pik")}</span></div>
+<div class="mbar">${this.pikFace(84, "p-alert")}
 <div style="flex: 1"><div class="kicker" style="color: #A9B6D6">${rg.name || "Doorbell"} · ${hmA(new Date(Date.parse(this.S(rg.ding)!.state)))}</div><div class="h1" style="font-size: 46px">Someone's at the ${(rg.name || "door").toLowerCase()}.</div></div></div>
 <div class="camwrap">${pic ? html`<img src=${pic} alt="Live view from the ${rg.name || "doorbell"} camera">` : nothing}<div class="camtag"><i></i>Live · Ring</div></div>
 <div class="mbar">
@@ -599,7 +599,7 @@ ${lv.f && lotTxt.length ? html`<div class="mcard"><div class="eb" style="color: 
 </div>
 ${this.ladder(lv)}
 <div class="mbar">
-<div class="pikbtn pik p-speak" style="pointer-events: none"><span class="mini" style="width: 64px; height: 64px">${pikArt("Pik")}</span></div>
+${this.pikFace(72, "p-rest")}
 <div class="grow">When you head out, tap <b>We're leaving</b>: lights off and the heat down 4°.</div>
 <button type="button" class="pill sun" @click=${() => { this.svcSay("script", (this.C.leaving_script || "script.pik_leaving").replace("script.", "")); this.log("calendar", "open", true); this.hide(key); this.wake(); }}>We're leaving</button>
 <button type="button" class="pill ghost" @click=${() => this.dismissMoment({ key, topic: "calendar" }, 5 * 60000)}>5 more minutes</button>
@@ -627,8 +627,8 @@ ${steps.map((st, i) => html`<div style="position: relative"><div style=${"width:
     const watch = st.watch ? this.S(st.watch) : undefined;
     const e = this.energy();
     return html`<div class="mom storm"><div class="mpad">
-<div class="kicker" style="color: #F0B25E">Weather alert · National Weather Service</div>
-<div class="h1" style="font-size: 64px">${name}.</div>
+<div style="display: flex; align-items: center; gap: 26px">${this.pikFace(120, "p-alert")}<div><div class="kicker" style="color: #F0B25E">Weather alert · National Weather Service</div>
+<div class="h1" style="font-size: 64px">${name}.</div></div></div>
 <p style="margin: 0; font-size: 20px; opacity: .85">${ends && !["unknown", "none", ""].includes(ends) ? "Until " + ends + ". " : ""}${e ? "The Powerwall is at " + e.pct + "%." : ""}</p>
 <div class="g3"><div class="mcard"><div class="eb" style="color: #B9C2CC">Storm Watch</div><div class="big">${watch ? (watch.state === "on" ? "On" : "Off") : "—"}</div><div class="sub">${watch && watch.state === "on" ? "The Powerwall fills up and holds for an outage." : "Turn it on and the Powerwall fills up and holds."}</div></div>
 <div class="mcard"><div class="eb" style="color: #B9C2CC">Outside</div><div class="big">${this.outTemp()}</div><div class="sub">${this.wxWord()}</div></div>
@@ -660,10 +660,27 @@ ${hol ? html`<button type="button" class="pill ghost" style="color: var(--ink)" 
 <button type="button" class="pill ghost" style="color: var(--ink)" @click=${() => this.dismissMoment({ key, topic: "cooking" }, 10 * 60000)}>In 10 minutes</button></div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 14px; min-height: 0">
+<div style="display: flex; align-items: center; gap: 16px">${this.pikFace(140, "p-rest")}${this.talk || (this.a && this._t3) ? nothing : html`<div style="font-size: 15px; color: var(--mute2); line-height: 1.45">Hands full? Say<br><b style="color: var(--ink)">“Hey Luna, what’s next?”</b></div>`}</div>
+${this.voiceBubble(true)}
 ${timers.length ? html`<div class="tile tmr" style="border-radius: 26px"><span class="eb">Timers</span>${timers.map((t) => html`<div class="trow"><span>${t.label}</span><b>${this.left(t)}</b></div>`)}</div>` : nothing}
 ${temps.length ? html`<div class="tile smoke" style="border-radius: 26px"><span class="eb">Turkey</span>${temps.map((k) => html`<div class="trow"><span>${k}</span><b>${tf[k]}</b></div>`)}</div>` : nothing}
 <div class="tile" style="border-radius: 26px"><span class="eb">Next</span>${nxt.map((n) => html`<div style="padding: 6px 0; border-top: 1px solid var(--line2)"><b style="font-size: 14px">${n.when.replace(/^\w+ /, "").replace(/ \(moved.*\)/, "")}</b><div class="sub">${n.task}</div></div>`)}</div>
 </div></div></div>`;
+  }
+
+  /** Pik on a moment: follows the voice (listening, thinking, speaking) and is tap-to-talk, like on Home. */
+  private pikFace(size: number, idle: string): TemplateResult {
+    const cls = this.muted ? "p-muted" : this.talk ? "p-" + this.talk : idle;
+    return html`<button type="button" class=${"pikbtn pik " + cls} style="flex: none; margin: 0" aria-label="Talk to Pik" @click=${(e: Event) => { e.stopPropagation(); this.tapPik(); }}><span class="mini" style=${"width: " + size + "px; height: " + size + "px"}>${pikArt("Pik")}</span></button>`;
+  }
+
+  /** While you talk to Pik over a moment, its answer floats on top so you never lose the moment underneath. */
+  private voiceBubble(inline = false): TemplateResult | typeof nothing {
+    const talking = !!this.talk || !!(this.a && this._t3);
+    if (!talking) return nothing;
+    const pages = this.pages(this.a), ci = Math.min(this.capIdx, pages.length - 1);
+    const line = this.talk === "listen" ? "I'm listening…" : this.talk === "think" ? "Let me think…" : pages[ci] || "";
+    return html`<div class=${"vbub" + (inline ? " inline" : "")} aria-live="polite"><div class="who"><span>${this.q ? "You asked" : "Pik"}</span>${pages.length > 1 ? html`<span class="cdots">${pages.map((_p, k) => html`<i class=${k === ci ? "on" : ""}></i>`)}</span>` : nothing}</div>${this.q ? html`<div class="q">“${this.q}”</div>` : nothing}<div class="line">${line}</div></div>`;
   }
 
   private left(t: PoolTimer): string {
@@ -1024,6 +1041,7 @@ ${tops.length ? html`<div class="bars">${tops.slice(0, 8).map((t) => html`<div c
     } else body = this.homeLayer();
     return html`<div class="root" @pointerdown=${() => { this.touched = Date.now(); }}>
 ${body}
+${m && m.kind !== "cooking" ? this.voiceBubble() : nothing}
 ${!m && this.sheet === "energy" ? this.energySheet() : nothing}
 ${!m && this.sheet === "notes" ? this.notesSheet() : nothing}
 ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
