@@ -125,6 +125,7 @@ export class PikHomeCard extends LitElement {
   setConfig(config: PikHomeConfig): void {
     if (!config) throw new Error("pik-home-card: missing config");
     this.config = config;
+    if (this._legacy) this._legacy.setConfig(Object.assign({}, config, { type: "custom:pik-house-card" }));
     this.requestUpdate();
   }
   set hass(h: unknown) {
@@ -169,12 +170,16 @@ export class PikHomeCard extends LitElement {
     this._vs = "";
   }
 
-  /** The design is a fixed 1280×800: shrink it to fit the room it has. */
+  /** The design is a fixed 1280×800: shrink it to fit the room it has. On a phone (narrow), the House card's phone layout takes over. */
+  private narrow = false;
+  private _legacy?: HTMLElement & { setConfig(c: unknown): void; hass: unknown };
   private measure(): void {
     const r = this.isConnected ? this.getBoundingClientRect() : null;
     const w = window.innerWidth - (r ? Math.max(0, r.left) : 0);
     const h = window.innerHeight - (r ? Math.max(0, r.top + (window.scrollY || 0)) : 0);
-    const z = Math.min(1, w / 1280, Math.max(0.5, h / 800));
+    const narrow = w < 900;
+    if (narrow !== this.narrow) { this.narrow = narrow; this.requestUpdate(); }
+    const z = narrow ? 1 : Math.min(1, w / 1280, Math.max(0.5, h / 800));
     const zs = z < 0.995 ? z.toFixed(3) : "";
     const st = this.style as unknown as { zoom: string };
     if (st.zoom !== zs) st.zoom = zs;
@@ -989,7 +994,18 @@ ${tops.length ? html`<div class="bars">${tops.slice(0, 8).map((t) => html`<div c
 </div></div></div>`;
   }
 
+  /** Phones get the House card (it has real phone layouts), fed the same config. */
+  private legacy(): HTMLElement {
+    if (!this._legacy) {
+      this._legacy = document.createElement("pik-house-card") as HTMLElement & { setConfig(c: unknown): void; hass: unknown };
+      this._legacy.setConfig(Object.assign({}, this.C, { type: "custom:pik-house-card" }));
+    }
+    this._legacy.hass = this.H;
+    return this._legacy;
+  }
+
   render() {
+    if (this.narrow && this.H && customElements.get("pik-house-card")) return html`${this.legacy()}`;
     if (!this.H) return html`<div class="root"><div class="empty" style="padding: 60px">Waiting for Home Assistant…</div></div>`;
     const moms = this.moments();
     const m = moms[0];
