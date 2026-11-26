@@ -975,7 +975,8 @@ ${on ? html`<div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></di
     const pit = ps.find((p) => p.kind === "smoker");
     const foods = ps.filter((p) => p.kind !== "smoker");
     const st = this.S("input_datetime.smoke_started");
-    const since = st && st.state && !["unknown", "unavailable"].includes(st.state) ? Date.parse(String(st.attributes.timestamp ? Number(st.attributes.timestamp) * 1000 : st.state)) : NaN;
+    const ts = st ? Number(st.attributes.timestamp) : NaN;
+    const since = isFinite(ts) && ts > 0 ? ts * 1000 : st && st.state && !["unknown", "unavailable"].includes(st.state) ? Date.parse(st.state.replace(" ", "T")) : NaN;
     const mins = isFinite(since) ? Math.max(0, Math.round((this.now - since) / 60000)) : NaN;
     const elapsed = isFinite(mins) ? (mins >= 60 ? Math.floor(mins / 60) + "h " + (mins % 60) + "m" : mins + "m") : "";
     return html`<button type="button" class="tile stile" @click=${() => this.open("smoker", () => sm.path && this.navigate(sm.path))}>
@@ -986,7 +987,7 @@ ${on ? html`<div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></di
       const done = p.target > 0 && p.v >= p.target;
       return html`<div class=${"probe" + (done ? " done" : "")}><div class="pl"><span>${p.food}</span><b>${Math.round(p.v)}°</b></div>
 ${p.target ? html`<div class="pbar"><i style=${"width: " + frac * 100 + "%"}></i></div><div class="pt">${done ? "Done · pull it" : "to " + p.target + "°"}</div>` : nothing}</div>`;
-    }) : html`<div class="isub" style="color: #D9CBBE; text-align: left">Waiting for the Inkbird</div>`}</div></button>`;
+    }) : html`<div class="isub" style="color: #D9CBBE; text-align: left; white-space: normal">${pit ? "Smoker's heating. Plug a probe into the turkey and it shows up here." : "Waiting for the Inkbird"}</div>`}</div></button>`;
   }
 
   private timersTile(ts: PoolTimer[]): TemplateResult {
