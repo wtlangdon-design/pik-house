@@ -1765,7 +1765,7 @@
     ]
    ],
    "done": "Bubbling at the edges and golden on top.",
-   "ahead": "Cook and chop the lobster and shred the cheeses Wednesday. Toast the panko Wednesday (store airtight; fold in parsley Thursday). Sauce, pasta and bake happen Thursday.",
+   "ahead": "Cook and chop the lobster and shred the cheeses Wednesday. Toast the panko Thursday at 12:30 (store airtight; fold in parsley at the end). Sauce, pasta and bake happen Thursday.",
    "store": "Leftovers in the fridge within 2 hours; eat within 2 days (seafood); reheat to 165°F.",
    "flags": [
     [
@@ -1813,8 +1813,8 @@
      ]
     },
     {
-     "d": "wed",
-     "t": "6:15 PM: topping. Sauté shallot, garlic and thyme in butter and oil, add the GF panko and toast until golden. Cool; store airtight.",
+     "d": "thu",
+     "t": "12:30 PM: topping. Sauté shallot, garlic and thyme in butter and oil, add the GF panko and toast until golden. Cool; store airtight.",
      "min": 8,
      "tm": [
       "Panko: golden?",
@@ -1993,7 +1993,7 @@
       [
        28,
        "",
-       "toasted panko (from Wednesday)"
+       "toasted panko (from 12:30)"
       ],
       [
        29
@@ -2906,28 +2906,6 @@
    ]
   },
   {
-   "id": "wed_1545_mac",
-   "day": "wed",
-   "hm": "18:15",
-   "lane": "stove",
-   "rid": "mac",
-   "text": "GF panko topping; cool; airtight.",
-   "tm": null,
-   "steps": [
-    [
-     "mac",
-     2
-    ]
-   ],
-   "dish": [
-    [
-     "mac",
-     "cold",
-     "Topping made"
-    ]
-   ]
-  },
-  {
    "id": "wed_1600_gravy",
    "day": "wed",
    "hm": "18:30",
@@ -3239,6 +3217,28 @@
     ]
    ],
    "dish": []
+  },
+  {
+   "id": "thu_1230_mac",
+   "day": "thu",
+   "hm": "12:30",
+   "lane": "stove",
+   "rid": "mac",
+   "text": "GF panko topping; cool; airtight.",
+   "tm": null,
+   "steps": [
+    [
+     "mac",
+     2
+    ]
+   ],
+   "dish": [
+    [
+     "mac",
+     "cold",
+     "Topping made"
+    ]
+   ]
   },
   {
    "id": "thu_1245_turkey",
@@ -5026,9 +5026,9 @@
    "st": "b2",
    "r": "mac",
    "l": "Panko topping",
-   "from": "wed_1545_mac",
-   "to": "wed_1545_mac",
-   "until": "18:30"
+   "from": "thu_1230_mac",
+   "to": "thu_1230_mac",
+   "until": "12:45"
   },
   {
    "st": "b1",
