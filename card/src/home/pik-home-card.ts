@@ -831,7 +831,7 @@ ${!evs.length ? html`<div class="empty" style="padding-bottom: 0">Nothing on the
     return html`<button type="button" class="tile etile" @click=${() => this.open("energy", () => { this.sheet = "energy"; })}>
 <div class="etop"><div style="min-width: 0"><span class="eb">Energy${t ? " · " + t.solar.toFixed(1) + " kWh today" : ""}</span><div class="enum">${big} <small>${lbl}</small></div><div class="esub">${e.main}</div></div>
 <div class="egauge">${batteryGauge(e.pct, e.bat > 0.05, 20, 54)}<span>${e.pct}%</span></div></div>
-<div class="echart">${energyChart(this.hist, this.now, 300, 86)}</div></button>`;
+<div class="echart">${energyChart(this.hist, this.now, 300, 86, { noLoad: true, pctLine: true })}</div></button>`;
   }
 
   /** Sun → home ← Powerwall / grid, as live nodes with moving connectors. */
