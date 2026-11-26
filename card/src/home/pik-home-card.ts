@@ -109,7 +109,7 @@ export class PikHomeCard extends LitElement {
   private storyIdx = 0;
   private storyAt = Date.now();
   private sheet: "" | "energy" | "notes" = "";
-  private snoozed: Record<string, number> = {};
+  private snoozed: Record<string, number> = (() => { try { const j = JSON.parse(localStorage.getItem("pik-home-snoozed") || "{}"); const now = Date.now(); return Object.fromEntries(Object.entries(j).filter(([, v]) => typeof v === "number" && v > now)) as Record<string, number>; } catch (_) { return {}; } })();
   private toast = "";
   private _toastT?: number;
   private _tick?: number;
@@ -408,7 +408,17 @@ export class PikHomeCard extends LitElement {
   private moreInfo(entityId: string): void {
     this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId }, bubbles: true, composed: true }));
   }
-  private hide(key: string, ms = 864e5 * 30): void { this.snoozed[key] = Date.now() + ms; this.requestUpdate(); }
+  private hide(key: string, ms = 864e5 * 30): void {
+    this.snoozed[key] = Date.now() + ms;
+    try { localStorage.setItem("pik-home-snoozed", JSON.stringify(this.snoozed)); } catch (_) { /* private mode */ }
+    this.requestUpdate();
+  }
+  private unhide(prefix: string): void {
+    Object.keys(this.snoozed).filter((k) => k.startsWith(prefix)).forEach((k) => delete this.snoozed[k]);
+    try { localStorage.setItem("pik-home-snoozed", JSON.stringify(this.snoozed)); } catch (_) { /* private mode */ }
+    this.wake();
+    this.requestUpdate();
+  }
   private isHidden(key: string): boolean { return (this.snoozed[key] || 0) > this.now; }
   private open(topic: Topic, fn: () => void): void { this.log(topic, "open"); fn(); }
 
@@ -502,7 +512,12 @@ export class PikHomeCard extends LitElement {
     const eod = d0.getTime() + 864e5, eot = eod + 864e5;
     const rows: TodayRow[] = [];
     const hol = this.holiday();
-    if (hol) rows.push({ key: "hol", t: "Today", color: "#5E8A5A", what: hol.name + " cooking mode", note: "open the plan", tap: () => this.open("cooking", () => this.navigate(hol.path)) });
+    if (hol) {
+      const due = ((this.cook as { due_now?: Array<{ task: string }> } | null)?.due_now || [])[0];
+      rows.push(due
+        ? { key: "hol", t: "Now", color: "#C2671F", what: due.task, note: "show the step", tap: () => this.unhide("cook-") }
+        : { key: "hol", t: "Today", color: "#5E8A5A", what: hol.name + " cooking mode", note: "open the plan", tap: () => this.open("cooking", () => this.navigate(hol.path)) });
+    }
     const todays = this.calEvents.filter((e) => endMs(e) > now && startMs(e) < eod);
     const tomorrow = this.calEvents.filter((e) => startMs(e) >= eod && startMs(e) < eot);
     const leave = this.leaveInfo();
@@ -1228,6 +1243,7 @@ ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : noth
     } else body = this.homeLayer();
     return html`<div class="root" @pointerdown=${() => { this.touched = Date.now(); }}>
 ${body}
+${m ? html`<button type="button" class=${"mexit" + (["leave", "storm", "doorbell"].includes(m.kind) ? " light" : "")} @click=${() => this.dismissMoment(m)} aria-label="Back to home">Home <span aria-hidden="true">×</span></button>` : nothing}
 ${m && m.kind !== "cooking" ? this.voiceBubble() : nothing}
 ${!m && this.sheet === "energy" ? this.energySheet() : nothing}
 ${!m && this.sheet === "notes" ? this.notesSheet() : nothing}
