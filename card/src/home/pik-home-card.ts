@@ -872,6 +872,7 @@ ${spot ? plantRing({ photo: spot.photo, m: sg ? sg.m : 30, thr: sg ? sg.thr : 0,
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px">
 <div class="h1" style="font-size: 50px">${dry.length ? dry.map((g) => g.room).join(" and ") + (dry.length === 1 ? " needs" : " need") + " water." : "Everyone's happy. No watering today."}</div>
 <div class="ringgrid">${gs.map((g) => plantRing({ photo: pics.sensor[g.room] || "", m: g.m, thr: g.thr, dry: g.dry, live: g.live }, 112, html`<span class="rlab"><b>${g.room}</b>${g.live ? g.m + "%" : "—"}</span>`))}</div>
+${!route.length && pics.all.length ? html`<div class="mosaic">${Array.from({ length: Math.min(10, pics.all.length) }, (_x, k) => pics.all[(Math.floor(this.now / 60000) * 7 + k * 5) % pics.all.length]).map((p) => html`<div class="thumb big"><img src=${photoUrl(p.photo, 256)} alt="" loading="lazy"><span>${p.name}</span></div>`)}</div>` : nothing}
 ${route.length ? html`<div class="glass" style="padding: 16px 20px"><div class="eb" style="margin-bottom: 10px">The ${focusG!.room.toLowerCase()} route · ${route.length} plants</div><div class="thumbs">${route.slice(0, 9).map((p) => html`<div class="thumb"><img src=${photoUrl(p.photo, 256)} alt="" loading="lazy"><span>${p.name}</span></div>`)}</div></div>` : nothing}
 </div></div>`;
   }
@@ -889,7 +890,7 @@ ${route.length ? html`<div class="glass" style="padding: 16px 20px"><div class="
 <div class="wmeta">${[f.producer, f.region, f.grape].filter(Boolean).join(" · ")}${f.value ? html`<br><b>$${Math.round(f.value)}</b> a bottle` : nothing}${f.count > 1 ? " · " + f.count + " on hand" : ""}</div>` : nothing}</div>
 <div class="wright">
 <div class="kicker" style="color: #E2A6A0">The cellar · ${n} bottles${value ? " · about $" + Math.round(value).toLocaleString() : ""}</div>
-<div class="rack">${ws.slice(0, 12).map((w) => niche(w, 150, undefined, w.name === df))}</div>
+<div class="rack">${ws.slice(0, 12).map((w) => niche(w, 250, undefined, w.name === df))}</div>
 </div></div>`;
   }
 
@@ -1027,7 +1028,7 @@ ${v ? html`<button type="button" class=${"chip" + (this.muted ? " on" : "")} ari
 <div class="phead"><span class="eb">Today, together</span><span class="legend">${people.map((p) => html`<i style=${"background: " + p.color}></i>${p.name}`)}<i style="background: #5E8A5A"></i>Both</span></div>
 <div class="rows">${today.length ? repeat(today, (r) => r.key, (r) => html`<button type="button" class=${"row" + (r.past ? " past" : "")} @click=${() => r.tap && r.tap()}>
 <span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w">${r.what}</span><span class="n">${r.note}</span></button>`)
-      : html`<div class="empty">Nothing on the calendar today.<br>Send either Pik a plan, a screenshot or a booking and it lands here for both of you.</div>`}</div>
+      : nothing}${today.length < 4 ? html`<div class="empty" style="border-top: 1px solid var(--line2)">${today.length ? "That's everything today." : "Nothing on the calendar today."} Send either Pik a plan, a screenshot or a booking and it lands here for both of you.</div>` : nothing}</div>
 </div>
 <div class="panel">
 <div class="phead"><span class="eb">From your Piks</span></div>

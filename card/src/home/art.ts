@@ -131,7 +131,7 @@ ${p.photo ? html`<img src=${photoUrl(p.photo, size > 160 ? 512 : 256)} alt="" lo
 <svg width=${size} height=${size} viewBox=${`0 0 ${size} ${size}`} aria-hidden="true">${svg`
 <circle cx=${size / 2} cy=${size / 2} r=${r} fill="none" stroke="rgba(94,138,90,.18)" stroke-width="6"></circle>
 <circle cx=${size / 2} cy=${size / 2} r=${r} fill="none" stroke=${col} stroke-width="6" stroke-linecap="round" stroke-dasharray=${`${c * f} ${c}`} transform=${`rotate(-90 ${size / 2} ${size / 2})`}></circle>
-<circle cx=${size / 2 + r * Math.cos(tk)} cy=${size / 2 + r * Math.sin(tk)} r="4.5" fill="#fff" stroke="#E3893B" stroke-width="2.5"></circle>`}</svg>
+${size >= 60 ? svg`<circle cx=${size / 2 + r * Math.cos(tk)} cy=${size / 2 + r * Math.sin(tk)} r="4.5" fill="#fff" stroke="#E3893B" stroke-width="2.5"></circle>` : nothing}`}</svg>
 ${p.dry ? html`<span class="drop" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 3 C8 9 6 12 6 15 a6 6 0 0 0 12 0 c0-3-2-6-6-12z" fill="#fff"></path></svg></span>` : nothing}
 ${label || nothing}</div>`;
 }

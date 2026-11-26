@@ -195,13 +195,15 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .thumbs{display:flex;gap:10px;overflow:hidden}
 .thumb{width:78px;flex:none;text-align:center;font-size:11px;color:var(--mute2)}
 .thumb img{width:78px;height:78px;border-radius:16px;object-fit:cover;display:block;margin-bottom:4px}
+.mosaic{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.thumb.big{width:auto;font-size:13px}.thumb.big img{width:100%;height:auto;aspect-ratio:1;border-radius:20px}
 .thumb span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile.wall{background:linear-gradient(180deg,#3B2418,#24150F);color:#F5ECE4;padding:10px 10px 12px;display:flex;flex-direction:column;gap:8px}
 .minirack{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;flex:1;min-height:0}
 .minirack .niche{height:auto!important;min-height:0}
 .wtxt .eb{color:#E2A6A0}.wtxt .sub{color:#D8C6C1;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .niche{position:relative;border:0;padding:6px 4px 4px;border-radius:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 18%,#FFF4E2 0%,#F1DEC2 55%,#C9A983 100%);box-shadow:inset 0 0 0 2px rgba(60,34,20,.55),inset 0 -10px 18px rgba(80,45,20,.25);display:flex;align-items:flex-end;justify-content:center}
-.niche img{max-height:100%;max-width:100%;object-fit:contain;mix-blend-mode:multiply;filter:saturate(1.05) contrast(1.05);position:relative;z-index:1}
+.niche img{height:100%;width:100%;object-fit:contain;transform:scale(1.32);transform-origin:50% 92%;mix-blend-mode:multiply;filter:saturate(1.05) contrast(1.05);position:relative;z-index:1}
 .niche .nart{display:flex;align-items:flex-end;justify-content:center;height:100%;position:relative;z-index:1}
 .niche .nart svg{height:100%;width:auto;filter:drop-shadow(0 4px 4px rgba(0,0,0,.25))}
 .niche .nlight{position:absolute;left:15%;right:15%;top:0;height:8px;border-radius:0 0 50% 50%;background:rgba(255,236,190,.9);filter:blur(3px)}
