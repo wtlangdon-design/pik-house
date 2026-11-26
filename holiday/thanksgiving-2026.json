@@ -1300,7 +1300,7 @@
     ]
    ],
    "done": "Sprouts tender with deeply charred cut sides. Dress with only enough to coat.",
-   "ahead": "Wednesday: dressing base (no herbs), refrigerated; toast the cereal with cayenne, cool, store airtight. Thursday: boil and dry the sprouts, char at the end.",
+   "ahead": "Wednesday: dressing base (no herbs), refrigerated. Thursday: toast the cereal with cayenne at 12:45, cool, store airtight; boil and dry the sprouts, char at the end.",
    "store": "Best right away. Leftovers: fridge within 2 hours.",
    "flags": [
     [
@@ -1344,34 +1344,6 @@
      ]
     },
     {
-     "d": "wed",
-     "t": "Toast the rice crisps with the cayenne and a pinch of salt in 1 tbsp oil, about 30 seconds. Cool completely; store airtight.",
-     "min": 5,
-     "tm": [
-      "Crisps: toasted?",
-      1,
-      "check"
-     ],
-     "ing": [
-      [
-       2
-      ],
-      [
-       3
-      ],
-      [
-       4,
-       "pinch",
-       "salt"
-      ],
-      [
-       1,
-       "1 tbsp",
-       "oil"
-      ]
-     ]
-    },
-    {
      "d": "thu",
      "t": "12:00 PM (our method): boil the sprouts in salted water until just tender.",
      "min": 5,
@@ -1396,6 +1368,34 @@
      "t": "Drain, spread on towels to dry thoroughly, then refrigerate.",
      "min": 5,
      "ing": []
+    },
+    {
+     "d": "thu",
+     "t": "12:45 PM: toast the rice crisps with the cayenne and a pinch of salt in 1 tbsp oil, about 30 seconds. Cool completely; store airtight.",
+     "min": 5,
+     "tm": [
+      "Crisps: toasted?",
+      1,
+      "check"
+     ],
+     "ing": [
+      [
+       2
+      ],
+      [
+       3
+      ],
+      [
+       4,
+       "pinch",
+       "salt"
+      ],
+      [
+       1,
+       "1 tbsp",
+       "oil"
+      ]
+     ]
     },
     {
      "d": "thu",
@@ -2889,23 +2889,19 @@
    "hm": "18:00",
    "lane": "stove",
    "rid": "sprouts",
-   "text": "Sprouts dressing base (no herbs); toast rice crisps with cayenne; cool; airtight.",
+   "text": "Sprouts dressing base (no herbs); fridge.",
    "tm": null,
    "steps": [
     [
      "sprouts",
      0
-    ],
-    [
-     "sprouts",
-     1
     ]
    ],
    "dish": [
     [
      "sprouts",
      "cold",
-     "Dressing and crisps ready"
+     "Dressing ready"
     ]
    ]
   },
@@ -3176,11 +3172,11 @@
    "steps": [
     [
      "sprouts",
-     2
+     1
     ],
     [
      "sprouts",
-     3
+     2
     ]
    ],
    "dish": [
@@ -3263,6 +3259,32 @@
     ]
    ],
    "dish": []
+  },
+  {
+   "id": "thu_1245_sprouts",
+   "day": "thu",
+   "hm": "12:45",
+   "lane": "stove",
+   "rid": "sprouts",
+   "text": "Toast the rice crisps with cayenne; cool; airtight.",
+   "tm": [
+    "Crisps: toasted?",
+    1,
+    "check"
+   ],
+   "steps": [
+    [
+     "sprouts",
+     3
+    ]
+   ],
+   "dish": [
+    [
+     "sprouts",
+     "cold",
+     "Crisps ready · char 3:40"
+    ]
+   ]
   },
   {
    "id": "thu_1315_mash",
@@ -4996,9 +5018,9 @@
    "st": "b2",
    "r": "sprouts",
    "l": "Rice crisps",
-   "from": "wed_1530_sprouts",
-   "to": "wed_1530_sprouts",
-   "until": "18:15"
+   "from": "thu_1245_sprouts",
+   "to": "thu_1245_sprouts",
+   "until": "12:50"
   },
   {
    "st": "b2",
