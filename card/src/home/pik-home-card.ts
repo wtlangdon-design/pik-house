@@ -888,6 +888,56 @@ ${t ? html`<div class="chips"><span class="echip"><b>${t.solar.toFixed(1)}</b> k
 <div class="prows">${gs.map((g) => html`<div class=${"prow2" + (g.dry ? " dry" : "")}><span class="pi">${plantIcon(g.room, 15, g.dry ? "#E3893B" : "#5E8A5A")}</span><span class="pn">${g.room}</span><span class="pb"><i style=${"width: " + (g.live ? Math.min(100, (g.m / 60) * 100) : 0) + "%"}></i><u style=${"left: " + Math.min(100, (g.thr / 60) * 100) + "%"}></u></span><b>${g.live ? g.m + "%" : "—"}</b></div>`)}</div></button>`;
   }
 
+  private insideTile(): TemplateResult {
+    const c = this.S(this.C.thermostat)!;
+    const cur = Number(c.attributes.current_temperature), sp = Number(c.attributes.temperature);
+    const act = String(c.attributes.hvac_action || "");
+    const heat = act === "heating", cool = act === "cooling";
+    const out = Number(this.S(this.C.weather)?.attributes.temperature);
+    // a 270° dial from 50° to 85°
+    const lo = 50, hi = 85, R = 34, cx = 44, cy = 44;
+    const ang = (t: number) => (135 + (Math.max(lo, Math.min(hi, t)) - lo) / (hi - lo) * 270) * Math.PI / 180;
+    const pt = (t: number, r = R) => [cx + r * Math.cos(ang(t)), cy + r * Math.sin(ang(t))];
+    const arc = (t: number) => { const [x0, y0] = pt(lo), [x1, y1] = pt(t); const large = (t - lo) / (hi - lo) * 270 > 180 ? 1 : 0; return `M${x0} ${y0} A${R} ${R} 0 ${large} 1 ${x1} ${y1}`; };
+    const groups = (this.C.lights || []).map((g) => ({ name: g.name, ids: g.entities.filter((id) => this.S(id)), on: g.entities.filter((id) => this.S(id)?.state === "on").length }));
+    const lightsOn = groups.reduce((a, g) => a + g.on, 0);
+    const toggle = (g: { ids: string[]; on: number }) => { this.log("inside", "tap"); g.ids.forEach((id) => this.svc(id.split(".")[0], g.on ? "turn_off" : "turn_on", {}, { entity_id: id })); };
+    const isNum = (x: number) => isFinite(x);
+    return html`<div class=${"tile itile" + (heat ? " heat" : cool ? " cool" : "")}>
+<button type="button" class="dialbtn" @click=${() => this.open("inside", () => this.moreInfo(this.C.thermostat!))} aria-label="Thermostat">
+<svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true">${svg`
+<defs><linearGradient id="ig1" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#7FB2D9"></stop><stop offset=".55" stop-color="#F0B25E"></stop><stop offset="1" stop-color="#E0643A"></stop></linearGradient></defs>
+<path d=${arc(hi)} fill="none" stroke="rgba(42,34,27,.1)" stroke-width="7" stroke-linecap="round"></path>
+${isNum(cur) ? svg`<path d=${arc(cur)} fill="none" stroke="url(#ig1)" stroke-width="7" stroke-linecap="round"></path>` : nothing}
+${isNum(sp) ? svg`<circle cx=${pt(sp)[0]} cy=${pt(sp)[1]} r="5.5" fill="#FCF8F1" stroke="#2A221B" stroke-width="2"></circle>` : nothing}
+${heat ? svg`<path d="M44 64 c-5 0 -8 -3 -8 -7 c0 -4 4 -6 5 -10 c3 3 2 5 2 6 c1 -1 2 -3 2 -5 c4 3 7 6 7 9 c0 4 -3 7 -8 7z" fill="#E0643A" transform="translate(8.8 17) scale(.8)"><animate attributeName="opacity" values="1;.6;1" dur="1.2s" repeatCount="indefinite"></animate></path>` : cool ? svg`<path d="M44 52 v16 M37 56 l14 8 M37 64 l14 -8" stroke="#5E95C2" stroke-width="2" stroke-linecap="round"></path>` : nothing}`}</svg>
+<span class="dialnum">${isNum(cur) ? Math.round(cur) + "°" : "—"}</span></button>
+<div class="itext"><span class="eb">Inside</span><div class="isub">${heat ? "Heating to " + sp + "°" : cool ? "Cooling to " + sp + "°" : isNum(sp) ? "Holding " + sp + "°" : ""}${isNum(out) ? html`<br><span style="opacity: .75">${Math.round(out)}° outside</span>` : nothing}</div></div>
+<div class="bulbs" aria-label=${lightsOn + " lights on"}>${groups.slice(0, 8).map((g) => html`<button type="button" class=${"bulb" + (g.on ? " on" : "")} title=${g.name + (g.on ? " · on" : " · off")} aria-label=${g.name + (g.on ? ", on. Turn off" : ", off. Turn on")} @click=${() => toggle(g)}><i></i></button>`)}<span>${lightsOn ? lightsOn + " on" : "lights off"}</span></div>
+</div>`;
+  }
+
+  private musicTile(): TemplateResult {
+    const id = this.C.echo!.media_player!;
+    const mp = this.S(id)!;
+    const a = mp.attributes;
+    const playing = mp.state === "playing", on = playing || mp.state === "paused";
+    const art = on && a.entity_picture ? String(a.entity_picture) : "";
+    const dur = Number(a.media_duration), pos = Number(a.media_position), upd = Date.parse(String(a.media_position_updated_at || ""));
+    const at = isFinite(pos) ? pos + (playing && isFinite(upd) ? (this.now - upd) / 1000 : 0) : NaN;
+    const frac = isFinite(dur) && dur > 0 && isFinite(at) ? Math.min(1, at / dur) : 0;
+    return html`<div class=${"tile mtile" + (playing ? " playing" : "")}>
+${art ? html`<img class="mbg" src=${art} alt="">` : nothing}
+<div class="mhead"><span class="eb">${playing ? "Playing" : on ? "Paused" : "Music"}</span>${playing ? html`<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>` : nothing}</div>
+<div class="mrow">${art ? html`<img class="mart" src=${art} alt="">` : html`<svg class="vinyl" width="50" height="50" viewBox="0 0 54 54" aria-hidden="true">${svg`<circle cx="27" cy="27" r="26" fill="#14111C"></circle>${[22, 18, 14].map((r) => svg`<circle cx="27" cy="27" r=${r} fill="none" stroke="#fff" stroke-opacity=".07"></circle>`)}<circle cx="27" cy="27" r="8" fill="#C4703E"></circle><circle cx="27" cy="27" r="1.6" fill="#14111C"></circle><path d="M10 16 A20 20 0 0 1 22 8" stroke="#fff" stroke-opacity=".18" stroke-width="2" fill="none"></path>`}</svg>`}
+<div style="min-width: 0"><div class="mtitle">${on ? String(a.media_title || a.media_artist || "Something good") : "Nothing on"}</div>
+<div class=${"msub" + (on ? "" : " wrap")}>${on ? String(a.media_artist || a.app_name || "") : "Say “Hey Luna, play…”"}</div></div></div>
+${on ? html`<div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></div>
+<div class="mctl"><button type="button" class="rb ink" aria-label=${playing ? "Pause" : "Play"} @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_play_pause", {}, { entity_id: id }); }}>${playing ? html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" fill="currentColor"></rect><rect x="8.5" y="1" width="3.5" height="12" fill="currentColor"></rect></svg>` : html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1 L12 7 L3 13 Z" fill="currentColor"></path></svg>`}</button>
+<button type="button" class="rb" aria-label="Next" @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_next_track", {}, { entity_id: id }); }}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1 L10 7 L2 13 Z" fill="currentColor"></path><rect x="10.5" y="1" width="2" height="12" fill="currentColor"></rect></svg></button></div>` : nothing}
+</div>`;
+  }
+
   private cellarTile(): TemplateResult {
     const ws = this.wines();
     const n = ws.reduce((a, w) => a + w.count, 0);
@@ -990,8 +1040,8 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
       { id: "smoker", topic: "smoker" as Topic, score: smokeOn ? this.rank("smoker", 60) : -99, fr: "1.2fr", body: () => this.smokeTile() },
       { id: "energy", topic: "energy" as Topic, score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, fr: "1.6fr", body: () => this.energyTile(e!) },
       { id: "plants", topic: "plants" as Topic, score: this.groups().length ? this.rank("plants", 1.5 + (dry.length ? 3 : 0)) : -99, fr: "1.4fr", body: () => this.plantsTile() },
-      { id: "inside", topic: "inside" as Topic, score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, fr: "1fr", body: () => this.insideTile() },
-      { id: "music", topic: "music" as Topic, score: mp ? this.rank("music", 1 + (playing ? 2.5 : 0)) : -99, fr: "1fr", body: () => this.musicTile() },
+      { id: "inside", topic: "inside" as Topic, score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, fr: "1.1fr", body: () => this.insideTile() },
+      { id: "music", topic: "music" as Topic, score: mp ? this.rank("music", 1 + (playing ? 2.5 : 0)) : -99, fr: "1.1fr", body: () => this.musicTile() },
       { id: "cellar", topic: "cellar" as Topic, score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, fr: "1.4fr", body: () => this.cellarTile() },
     ];
     const order = cand.map((c) => c.id);
@@ -999,28 +1049,6 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     return pick.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   }
 
-  private insideTile(): TemplateResult {
-    const c = this.S(this.C.thermostat)!;
-    const cur = c.attributes.current_temperature as number | undefined, sp = c.attributes.temperature as number | undefined;
-    const act = String(c.attributes.hvac_action || "");
-    const lightsOn = (this.C.lights || []).reduce((n, g) => n + g.entities.filter((id) => this.S(id)?.state === "on").length, 0);
-    return html`<button type="button" class="tile" @click=${() => this.open("inside", () => this.moreInfo(this.C.thermostat!))}>
-<span class="eb">Inside</span><div class="big">${typeof cur === "number" ? Math.round(cur) + "°" : "—"}</div>
-<div class="sub">${act === "heating" ? "Heating to " + sp + "°" : act === "cooling" ? "Cooling to " + sp + "°" : typeof sp === "number" ? "Set to " + sp + "°" : ""}<br>${lightsOn ? lightsOn + (lightsOn === 1 ? " light on" : " lights on") : "Lights off"}</div></button>`;
-  }
-  private musicTile(): TemplateResult {
-    const id = this.C.echo!.media_player!;
-    const mp = this.S(id)!;
-    const a = mp.attributes;
-    const on = mp.state === "playing" || mp.state === "paused";
-    return html`<div class="tile">
-<span class="eb">${mp.state === "playing" ? "Playing" : on ? "Paused" : "Music"}</span>
-<div class="big" style="font-size: 22px; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">${on ? String(a.media_title || a.media_artist || "Something good") : "Nothing on"}</div>
-<div class="sub">${on ? String(a.media_artist || a.app_name || "") : "Say “Hey Luna, play…”"}</div>
-${on ? html`<div class="mbtns"><button type="button" class="rb ink" aria-label=${mp.state === "playing" ? "Pause" : "Play"} @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_play_pause", {}, { entity_id: id }); }}>${mp.state === "playing" ? html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" fill="currentColor"></rect><rect x="8.5" y="1" width="3.5" height="12" fill="currentColor"></rect></svg>` : html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1 L12 7 L3 13 Z" fill="currentColor"></path></svg>`}</button>
-<button type="button" class="rb" aria-label="Next" @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_next_track", {}, { entity_id: id }); }}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1 L10 7 L2 13 Z" fill="currentColor"></path><rect x="10.5" y="1" width="2" height="12" fill="currentColor"></rect></svg></button></div>` : nothing}
-</div>`;
-  }
   private smokeTile(): TemplateResult {
     const sm = this.C.smoke!;
     const ps = sm.probes.map((id, i) => ({ v: this.S(id)?.state, n: this.S("input_text.smoke_probe_" + (i + 1) + "_food")?.state || "Probe " + (i + 1) })).filter((p) => p.v && /^-?[\d.]+$/.test(p.v));
