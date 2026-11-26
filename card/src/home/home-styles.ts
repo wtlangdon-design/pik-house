@@ -345,6 +345,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .mtitle{position:relative;font-family:var(--serif);font-size:19px;line-height:1.08;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .msub{position:relative;font-size:12.5px;color:#D9CDE8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .msub.wrap{white-space:normal}
+.mpicks{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:auto}
+.mpick{min-height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#F5EFF8;font-size:12.5px;font-weight:600;padding:0 8px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mpick:active{background:rgba(231,184,240,.3)}
 .mbar2{position:relative;height:3px;border-radius:2px;background:rgba(255,255,255,.15);margin-top:auto}.mbar2 i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#E7B8F0}
 .mctl{position:relative;display:flex;gap:6px;margin-top:6px}
 .mtile .rb{width:36px;height:36px;border-color:rgba(255,255,255,.3);color:#fff}.mtile .rb.ink{background:#fff;color:#221A33;border-color:#fff}

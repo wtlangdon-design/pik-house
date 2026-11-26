@@ -33,7 +33,9 @@ export interface PikHomeConfig extends LiveConfig {
   smoke?: { active: string; probes: string[]; path?: string };
   cooking?: { script: string; done_script?: string };
   plants_path?: string;
-  sky?: string;          // a weather entity with cloud_coverage (the energy scene's clouds)
+  sky?: string;
+  music_device?: string;  // the Echo's device id, for "play …" quick picks (alexa_devices.send_text_command)
+  music_picks?: Array<{ label: string; say: string }>;          // a weather entity with cloud_coverage (the energy scene's clouds)
   energy_today?: { solar?: string; usage?: string; imported?: string; exported?: string };
   ambient_after?: number; // seconds untouched before the stories start (default 120)
   story_seconds?: number; // each story's time on screen (default 12)
@@ -933,11 +935,32 @@ ${art ? html`<img class="mbg" src=${art} alt="">` : nothing}
 <div class="mhead"><span class="eb">${playing ? "Playing" : on ? "Paused" : "Music"}</span>${playing ? html`<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>` : nothing}</div>
 <div class="mrow">${art ? html`<img class="mart" src=${art} alt="">` : html`<svg class="vinyl" width="50" height="50" viewBox="0 0 54 54" aria-hidden="true">${svg`<circle cx="27" cy="27" r="26" fill="#14111C"></circle>${[22, 18, 14].map((r) => svg`<circle cx="27" cy="27" r=${r} fill="none" stroke="#fff" stroke-opacity=".07"></circle>`)}<circle cx="27" cy="27" r="8" fill="#C4703E"></circle><circle cx="27" cy="27" r="1.6" fill="#14111C"></circle><path d="M10 16 A20 20 0 0 1 22 8" stroke="#fff" stroke-opacity=".18" stroke-width="2" fill="none"></path>`}</svg>`}
 <div style="min-width: 0"><div class="mtitle">${on ? String(a.media_title || a.media_artist || "Something good") : "Nothing on"}</div>
-<div class=${"msub" + (on ? "" : " wrap")}>${on ? String(a.media_artist || a.app_name || "") : "Say “Hey Luna, play…”"}</div></div></div>
+<div class=${"msub" + (on ? "" : " wrap")}>${on ? String(a.media_artist || a.app_name || "") : this.C.music_device ? "Tap one to start it on the Echo" : "Say “Hey Luna, play…”"}</div></div></div>
+${!on && this.C.music_device ? html`<div class="mpicks">${this.musicPicks().map((p) => html`<button type="button" class="mpick" @click=${() => this.playPick(p)}>${p.label}</button>`)}</div>` : nothing}
 ${on ? html`<div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></div>
 <div class="mctl"><button type="button" class="rb ink" aria-label=${playing ? "Pause" : "Play"} @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_play_pause", {}, { entity_id: id }); }}>${playing ? html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" fill="currentColor"></rect><rect x="8.5" y="1" width="3.5" height="12" fill="currentColor"></rect></svg>` : html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1 L12 7 L3 13 Z" fill="currentColor"></path></svg>`}</button>
 <button type="button" class="rb" aria-label="Next" @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_next_track", {}, { entity_id: id }); }}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1 L10 7 L2 13 Z" fill="currentColor"></path><rect x="10.5" y="1" width="2" height="12" fill="currentColor"></rect></svg></button></div>` : nothing}
 </div>`;
+  }
+
+  /** Quick picks for the idle music tile: yours from the config, otherwise ones that fit the moment. */
+  private musicPicks(): Array<{ label: string; say: string }> {
+    if (this.C.music_picks && this.C.music_picks.length) return this.C.music_picks.slice(0, 4);
+    const hol = this.holiday();
+    const p = this.dayPart;
+    const base = p === "morning" ? [["Coffee", "morning coffee jazz"], ["Top hits", "today's top hits"]]
+      : p === "midday" ? [["Cooking", "upbeat cooking music"], ["Top hits", "today's top hits"]]
+      : p === "evening" ? [["Jazz", "dinner jazz"], ["Soul", "classic soul"]]
+      : [["Wind down", "relaxing evening music"], ["Rain", "rain sounds"]];
+    const picks = (hol ? [["Holiday", hol.name.toLowerCase() + " dinner music"], ["Cooking", "upbeat cooking music"]] : []).concat(base, [["Chill", "chill music"], ["Throwbacks", "throwback hits"]]);
+    const seen = new Set<string>();
+    return picks.filter(([l]) => (seen.has(l) ? false : (seen.add(l), true))).slice(0, 4).map(([label, say]) => ({ label, say }));
+  }
+  private playPick(p: { label: string; say: string }): void {
+    if (!this.C.music_device) return;
+    this.log("music", "open");
+    this.svc("alexa_devices", "send_text_command", { device_id: this.C.music_device, text_command: "play " + p.say });
+    this.flash("Asking the Echo to play " + p.say + "…");
   }
 
   private cellarTile(): TemplateResult {
