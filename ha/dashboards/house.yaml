@@ -71,6 +71,8 @@ views:
         smoke: { active: input_boolean.smoke_on, probes: [sensor.smoke_probe_1, sensor.smoke_probe_2, sensor.smoke_probe_3, sensor.smoke_probe_4], path: /dashboard-smoking/probes }
         cooking: { script: script.holiday_whats_next, done_script: script.holiday_task_done }
         plants_path: /dashboard-plants/plants
+        sky: weather.home   # cloud cover for the energy scene
+        energy_today: { solar: sensor.home_solar_generated, usage: sensor.home_home_usage, imported: sensor.home_grid_imported, exported: sensor.home_grid_exported }
         ambient_after: 120   # seconds untouched before the stories start
         story_seconds: 12
         quiet_hours: [23, 7]

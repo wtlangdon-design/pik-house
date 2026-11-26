@@ -12,6 +12,7 @@
 import { LitElement, html, nothing, svg, type TemplateResult } from "lit";
 import { repeat } from "lit/directives/repeat.js";
 import { homeStyles } from "./home-styles";
+import { energyScene, niche, photoUrl, plantRing, type PlantPic, type SceneIn, type Wine } from "./art";
 import { pikStyles } from "../styles";
 import { pikArt } from "../pik-art";
 import { condWord, fetchEvents, liveGroups, num, parseDesc, parseQuiet, poolTimers, whenWord, type CalEvent, type Hass, type HState, type LiveConfig, type PoolTimer, type TodoItem } from "../live";
@@ -32,6 +33,8 @@ export interface PikHomeConfig extends LiveConfig {
   smoke?: { active: string; probes: string[]; path?: string };
   cooking?: { script: string; done_script?: string };
   plants_path?: string;
+  sky?: string;          // a weather entity with cloud_coverage (the energy scene's clouds)
+  energy_today?: { solar?: string; usage?: string; imported?: string; exported?: string };
   ambient_after?: number; // seconds untouched before the stories start (default 120)
   story_seconds?: number; // each story's time on screen (default 12)
   quiet_hours?: [number, number]; // night clock between these hours (default 23 → 7)
@@ -748,58 +751,146 @@ ${!evs.length ? html`<div class="empty" style="padding-bottom: 0">Nothing on the
 </div></div>`;
   }
 
-  private flowSvg(e: Energy | null, w: number, h: number): TemplateResult {
-    const on = (b: boolean) => "flow" + (b ? "" : " off");
-    return html`<svg width=${w} height=${h} viewBox="0 0 400 300" aria-hidden="true">${svg`
-<path d="M88 70 C150 70 160 150 200 150" fill="none" stroke="#F0B25E" stroke-width="7" class=${on(!!e && e.solar > 0.1)}></path>
-<path d="M200 150 C260 150 250 232 312 232" fill="none" stroke="#9FD18B" stroke-width="7" class=${on(!!e && Math.abs(e.bat) > 0.05)}></path>
-<path d="M200 150 C140 150 150 232 88 232" fill="none" stroke="#8FB7D9" stroke-width="7" class=${on(!!e && e.grid !== null && Math.abs(e.grid) > 0.05)}></path>
-<circle cx="66" cy="70" r="40" fill=${e && e.solar > 0.1 ? "#FFD48A" : "#4A5A60"}></circle>
-<rect x="160" y="112" width="80" height="80" rx="14" fill="#F3EDE3"></rect><path d="M172 150 L200 126 L228 150 V178 H172 Z" fill="#C98F65"></path>
-<rect x="290" y="196" width="48" height="76" rx="10" fill="#203238" stroke="#9FD18B" stroke-width="3"></rect>
-<rect x="296" y=${268 - 64 * ((e ? e.pct : 0) / 100)} width="36" height=${64 * ((e ? e.pct : 0) / 100)} rx="5" fill="#9FD18B"></rect>
-<path d="M66 214 L80 262 M66 214 L52 262 M54 230 H78" stroke=${e && e.out ? "#E0645A" : "#8FB7D9"} stroke-width="5" stroke-linecap="round" fill="none"></path>`}</svg>`;
+  // ---------------- illustrated pieces ----------------
+
+  private sceneIn(e: Energy): SceneIn {
+    const sun = this.S(this.C.sun);
+    const sk = this.S(this.C.sky || this.C.weather);
+    const n = (v: unknown) => (typeof v === "number" ? v : null);
+    return { solar: e.solar, house: e.house, bat: e.bat, grid: e.grid, pct: e.pct, out: e.out, elevation: sun ? n(sun.attributes.elevation) : null, azimuth: sun ? n(sun.attributes.azimuth) : null, clouds: sk ? n(sk.attributes.cloud_coverage) : null };
+  }
+
+  /** Today's energy totals (kWh) from the Powerwall, when configured. */
+  private energyToday(): { solar: number; usage: number; imported: number; exported: number; self: number } | null {
+    const t = this.C.energy_today;
+    if (!t) return null;
+    const v = (id?: string) => num(this.S(id));
+    const solar = v(t.solar), usage = v(t.usage), imported = v(t.imported), exported = v(t.exported);
+    if (solar === null || usage === null) return null;
+    const self = usage > 0 && imported !== null ? Math.round(Math.max(0, Math.min(1, (usage - imported) / usage)) * 100) : 0;
+    return { solar, usage, imported: imported || 0, exported: exported || 0, self };
+  }
+
+  /** Every plant with a photo, and each group's sensor plant. */
+  private plantPics(): { all: Array<PlantPic & { group: string; room: string }>; sensor: Record<string, string> } {
+    const all: Array<PlantPic & { group: string; room: string }> = [];
+    const sensor: Record<string, string> = {};
+    this.plantItems.filter((i) => i.status === "needs_action").forEach((i) => {
+      const d = i.description || "";
+      const f = (k: string) => { const m = new RegExp("^" + k + ":\\s*(.+)$", "m").exec(d); return m ? m[1].trim() : ""; };
+      const g = f("Group"), photo = f("Photo");
+      if (f("Sensor") && g) sensor[g] = photo;
+      if (photo) all.push({ name: i.summary.split(" · ")[0], photo, spot: [f("Room"), f("Spot")].filter(Boolean).join(", "), notes: f("Notes"), group: g, room: f("Room") });
+    });
+    return { all, sensor };
+  }
+
+  /** The cellar as wines (same bottle twice = one wine ×2), photo and details from each bottle's notes. */
+  private wines(): Wine[] {
+    const by: Record<string, Wine> = {};
+    this.cellarItems.filter((i) => i.status === "needs_action").forEach((i) => {
+      if (by[i.summary]) { by[i.summary].count++; return; }
+      const d = i.description || "";
+      const f = (k: string) => { const m = new RegExp("^" + k + ":\\s*(.+)$", "m").exec(d); return m ? m[1].trim() : ""; };
+      const t = i.summary + " " + f("Grape");
+      const kind: "red" | "rose" | "white" = ROSE.test(t) ? "rose" : WHITE.test(t) ? "white" : "red";
+      const vm = /\b(19|20)\d\d\b/.exec(i.summary);
+      by[i.summary] = { name: i.summary, producer: f("Producer"), vintage: f("Vintage") || (vm ? vm[0] : ""), region: f("Region"), grape: f("Grape"), value: parseFloat(f("Value").replace(/[^0-9.]/g, "")) || 0, image: /^https:\/\//.test(f("Image")) ? f("Image") : "", kind, count: 1 };
+    });
+    return Object.values(by).sort((a, b) => (a.kind === b.kind ? b.count - a.count || b.value - a.value : a.kind === "red" ? -1 : 1));
+  }
+
+  /** The bottle the screen features: the one to drink first, or a different one every few minutes. */
+  private featured(ws: Wine[]): Wine | undefined {
+    const df = this.drinkFirst();
+    const slot = Math.floor(this.now / 240000);
+    if (df && slot % 2 === 0) return ws.find((w) => w.name === df) || ws[0];
+    return ws.length ? ws[slot % ws.length] : undefined;
+  }
+
+  private energyTile(e: Energy): TemplateResult {
+    return html`<button type="button" class="tile scene" @click=${() => this.open("energy", () => { this.sheet = "energy"; })}>
+${energyScene(this.sceneIn(e))}
+<div class="sov"><span class="eb">Energy</span><div class="big">${e.solar > 0.1 ? e.solar.toFixed(1) + " kW sun" : e.out ? "Grid down" : e.pct + "% stored"}</div><div class="sub">${e.main}</div></div></button>`;
+  }
+
+  private plantsTile(): TemplateResult {
+    const gs = this.groups(), dry = gs.filter((g) => g.dry);
+    const pics = this.plantPics();
+    const thirstyPic = dry.length ? pics.all.find((p) => p.photo === pics.sensor[dry[0].room]) : undefined;
+    const pool = pics.all;
+    const hero = thirstyPic || (pool.length ? pool[Math.floor(this.now / 90000) % pool.length] : undefined);
+    return html`<button type="button" class="tile photo" @click=${() => this.open("plants", () => this.C.plants_path && this.navigate(this.C.plants_path))}>
+${hero ? html`<img class="hero" src=${photoUrl(hero.photo, 512)} alt="" loading="lazy">` : nothing}
+<div class="pshade"></div>
+<div class="prow">${gs.map((g) => plantRing({ photo: pics.sensor[g.room] || "", m: g.m, thr: g.thr, dry: g.dry, live: g.live }, 34))}</div>
+<div class="sov low"><span class="eb">${dry.length ? "Water today" : "Plants · all happy"}</span><div class="big" style="font-size: 22px">${dry.length ? dry.map((g) => g.room).join(", ") : hero ? hero.name : "Everyone's fine"}</div>${!dry.length && hero && hero.spot ? html`<div class="sub">${hero.spot}</div>` : nothing}</div></button>`;
+  }
+
+  private cellarTile(): TemplateResult {
+    const ws = this.wines();
+    const n = ws.reduce((a, w) => a + w.count, 0);
+    const df = this.drinkFirst();
+    return html`<button type="button" class="tile wall" @click=${() => this.open("cellar", () => this.C.cellar && this.C.cellar.path && this.navigate(this.C.cellar.path))}>
+<div class="minirack">${ws.slice(0, 4).map((w) => niche(w, 96, undefined, w.name === df))}</div>
+<div class="wtxt"><span class="eb">Cellar · ${n}</span><div class="sub">${df ? "Drink first: " + df.replace(/^(19|20)\d\d\s+/, "") : this.dayPart === "evening" ? "Something for tonight?" : ws.length + " wines"}</div></div></button>`;
   }
 
   private energyStory(): TemplateResult {
     const e = this.energy();
     if (!e) return html``;
-    return html`<div class="story dark-s" style="flex-direction: row; align-items: center; gap: 50px">
-<div style="flex: none">${this.flowSvg(e, 520, 390)}</div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px">
-<div class="kicker" style="color: #9FB4BC">Energy · right now</div>
-<div class="h1">${e.main}.</div>
-<div style="font-size: 20px; color: #C9D3D6">${e.sub}.</div>
-<div class="g3" style="margin-top: 10px">
-<div class="sc"><div class="eb" style="color: #F0B25E">Solar</div><div class="big">${e.solar.toFixed(1)} kW</div></div>
-<div class="sc"><div class="eb" style="color: #C9D3D6">House</div><div class="big">${e.house.toFixed(1)} kW</div></div>
-<div class="sc"><div class="eb" style="color: #9FD18B">Powerwall</div><div class="big">${e.pct}%</div></div></div>
+    const t = this.energyToday();
+    return html`<div class="story scenestory">
+<div class="scenebg">${energyScene(this.sceneIn(e), { labels: true, wide: true })}</div>
+<div class="sceneov">
+<div class="kicker" style="color: #F3EDE3; opacity: .85">Energy · right now</div>
+<div class="h1" style="color: #fff">${e.main}.</div>
+<div style="font-size: 19px; color: #F3EDE3">${e.sub}.</div>
+${t ? html`<div class="chips">
+<span class="echip"><b>${t.solar.toFixed(1)}</b> kWh from the sun today</span>
+<span class="echip"><b>${t.self}%</b> of today on your own power</span>
+${t.exported > 0.1 ? html`<span class="echip"><b>${t.exported.toFixed(1)}</b> kWh sold back</span>` : nothing}
+</div>` : nothing}
 </div></div>`;
   }
 
   private plantStory(): TemplateResult {
     const gs = this.groups();
     const dry = gs.filter((g) => g.dry);
-    return html`<div class="story">
-<div class="shead"><div class="pik ${dry.length ? "p-alert" : "p-rest"}">${pikArt("Pik")}</div><div style="flex: 1"><div class="kicker" style="color: var(--green)">The plants · ${gs.reduce((n, g) => n + g.plants, 0)} in ${gs.length} groups</div>
-<div class="h1">${dry.length ? dry.map((g) => g.room).join(" and ") + (dry.length === 1 ? " is" : " are") + " thirsty." : "Everyone's happy. No watering today."}</div></div></div>
-<div class="glass" style="flex: 1; display: flex; align-items: flex-end; padding: 26px 34px"><div class="bigplants" style="width: 100%">
-${gs.map((g) => html`<div class=${"bp" + (g.dry ? " dry" : "")}><div class="bar"><i style=${"height: " + Math.max(4, Math.min(100, (g.m / 60) * 100)) + "%"}></i><u style=${"bottom: " + Math.min(100, (g.thr / 60) * 100) + "%"}></u></div><b>${g.room}</b><span>${g.live ? g.m + "% · " + g.plants + " plants" : "no reading"}</span></div>`)}
-</div></div></div>`;
+    const pics = this.plantPics();
+    const focusG = dry[0];
+    const route = focusG ? pics.all.filter((p) => p.group === focusG.room) : [];
+    const spot = focusG ? pics.all.find((p) => p.photo === pics.sensor[focusG.room]) : pics.all.length ? pics.all[Math.floor(this.now / 60000) % pics.all.length] : undefined;
+    const sg = spot ? gs.find((g) => g.room === spot.group) : undefined;
+    return html`<div class="story" style="flex-direction: row; gap: 44px; align-items: stretch">
+<div style="width: 400px; flex: none; display: flex; flex-direction: column; gap: 18px; align-items: center; text-align: center">
+${spot ? plantRing({ photo: spot.photo, m: sg ? sg.m : 30, thr: sg ? sg.thr : 0, dry: !!sg && sg.dry, live: !!sg && sg.live }, 340) : nothing}
+<div><div class="kicker" style="color: var(--green)">${focusG ? "Thirstiest right now" : "Plant of the minute"}</div>
+<div class="h1" style="font-size: 44px">${spot ? spot.name : "Your plants"}</div>
+<div style="font-size: 16px; color: var(--mute2); margin-top: 6px">${spot ? [spot.spot, spot.notes].filter(Boolean).join(" · ") : ""}</div></div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<div class="h1" style="font-size: 50px">${dry.length ? dry.map((g) => g.room).join(" and ") + (dry.length === 1 ? " needs" : " need") + " water." : "Everyone's happy. No watering today."}</div>
+<div class="ringgrid">${gs.map((g) => plantRing({ photo: pics.sensor[g.room] || "", m: g.m, thr: g.thr, dry: g.dry, live: g.live }, 112, html`<span class="rlab"><b>${g.room}</b>${g.live ? g.m + "%" : "—"}</span>`))}</div>
+${route.length ? html`<div class="glass" style="padding: 16px 20px"><div class="eb" style="margin-bottom: 10px">The ${focusG!.room.toLowerCase()} route · ${route.length} plants</div><div class="thumbs">${route.slice(0, 9).map((p) => html`<div class="thumb"><img src=${photoUrl(p.photo, 256)} alt="" loading="lazy"><span>${p.name}</span></div>`)}</div></div>` : nothing}
+</div></div>`;
   }
 
   private cellarStory(): TemplateResult {
-    const bs = this.bottles();
+    const ws = this.wines();
+    const n = ws.reduce((a, w) => a + w.count, 0);
+    const value = ws.reduce((a, w) => a + w.value * w.count, 0);
+    const f = this.featured(ws);
     const df = this.drinkFirst();
-    const col = { red: "#5A1626", rose: "#E8A08C", white: "#E9D9A0" };
-    const reds = bs.filter((b) => b.kind === "red").length, roses = bs.filter((b) => b.kind === "rose").length, whites = bs.filter((b) => b.kind === "white").length;
-    return html`<div class="story dark-s">
-<div class="kicker" style="color: #E2A6A0">The cellar · ${bs.length} bottles</div>
-<div class="h1">${df ? "Drink the " + df.replace(/^(19|20)\d\d\s+/, "") + " first." : this.dayPart === "evening" ? "Something good for tonight?" : bs.length + " bottles, ready when you are."}</div>
-<div style="font-size: 19px; color: #D8C6C1">${[reds && reds + " red", roses && roses + " rosé", whites && whites + " white"].filter(Boolean).join(" · ")}${df ? ". Rosés and whites are best young." : ""}</div>
-<div style="flex: 1; display: flex; align-items: flex-end; padding-bottom: 8px"><div class="bigshelf" style="width: 100%">
-${bs.map((b) => html`<svg viewBox="0 0 18 86" aria-hidden="true"><path d="M7 0 H11 V22 C11 28 17 30 17 38 V84 Q17 86 15 86 H3 Q1 86 1 84 V38 C1 30 7 28 7 22 Z" fill=${col[b.kind]}></path><rect x="1" y="50" width="16" height="15" fill="#EFE3D3" opacity=".85"></rect></svg>`)}
-</div></div></div>`;
+    return html`<div class="story dark-s winestory">
+<div class="wfeat">${f ? html`<div class="wbig">${niche(f, 360, undefined, f.name === df)}</div>
+<div class="kicker" style="color: #E2A6A0">${f.name === df ? "Drink this one first" : "From your cellar"}</div>
+<div class="h1" style="font-size: 40px">${f.name}</div>
+<div class="wmeta">${[f.producer, f.region, f.grape].filter(Boolean).join(" · ")}${f.value ? html`<br><b>$${Math.round(f.value)}</b> a bottle` : nothing}${f.count > 1 ? " · " + f.count + " on hand" : ""}</div>` : nothing}</div>
+<div class="wright">
+<div class="kicker" style="color: #E2A6A0">The cellar · ${n} bottles${value ? " · about $" + Math.round(value).toLocaleString() : ""}</div>
+<div class="rack">${ws.slice(0, 12).map((w) => niche(w, 150, undefined, w.name === df))}</div>
+</div></div>`;
   }
 
   private pikStory(f: FeedRow): TemplateResult {
@@ -852,29 +943,17 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     const cand = [
       { id: "timers", topic: "timers" as Topic, score: timers.length ? 100 : -99, fr: "1.2fr", body: () => this.timersTile(timers) },
       { id: "smoker", topic: "smoker" as Topic, score: smokeOn ? this.rank("smoker", 60) : -99, fr: "1.2fr", body: () => this.smokeTile() },
-      { id: "energy", topic: "energy" as Topic, score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, fr: "1.4fr", body: () => this.energyTile(e!) },
-      { id: "plants", topic: "plants" as Topic, score: this.groups().length ? this.rank("plants", 1.5 + (dry.length ? 3 : 0)) : -99, fr: "1.2fr", body: () => this.plantsTile() },
+      { id: "energy", topic: "energy" as Topic, score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, fr: "1.6fr", body: () => this.energyTile(e!) },
+      { id: "plants", topic: "plants" as Topic, score: this.groups().length ? this.rank("plants", 1.5 + (dry.length ? 3 : 0)) : -99, fr: "1.5fr", body: () => this.plantsTile() },
       { id: "inside", topic: "inside" as Topic, score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, fr: "1fr", body: () => this.insideTile() },
       { id: "music", topic: "music" as Topic, score: mp ? this.rank("music", 1 + (playing ? 2.5 : 0)) : -99, fr: "1fr", body: () => this.musicTile() },
-      { id: "cellar", topic: "cellar" as Topic, score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, fr: "1fr", body: () => this.cellarTile() },
+      { id: "cellar", topic: "cellar" as Topic, score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, fr: "1.4fr", body: () => this.cellarTile() },
     ];
     const order = cand.map((c) => c.id);
     const pick = cand.filter((c) => c.score > -50).sort((a, b) => b.score - a.score).slice(0, 5);
     return pick.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   }
 
-  private energyTile(e: Energy): TemplateResult {
-    return html`<button type="button" class="tile dark" style="flex-direction: row; align-items: center; gap: 12px" @click=${() => this.open("energy", () => { this.sheet = "energy"; })}>
-${this.flowSvg(e, 120, 104)}
-<div style="min-width: 0"><span class="eb">Energy</span><div class="big">${e.solar > 0.1 ? e.solar.toFixed(1) + " kW sun" : e.pct + "%"}</div><div class="sub">${e.main}</div></div></button>`;
-  }
-  private plantsTile(): TemplateResult {
-    const gs = this.groups(), dry = gs.filter((g) => g.dry);
-    return html`<button type="button" class="tile" @click=${() => this.open("plants", () => this.C.plants_path && this.navigate(this.C.plants_path))}>
-<span class="eb" style="color: var(--green)">Plants</span>
-<div class="pots">${gs.map((g) => html`<div class=${"pot" + (g.dry ? " dry" : "")} title=${g.room}><i></i><u></u><s></s></div>`)}</div>
-<div class="sub" style="font-size: 14px; color: var(--ink)">${dry.length ? dry.map((g) => g.room).join(", ") + " today." : "Everyone's fine."}</div></button>`;
-  }
   private insideTile(): TemplateResult {
     const c = this.S(this.C.thermostat)!;
     const cur = c.attributes.current_temperature as number | undefined, sp = c.attributes.temperature as number | undefined;
@@ -896,14 +975,6 @@ ${this.flowSvg(e, 120, 104)}
 ${on ? html`<div class="mbtns"><button type="button" class="rb ink" aria-label=${mp.state === "playing" ? "Pause" : "Play"} @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_play_pause", {}, { entity_id: id }); }}>${mp.state === "playing" ? html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" fill="currentColor"></rect><rect x="8.5" y="1" width="3.5" height="12" fill="currentColor"></rect></svg>` : html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1 L12 7 L3 13 Z" fill="currentColor"></path></svg>`}</button>
 <button type="button" class="rb" aria-label="Next" @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_next_track", {}, { entity_id: id }); }}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1 L10 7 L2 13 Z" fill="currentColor"></path><rect x="10.5" y="1" width="2" height="12" fill="currentColor"></rect></svg></button></div>` : nothing}
 </div>`;
-  }
-  private cellarTile(): TemplateResult {
-    const bs = this.bottles(), df = this.drinkFirst();
-    const col = { red: "#5A1626", rose: "#E8A08C", white: "#E9D9A0" };
-    return html`<button type="button" class="tile wine" @click=${() => this.open("cellar", () => this.C.cellar && this.C.cellar.path && this.navigate(this.C.cellar.path))}>
-<span class="eb">Cellar · ${bs.length}</span>
-<div class="shelf">${bs.slice(0, 22).map((b) => html`<i style=${"background: " + col[b.kind]}></i>`)}</div>
-<div class="sub">${df ? "Drink first: " + df : this.dayPart === "evening" ? "Pick something for tonight?" : bs.length + " bottles on hand"}</div></button>`;
   }
   private smokeTile(): TemplateResult {
     const sm = this.C.smoke!;
@@ -975,18 +1046,20 @@ ${p ? html`<div class="av sm" style=${"background: " + p.color}>${p.name[0]}</di
 
   private energySheet(): TemplateResult {
     const e = this.energy();
-    return html`<div class="scrim" @click=${() => { this.sheet = ""; }}></div><div class="sheet darkx">
-<div class="shtop"><h2>${e ? e.main : "Energy"}</h2><button type="button" class="done" @click=${() => { this.sheet = ""; }}>Done</button></div>
-${e ? html`<div style="display: flex; gap: 40px; align-items: center; flex: 1; min-height: 0">${this.flowSvg(e, 480, 360)}
-<div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
-<div class="mcard"><div class="eb" style="color: #F0B25E">Solar</div><div class="big">${e.solar.toFixed(1)} kW</div></div>
-<div class="mcard"><div class="eb" style="color: #C9D3D6">House using</div><div class="big">${e.house.toFixed(1)} kW</div></div>
-<div class="mcard"><div class="eb" style="color: #9FD18B">Powerwall</div><div class="big">${e.pct}%</div><div class="sub">${e.bat > 0.05 ? "Charging " + e.bat.toFixed(1) + " kW" : e.bat < -0.05 ? "Running the house" + (e.hours ? ", ~" + e.hours + " h left" : "") : "Resting"}</div></div>
-<div class="mcard"><div class="eb" style="color: #8FB7D9">Grid</div><div class="big">${e.grid === null ? "Down" : Math.abs(e.grid) < 0.05 ? "Idle" : (e.grid > 0 ? "Sending " : "Using ") + Math.abs(e.grid).toFixed(1) + " kW"}</div></div>
-</div></div>` : html`<div class="empty">The Powerwall isn't reporting right now.</div>`}
-</div>`;
+    const t = this.energyToday();
+    return html`<div class="scrim" @click=${() => { this.sheet = ""; }}></div><div class="sheet darkx" style="padding: 0">
+<div class="scenebg" style="border-radius: 30px 30px 0 0; overflow: hidden">${e ? energyScene(this.sceneIn(e), { labels: true, wide: true }) : nothing}</div>
+<div class="sceneov" style="padding: 26px 34px">
+<div class="shtop"><h2 style="color: #fff">${e ? e.main : "Energy"}</h2><button type="button" class="done" style="color: #fff" @click=${() => { this.sheet = ""; }}>Done</button></div>
+${e ? html`<div style="font-size: 18px; color: #F3EDE3">${e.sub}.${e.hours ? " About " + e.hours + " hours of Powerwall at this rate." : ""}</div>` : html`<div class="empty" style="color: #fff">The Powerwall isn't reporting right now.</div>`}
+${t ? html`<div class="chips" style="margin-top: auto">
+<span class="echip"><b>${t.solar.toFixed(1)}</b> kWh from the sun today</span>
+<span class="echip"><b>${t.usage.toFixed(1)}</b> kWh used</span>
+<span class="echip"><b>${t.self}%</b> on your own power</span>
+<span class="echip"><b>${t.exported.toFixed(1)}</b> kWh sold back</span>
+</div>` : nothing}
+</div></div>`;
   }
-
   private notesSheet(): TemplateResult {
     const rs = this.rules();
     const on = rs.filter((r) => r.state === "on"), sug = rs.filter((r) => r.state === "suggested");
@@ -1035,8 +1108,8 @@ ${tops.length ? html`<div class="bars">${tops.slice(0, 8).map((t) => html`<div c
         const i = this.storyIdx % list.length;
         const s = list[i];
         const dark = ["energy", "cellar", "night"].includes(s.theme);
-        const BG: Record<string, string> = { morning: "linear-gradient(180deg, #F7E3C8 0%, #F3EADD 70%)", energy: "#1F2A2E", garden: "#EEF0E4", cellar: "#2B1B1E", night: "radial-gradient(ellipse at 30% 20%, #26305A 0%, #1B2240 45%, #121730 100%)" };
-        body = html`<div class="amb" style=${"background: " + (BG[s.theme] || "#F3EADD")} @click=${() => this.wake()}>${s.render()}${s.id !== "night" ? this.sfoot(list, i, dark) : nothing}</div>`;
+        const BG: Record<string, string> = { morning: "linear-gradient(180deg, #F7E3C8 0%, #F3EADD 70%)", energy: "#0F1720", garden: "#EEF0E4", cellar: "radial-gradient(ellipse at 70% 30%, #4A2A22 0%, #2B1A16 55%, #1C110E 100%)", night: "radial-gradient(ellipse at 30% 20%, #26305A 0%, #1B2240 45%, #121730 100%)" };
+        body = html`<div class=${"amb" + (s.theme === "energy" ? " over" : "")} style=${"background: " + (BG[s.theme] || "#F3EADD")} @click=${() => this.wake()}>${s.render()}${s.id !== "night" ? this.sfoot(list, i, dark) : nothing}</div>`;
       }
     } else body = this.homeLayer();
     return html`<div class="root" @pointerdown=${() => { this.touched = Date.now(); }}>
