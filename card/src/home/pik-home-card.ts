@@ -110,7 +110,8 @@ export class PikHomeCard extends LitElement {
   private layer: "home" | "ambient" = "home";
   private storyIdx = 0;
   private storyAt = Date.now();
-  private sheet: "" | "energy" | "notes" = "";
+  private sheet: "" | "energy" | "notes" | "lights" = "";
+  private lightsRoom = "";
   private snoozed: Record<string, number> = (() => { try { const j = JSON.parse(localStorage.getItem("pik-home-snoozed") || "{}"); const now = Date.now(); return Object.fromEntries(Object.entries(j).filter(([, v]) => typeof v === "number" && v > now)) as Record<string, number>; } catch (_) { return {}; } })();
   private toast = "";
   private _toastT?: number;
@@ -1239,9 +1240,46 @@ ${pic ? html`<img class="bimg" src=${pic} alt="Live view" @click=${() => this.mo
 
   /** Light groups with one tap each: off if anything's on, otherwise on. */
   private lightsTile(): TemplateResult {
-    const gs = (this.C.lights || []).map((g) => ({ name: g.name, ids: g.entities, on: g.entities.filter((id) => this.S(id)?.state === "on").length }));
-    return html`<div class="tile lightsT"><span class="eb">Lights · ${gs.reduce((a, g) => a + g.on, 0)} on</span>
-<div class="lgrid">${gs.map((g) => html`<button type="button" class=${"lg" + (g.on ? " on" : "")} @click=${() => { this.log("inside", "tap"); const ids = g.ids.filter((id) => this.S(id)); const dom = (id: string) => id.split(".")[0]; ids.forEach((id) => this.svc(dom(id), g.on ? "turn_off" : "turn_on", {}, { entity_id: id })); }}><b>${g.name}</b><span>${g.on ? g.on + " on" : "off"}</span></button>`)}</div></div>`;
+    const gs = (this.C.lights || []).map((g) => ({ name: g.name, on: g.entities.filter((id) => this.S(id)?.state === "on").length }));
+    const open = (room: string) => { this.log("inside", "open"); this.lightsRoom = room; this.sheet = "lights"; this.requestUpdate(); };
+    return html`<div class="tile lightsT">
+<button type="button" class="lhead" @click=${() => open("")}><span class="eb">Lights · ${gs.reduce((a, g) => a + g.on, 0)} on</span><span class="lall">All lights ›</span></button>
+<div class="lgrid">${gs.map((g) => html`<button type="button" class=${"lg" + (g.on ? " on" : "")} @click=${() => open(g.name)}><b>${g.name}</b><span>${g.on ? g.on + " on" : "off"}</span></button>`)}</div></div>`;
+  }
+
+  /** Every light, room by room: tap a light to switch it, slide to dim it. */
+  private lightsSheet(): TemplateResult {
+    const rooms = (this.C.lights || []).map((g) => ({ name: g.name, ids: g.entities.filter((id) => this.S(id)) }));
+    const strip = (name: string, room: string) => {
+      const n = name.replace(new RegExp("^" + room.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*", "i"), "").trim();
+      return n ? n[0].toUpperCase() + n.slice(1) : name;
+    };
+    const dimmable = (e: HState) => { const m = (e.attributes.supported_color_modes || []) as string[]; return e.entity_id.startsWith("light.") && m.length > 0 && !(m.length === 1 && m[0] === "onoff"); };
+    const close = () => { this.sheet = ""; this.lightsRoom = ""; };
+    const anyOn = rooms.some((r) => r.ids.some((id) => this.S(id)?.state === "on"));
+    window.setTimeout(() => {
+      if (!this.lightsRoom) return;
+      const el = this.renderRoot.querySelector("[data-room=\"" + this.lightsRoom + "\"]") as HTMLElement | null;
+      if (el && !el.dataset.scrolled) { el.dataset.scrolled = "1"; el.scrollIntoView({ block: "start" }); }
+    }, 50);
+    return html`<div class="scrim" @click=${close}></div><div class="sheet lsheet">
+<div class="shtop"><h2>Lights</h2>${anyOn ? html`<button type="button" class="chip" @click=${() => { rooms.forEach((r) => r.ids.filter((id) => this.S(id)?.state === "on").forEach((id) => this.svc(id.split(".")[0], "turn_off", {}, { entity_id: id }))); this.flash("Turning everything off."); }}>All off</button>` : nothing}<button type="button" class="done" @click=${close}>Done</button></div>
+<div class="lrooms">${rooms.map((r) => {
+      const on = r.ids.filter((id) => this.S(id)?.state === "on").length;
+      return html`<section class="lroom" data-room=${r.name}>
+<div class="lrh"><b>${r.name}</b><span>${on ? on + " on" : "all off"}</span><button type="button" class="chip" @click=${() => r.ids.forEach((id) => this.svc(id.split(".")[0], on ? "turn_off" : "turn_on", {}, { entity_id: id }))}>${on ? "Room off" : "Room on"}</button></div>
+${r.ids.map((id) => {
+        const e = this.S(id)!;
+        const isOn = e.state === "on";
+        const pct = isOn && typeof e.attributes.brightness === "number" ? Math.round((Number(e.attributes.brightness) / 255) * 100) : 0;
+        const name = strip(String(e.attributes.friendly_name || id), r.name);
+        return html`<div class=${"lrow" + (isOn ? " on" : "") + (e.state === "unavailable" ? " na" : "")}>
+<button type="button" class="ltog" role="switch" aria-checked=${isOn ? "true" : "false"} aria-label=${name} @click=${() => { this.log("inside", "tap"); this.svc(id.split(".")[0], "toggle", {}, { entity_id: id }); }}>
+<span class="lbulb"></span><span class="lname">${name}</span><span class="lstate">${e.state === "unavailable" ? "offline" : isOn ? (pct ? pct + "%" : "on") : "off"}</span><span class="sw"><i></i></span></button>
+${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" .value=${String(pct || 100)} aria-label=${name + " brightness"} @change=${(ev: Event) => this.svc("light", "turn_on", { brightness_pct: Number((ev.target as HTMLInputElement).value) }, { entity_id: id })}>` : nothing}
+</div>`;
+      })}</section>`;
+    })}</div></div>`;
   }
 
   private phoneLayer(): TemplateResult {
@@ -1307,6 +1345,7 @@ ${p ? html`<div class="av sm" style=${"background: " + p.color}>${p.name[0]}</di
     if (this.narrow && this.H) return html`<div class="root phone">${this.phoneLayer()}
 ${this.sheet === "energy" ? this.energySheet() : nothing}
 ${this.sheet === "notes" ? this.notesSheet() : nothing}
+${this.sheet === "lights" ? this.lightsSheet() : nothing}
 ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}</div>`;
     if (!this.H) return html`<div class="root"><div class="empty" style="padding: 60px">Waiting for Home Assistant…</div></div>`;
     const moms = this.moments();
@@ -1330,6 +1369,7 @@ ${m ? html`<button type="button" class=${"mexit" + (["leave", "storm", "doorbell
 ${m && m.kind !== "cooking" ? this.voiceBubble() : nothing}
 ${!m && this.sheet === "energy" ? this.energySheet() : nothing}
 ${!m && this.sheet === "notes" ? this.notesSheet() : nothing}
+${!m && this.sheet === "lights" ? this.lightsSheet() : nothing}
 ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
 </div>`;
   }
