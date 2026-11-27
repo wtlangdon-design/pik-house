@@ -177,7 +177,9 @@ export class PikHomeCard extends LitElement {
     this._vs = "";
   }
 
-  /** The design is a fixed 1280×800: shrink it to fit the room it has. On a phone (narrow), the House card's phone layout takes over. */
+  /** The design is 1280×800 at heart. On any other screen it scales to fit (up as well as down), and the
+   *  extra room on the long side goes to the layout itself, so a 1920×1080 kitchen screen is filled edge to edge
+   *  instead of showing a 1280×800 box. On a phone (narrow), the House card's phone layout takes over. */
   private narrow = false;
   private measure(): void {
     const r = this.isConnected ? this.getBoundingClientRect() : null;
@@ -185,10 +187,16 @@ export class PikHomeCard extends LitElement {
     const h = window.innerHeight - (r ? Math.max(0, r.top + (window.scrollY || 0)) : 0);
     const narrow = w < 900;
     if (narrow !== this.narrow) { this.narrow = narrow; this.requestUpdate(); }
-    const z = narrow ? 1 : Math.min(1, w / 1280, Math.max(0.5, h / 800));
-    const zs = z < 0.995 ? z.toFixed(3) : "";
+    const z = narrow ? 1 : Math.min(2, w / 1280, Math.max(0.5, h / 800));
+    const zs = Math.abs(z - 1) < 0.005 ? "" : z.toFixed(3);
     const st = this.style as unknown as { zoom: string };
     if (st.zoom !== zs) st.zoom = zs;
+    // the room left over once scaled, in design pixels: never smaller than the design itself
+    const lw = narrow ? 1280 : Math.max(1280, Math.floor(w / z));
+    const lh = narrow ? 800 : Math.max(800, Math.floor(h / z));
+    const pw = lw + "px", ph = lh + "px";
+    if (this.style.getPropertyValue("--pw") !== pw) this.style.setProperty("--pw", pw);
+    if (this.style.getPropertyValue("--ph") !== ph) this.style.setProperty("--ph", ph);
   }
 
   // ---------------- data ----------------
