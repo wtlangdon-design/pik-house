@@ -1,11 +1,11 @@
-// The Pik House system screen: Home, Ambient stories and Moments (1280×800, scaled to fit).
+// The Pik House system screen: Home, Ambient stories and Moments (designed at 1280×800; scaled to fit and stretched to fill any screen).
 import { css } from "lit";
 
 export const homeStyles = css`
 :host{display:block;--cream:#F1E8DA;--card:#FCF8F1;--ink:#2A221B;--mute:#7A6C5E;--mute2:#5E5145;--line:#E6DACB;--line2:#EFE5D8;--clay:#9A5530;--sun:#F0B25E;--green:#5E8A5A;--blue:#3F6E9A;--serif:'Instrument Serif',Georgia,serif;--sans:'Instrument Sans',system-ui,sans-serif;font-family:var(--sans);color:var(--ink)}
 *{box-sizing:border-box}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.root{width:1280px;height:800px;position:relative;overflow:hidden;background:var(--cream)}
+.root{width:var(--pw,1280px);height:var(--ph,800px);position:relative;overflow:hidden;background:var(--cream)}
 .eb{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);font-weight:600}
 .serif{font-family:var(--serif);font-weight:400}
 
