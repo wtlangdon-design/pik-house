@@ -5,18 +5,20 @@ Everything here goes onto the Home Assistant Green. Nothing in this folder runs 
 | File | What it is |
 |---|---|
 | `packages/pik_kitchen.yaml` | The shared kitchen timer pool (12 timers), the timer scripts Pik uses, and `script.pik_announce`, which speaks on the chosen Echos and can push to both phones. |
-| `packages/pik_holiday_thanksgiving_2026.yaml` | Holiday cooking mode for Thanksgiving. **Generated** from `holiday/thanksgiving-2026.json` by `node holiday/gen-ha.mjs thanksgiving-2026 tg26`; don't edit it by hand. `node holiday/check-plan.mjs` cross-checks the plan (it also runs on every card build). |
+| `archive/pik_holiday_thanksgiving_2026.yaml` | **Archived Nov 26, 2026** (no longer on the hub). Holiday cooking mode for Thanksgiving. **Generated** from `holiday/thanksgiving-2026.json` by `node holiday/gen-ha.mjs thanksgiving-2026 tg26`; don't edit it by hand. `node holiday/check-plan.mjs` cross-checks the plan (it also runs on every card build). |
 | `packages/pik_energy.yaml` | The Powerwall 3 (through Teslemetry): a once-a-day "free power" card when the battery's full and solar is exporting, and a storm-day card from the National Weather Service's alerts that checks Storm Watch and can turn it on. |
 | `packages/pik_mail.yaml` | OpenTable, Resy and airline emails (read over IMAP from Tyler's Gmail): Claude reads each one and confirmed bookings go on the shared calendar with a card; cancellations get a card. |
 | `packages/pik_screen.yaml` | The kitchen screen redesign's adaptive side: logs taps, opens, dismissals and skips as `pik_screen` events into a fading score per topic and part of day, rules you tell Pik ("less wine in the morning") in `todo.pik_screen_rules`, a weekly-review report, Claude's one line for the day every two hours, and the "We're leaving" script. Needs a Local To-do list named "Pik screen rules". |
 | `packages/pik_smoke.yaml` | Smoking with the Inkbird: finds its four probes by itself, watches them every minute, and has Pik speak up (almost there, done, the stall, the smoker dropping, a probe lost). **Generated** by `node ha/gen-smoke.mjs`. |
 | `dashboards/smoking.yaml` | The Smoking dashboard: the four probes on one page. |
 | `dashboards/plants.yaml` | The Plants dashboard: the plant catalog (photo, group, room, spot, pot and history for every plant) with each watering group's soil reading. Plants live in the **Plants** to-do list (Local To-do); photos in Home Assistant's own image store. **Replace with a new plant** keeps the spot, pot and group and moves the old plant into that spot's history. |
-| `dashboards/thanksgiving.yaml` | The Thanksgiving dashboard: one page for the Chromebook (`/kitchen`) and one for the Echo Show 15 (`/echo`). |
+| `archive/thanksgiving-dashboard.yaml` | **Archived Nov 26, 2026** (hidden from the sidebar). The Thanksgiving dashboard: one page for the Chromebook (`/kitchen`) and one for the Echo Show 15 (`/echo`). |
 | `../card/dist/pik-house-card.js` | The card file. It contains both the house feed and the holiday card. |
 
 Only one holiday package can be installed at a time (they share the `holiday_*` script names
 Pik uses). When the next holiday comes, delete the old file and add the new one.
+
+> **Thanksgiving 2026 is archived.** For the next holiday: copy `holiday/thanksgiving-2026.json` to a new plan, run `node holiday/gen-ha.mjs <plan> <prefix>`, upload the package, and add the dates to `holiday:` in `dashboards/house.yaml`. Read `holiday/thanksgiving-2026-debrief.md` first.
 
 ## Thanksgiving setup (about 20 minutes, before Tuesday at 7 PM)
 

@@ -56,8 +56,7 @@ views:
           battery_level: sensor.home_percentage_charged
           grid_status: binary_sensor.home_grid_status
           capacity_kwh: 13.5
-        holiday:
-          - { name: Thanksgiving, path: /dashboard-thanksgiving/kitchen, from: "2026-11-24", to: "2026-11-26" }
+        holiday: []   # add { name, path, from, to } when the next holiday plan goes live (Thanksgiving 2026 is in ha/archive)
         people:
           - { key: tyler, name: Tyler, person: person.tyler_langdon, color: "#B5602F" }
           - { key: charlie, name: Charlie, person: person.charlie_finlayson, color: "#3F6E9A" }
