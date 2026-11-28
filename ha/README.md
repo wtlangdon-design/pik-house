@@ -290,7 +290,7 @@ with your instant-read thermometer in each spot.
 
 The bottom row of the kitchen screen holds up to five tiles, picked by what's going on and by what you two
 use (it learns from taps and clears, and from rules you tell Pik). Things that stay true for a while get a
-tile; the house feed ("From your Piks") is for things to act on or clear.
+tile; the house feed ("For the house") is for things to act on or clear.
 
 | Tile | Shows | Comes from |
 |---|---|---|
