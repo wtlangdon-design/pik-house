@@ -55,7 +55,7 @@ interface Energy { solar: number; house: number; bat: number; grid: number | nul
 interface FeedRow { uid: string; fid: string; open: string; done: () => void; title: string; label: string; detail: string; urgent: boolean; who: string; at: number; cat: string; topic: Topic; primary: () => void; secondary: () => void; secLabel: string }
 interface TodayRow { key: string; t: string; tsub?: string; color: string; what: string; note: string; past?: boolean; tap?: () => void }
 interface Moment { key: string; kind: "timer" | "doorbell" | "leave" | "storm" | "cooking"; topic: Topic; body: () => TemplateResult }
-interface Slot { id: string; topic: Topic; area: string; size: "L" | "W" | "S" | "C"; left: boolean; body: () => TemplateResult }
+interface Slot { id: string; topic: Topic; area: string; size: "L" | "W" | "S" | "C"; cols: [number, number]; body: () => TemplateResult }
 interface Hike { name: string; kind: string; miles: number; gain: number; drive: number; why: string; url: string; forecast: string; until: number }
 interface Story { id: string; topic: Topic; score: number; render: () => TemplateResult; theme: string }
 
@@ -1375,11 +1375,11 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     const areas = AREAS[main.length] || [];
     const slots: Slot[] = main.map((c, i) => {
       const [r0, c0, r1, c1] = areas[i].split("/").map((x) => Number(x.trim()));
-      return { id: c.id, topic: c.topic, area: areas[i], size: r1 - r0 >= 4 && c1 - c0 >= 2 ? "L" : "W", left: c0 === 1 && c1 <= 3, body: c.body };
+      return { id: c.id, topic: c.topic, area: areas[i], size: r1 - r0 >= 4 && c1 - c0 >= 2 ? "L" : "W", cols: [c0, c1] as [number, number], body: c.body };
     });
     const stack: Slot[] = [];
-    if (inside) stack.push({ id: "inside", topic: "inside", area: "", size: small.length ? "C" : "S", left: false, body: inside.body });
-    small.forEach((c) => stack.push({ id: c.id, topic: c.topic, area: "", size: "S", left: false, body: c.body }));
+    if (inside) stack.push({ id: "inside", topic: "inside", area: "", size: small.length ? "C" : "S", cols: [5, 6], body: inside.body });
+    small.forEach((c) => stack.push({ id: c.id, topic: c.topic, area: "", size: "S", cols: [5, 6], body: c.body }));
     return { main: slots, stack };
   }
   private tslot(t: Slot, lift: string): TemplateResult {
@@ -1424,8 +1424,9 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     const v = this.V;
     const answering = talking && this.talk !== "listen" && this.talk !== "think" && !!this.a;
     const lift = answering ? this.aboutTile(this.a, main.concat(stack).map((t) => t.id)) : "";
-    const liftSlot = main.find((t) => t.id === lift);
-    const side = !lift ? "mid" : liftSlot && liftSlot.left ? "right" : "left";
+    // the card sits beside the lifted tile, never over it
+    const liftSlot = main.concat(stack).find((t) => t.id === lift);
+    const side = !liftSlot ? "mid" : liftSlot.cols[0] === 5 ? "leftmost" : liftSlot.cols[1] - liftSlot.cols[0] >= 4 ? "mid" : liftSlot.cols[0] === 1 ? "right" : "left";
     return html`<div class=${"home" + (talking ? " talking" : "")}>
 <div class="left">
 <div class="clock"><b>${hm(d)}</b><span>${d.toLocaleTimeString([], { hour: "numeric" }).replace(/^\d+\s?/, "")} · ${d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</span></div>

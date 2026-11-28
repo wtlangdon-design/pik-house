@@ -42,14 +42,14 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .slot.sL .hrow{padding:14px 16px;border-radius:18px}
 .slot.sL .hrow b{font-size:30px}.slot.sL .hrow .hst{font-size:14px}.slot.sL .hkind{font-size:12px}
 .hwhy{grid-column:1 / -1;font-size:13.5px;color:#F6E2D0;line-height:1.35;margin-top:3px}
-.tile.itile.compact{flex:none;justify-content:center;gap:6px;padding:10px 12px}
+.tile.itile.compact{justify-content:center;gap:6px;padding:10px 12px}
 .itile .crow{display:flex;align-items:center;justify-content:space-between;width:100%}
 .cnum{border:0;background:none;color:#fff;font-family:var(--serif);font-size:40px;line-height:1;padding:0}
 @keyframes sring{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.28);opacity:0}}
 @keyframes wv{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
 .stscrim{position:absolute;inset:0;z-index:15;background:rgba(28,20,14,.6);animation:fade .25s}
-.stage{--sw:min(600px,calc((100% - 400px) * .62));position:absolute;z-index:17;top:50%;transform:translateY(-50%);width:var(--sw);background:var(--card);border-radius:34px;padding:30px 34px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;box-shadow:0 40px 90px rgba(0,0,0,.4);animation:fade .25s}
-.stage.right{right:24px}.stage.left{left:354px}.stage.mid{left:calc(354px + (100% - 378px - var(--sw)) / 2)}
+.stage{--sw:min(600px,calc((100% - 400px) * .58));--half:calc(((100% - 392px) * .8 - 14px) / 2);--stw:calc((100% - 392px) * .2);position:absolute;z-index:17;top:50%;transform:translateY(-50%);width:var(--sw);background:var(--card);border-radius:34px;padding:30px 34px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;box-shadow:0 40px 90px rgba(0,0,0,.4);animation:fade .25s}
+.stage.right{right:24px}.stage.left{right:calc(24px + var(--stw) + 14px + var(--half) + 22px)}.stage.leftmost{right:calc(24px + var(--stw) + 22px)}.stage.mid{left:calc(354px + (100% - 378px - var(--sw)) / 2)}
 .sthead{display:flex;align-items:center;gap:20px}
 .sthalo{position:relative;width:124px;height:124px;flex:none;border-radius:50%;background:#F7EEDF;border:2px solid #F0B25E;display:flex;align-items:center;justify-content:center}
 .sthalo .pik{width:108px;height:108px;display:block}.sthalo .pik svg{width:100%!important;height:100%!important}
