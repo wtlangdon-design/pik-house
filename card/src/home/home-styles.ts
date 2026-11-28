@@ -17,6 +17,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .halo{align-self:center;width:172px;height:172px;border-radius:50%;background:#F7EEDF;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;margin:2px 0}
 .halo .pikbtn{margin:0}.halo .pikbtn svg{width:152px;height:152px}
 .panel.now{flex:1;min-height:0;padding:14px 16px}
+.phonewrap .panel.now{flex:none}
+.ph-halo{width:88px;height:88px;margin:0}.ph-halo .pikbtn svg{width:76px;height:76px}
+.ph-card .tile.itile.compact{height:100%}
 .nrow{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--line2);width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:inherit}
 .nrow .t{width:58px;flex:none;font-size:13px;font-weight:600;padding-top:2px;line-height:1.2}
 .nrow .t small{display:block;font-size:10.5px;font-weight:500;color:var(--mute);letter-spacing:.5px;text-transform:uppercase}
