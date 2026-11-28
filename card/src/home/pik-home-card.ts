@@ -1441,17 +1441,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
 <div class="who"><span>Pik</span></div>
 <div class=${"line" + (this.headline().length > 110 ? " s3" : this.headline().length > 70 ? " s2" : "")}>${this.headline()}</div>
 </div>
-<div class="panel now">
-<div class="phead"><span class="eb">Now</span><span class="legend">${people.map((p) => html`<i style=${"background: " + p.color}></i>${p.name}`)}<i style="background: #5E8A5A"></i>Both</span></div>
-<div class="rows">${repeat(today, (r) => r.key, (r) => html`<button type="button" class=${"nrow" + (r.past ? " past" : "")} @click=${() => r.tap && r.tap()}>
-<span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w"><b>${r.what}</b>${r.note ? html`<small>${r.note}</small>` : nothing}</span></button>`)}${repeat(feed, (f) => f.uid, (f) => {
-      const p = this.person(f.who);
-      return html`<div class=${"nrow f" + (f.urgent ? " urgent" : "")}>
-<span class="t">${f.at ? ago(f.at) : ""}</span>${p ? html`<span class="av xs" style=${"background: " + p.color}>${p.name[0]}</span>` : html`<span class="av xs house" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></span>`}
-<button type="button" class="w fb" @click=${f.primary}><b>${f.title}</b><small>${[p ? p.name + "'s Pik" : f.label, !p && f.detail ? f.detail : ""].filter(Boolean).join(" · ")}</small></button>
-<button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
-    })}${!today.length && !feed.length ? html`<div class="empty">Nothing on the calendar and nothing waiting. Send either Pik a plan, a screenshot or a booking and it shows up here for both of you.</div>` : nothing}</div>
-</div>
+${this.nowPanel(today, feed)}
 <div class="leftfoot">
 ${v ? html`<button type="button" class=${"chip" + (this.muted ? " on" : "")} aria-pressed=${this.muted ? "true" : "false"} @click=${() => this.toggleMic()}>${this.muted ? "Mic off" : "Mic on"}</button>` : nothing}
 <button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button>
@@ -1462,6 +1452,21 @@ ${v ? html`<button type="button" class=${"chip" + (this.muted ? " on" : "")} ari
 ${stack.length ? html`<div class="tstack">${stack.map((t) => this.tslot(t, lift))}</div>` : nothing}
 </div>
 ${talking ? this.stage(pikCls, side) : nothing}
+</div>`;
+  }
+  /** One list for both screens: today's plans first, then the house notes, newest first. */
+  private nowPanel(today: TodayRow[], feed: FeedRow[]): TemplateResult {
+    const people = this.C.people || [];
+    return html`<div class="panel now">
+<div class="phead"><span class="eb">Now</span><span class="legend">${people.map((p) => html`<i style=${"background: " + p.color}></i>${p.name}`)}<i style="background: #5E8A5A"></i>Both</span></div>
+<div class="rows">${repeat(today, (r) => r.key, (r) => html`<button type="button" class=${"nrow" + (r.past ? " past" : "")} @click=${() => r.tap && r.tap()}>
+<span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w"><b>${r.what}</b>${r.note ? html`<small>${r.note}</small>` : nothing}</span></button>`)}${repeat(feed, (f) => f.uid, (f) => {
+      const p = this.person(f.who);
+      return html`<div class=${"nrow f" + (f.urgent ? " urgent" : "")}>
+<span class="t">${f.at ? ago(f.at) : ""}</span>${p ? html`<span class="av xs" style=${"background: " + p.color}>${p.name[0]}</span>` : html`<span class="av xs house" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></span>`}
+<button type="button" class="w fb" @click=${f.primary}><b>${f.title}</b><small>${[p ? p.name + "'s Pik" : f.label, !p && f.detail ? f.detail : ""].filter(Boolean).join(" · ")}</small></button>
+<button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
+    })}${!today.length && !feed.length ? html`<div class="empty">Nothing on the calendar and nothing waiting. Send either Pik a plan, a screenshot or a booking and it shows up here for both of you.</div>` : nothing}</div>
 </div>`;
   }
   /** Pik takes the stage: everything dims, his answer rises in a big card, and the tile he's talking about stays lit. */
@@ -1616,43 +1621,26 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
       { id: "dinners", score: this.dinnersScore(), body: () => this.dinnersTile() },
       { id: "week", score: this.week() ? this.rank("week", this.weekBoost()) : -99, body: () => this.weekTile() },
       { id: "lights", score: (this.C.lights || []).length ? this.rank("inside", 1.4) : -99, body: () => this.lightsTile() },
-      { id: "inside", score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, body: () => this.insideTile() },
+      { id: "inside", score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, body: () => { this.tsize = "C"; const b = this.insideTile(); this.tsize = "W"; return b; } },
       { id: "music", score: mp ? this.rank("music", 1 + (mp.state === "playing" ? 2.5 : 0)) : -99, body: () => this.musicTile() },
     ];
     const row = cards.filter((c) => c.score > -50).sort((a, b) => b.score - a.score);
     const sug = this.rules().filter((r) => r.state === "suggested").length;
     return html`<div class="phonewrap">
 <div class="ph-top">
-<div class="pik p-rest mini" style="width: 64px; height: 64px; flex: none">${pikArt("Pik")}</div>
+<div class="halo ph-halo"><button type="button" class="pikbtn pik p-rest" aria-label="Pik">${pikArt("Pik")}</button></div>
 <div style="min-width: 0"><div class="ph-clock">${hm(d)} <span>${d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</span></div>
 <div class="wxl">${this.outTemp()} ${this.wxWord().toLowerCase()}${this.hi !== null ? ", high " + this.hi : ""}${this.S(this.C.thermostat) ? " · " + Math.round(Number(this.S(this.C.thermostat)!.attributes.current_temperature || 0)) + "° inside" : ""}</div></div>
 </div>
 <div class="bubble ph-bub"><div class="who"><span>Pik</span></div><div class="line">${this.headline()}</div></div>
 ${moms.map((m) => this.banner(m))}
-<div class="us ph-us">${people.map((p) => {
+<div class="uschips">${people.map((p) => {
       const st = this.S(p.person);
       const where = !st ? "" : st.state === "home" ? "home" : st.state === "not_home" ? "out" : st.state;
-      const nx = this.nextFor(p.key);
-      return html`<button type="button" class="person" @click=${() => this.moreInfo(p.person)}>
-<div class="av" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></div>
-<div style="min-width: 0"><b>${p.name}${where ? " · " + where : ""}</b><span>${nx ? nx.summary + " · " + whenWord(nx.start) : "Nothing else planned"}</span></div></button>`;
+      return html`<button type="button" class="uchip" @click=${() => this.moreInfo(p.person)}><span class="av xs" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></span>${p.name}${where ? " · " + where : ""}</button>`;
     })}</div>
 <div class="ph-row">${row.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>
-<div class="panel">
-<div class="phead"><span class="eb">Today, together</span></div>
-${today.map((r) => html`<button type="button" class="row" @click=${() => r.tap && r.tap()}><span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w">${r.what}</span></button>`)}
-${today.length < 3 ? html`<div class="empty" style="border-top: 1px solid var(--line2)">${today.length ? "That's everything today." : "Nothing on the calendar today."} Send either Pik a plan and it lands here for both of you.</div>` : nothing}
-</div>
-<div class="panel">
-<div class="phead"><span class="eb">For the house</span></div>
-${feed.length ? repeat(feed, (f) => f.uid, (f) => {
-      const p = this.person(f.who);
-      return html`<div class=${"fitem" + (f.urgent ? " urgent" : "")}>
-${p ? html`<div class="av sm" style=${"background: " + p.color}>${p.name[0]}</div>` : html`<div class="av sm house" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></div>`}
-<button type="button" class="fb" @click=${f.primary}><div class="ft">${f.title}</div><div class="fs">${[p ? p.name + "'s Pik" : f.label, f.at ? ago(f.at) : ""].filter(Boolean).join(" · ")}</div></button>
-<button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
-    }) : html`<div class="empty">Nothing waiting right now.</div>`}
-</div>
+${this.nowPanel(today, feed)}
 <div style="display: flex; justify-content: center; padding: 4px 0 18px"><button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button></div>
 </div>`;
   }
