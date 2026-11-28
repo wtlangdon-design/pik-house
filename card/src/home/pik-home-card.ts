@@ -1224,14 +1224,44 @@ ${prep ? html`<div class="dprep">For tomorrow: ${prep}</div>` : nothing}
 <div class="wklist">${w.lines.map((l) => html`<div>${l}</div>`)}</div></div>`;
   }
 
+  /** How steep a hike is, from its climb per mile. */
+  private hikeGrade(h: Hike): { word: string; k: number } {
+    const fpm = h.miles > 0 ? h.gain / h.miles : 0;
+    const word = !fpm ? "" : fpm < 120 ? "Gentle" : fpm < 250 ? "Steady climb" : fpm < 400 ? "Stiff climb" : "Steep";
+    return { word, k: Math.max(0.18, Math.min(1, fpm / 420)) };
+  }
+  /** A little out-and-back hill whose height follows the climb per mile (its shape is a sketch, not the real trail). */
+  private hikeHill(h: Hike): TemplateResult {
+    const { k } = this.hikeGrade(h);
+    let seed = 0; for (const ch of h.name) seed = (seed * 31 + ch.charCodeAt(0)) % 997;
+    const j = (n: number) => ((seed * (n + 3)) % 7) - 3;
+    const top = 40 - 34 * k;
+    const y = (f: number) => (40 - (40 - top) * f).toFixed(1);
+    const d = `M0 40 L0 ${y(0.06)} L14 ${y(0.22 + j(1) * 0.02)} L24 ${y(0.4)} L34 ${y(0.55 + j(2) * 0.03)} L44 ${y(0.78)} L54 ${y(0.92 + j(3) * 0.01)} L60 ${y(1)} L68 ${y(0.86)} L78 ${y(0.6 + j(4) * 0.03)} L88 ${y(0.42)} L100 ${y(0.18)} L100 40 Z`;
+    return html`<svg class="hhill" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">${svg`<path d=${d} fill="rgba(255,236,214,.26)"></path><path d=${d.replace(/^M0 40 L/, "M").replace(/ L100 40 Z$/, "")} fill="none" stroke="#FFE3C4" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path><circle cx="60" cy=${top} r="2.2" fill="#FFF7EC"></circle>`}</svg>`;
+  }
   private hikesTile(): TemplateResult {
     const hs = this.hikes();
     const wkend = this.hikeBoost() >= 5 ? "Today's hikes" : "Weekend hikes";
     const big = this.tsize === "L";
-    return html`<div class="tile htile">${ridge()}
-<div class="hhead"><span class="eb">${wkend}</span>${hs[0] && hs[0].forecast ? html`<span class="hfc">${hs[0].forecast}</span>` : nothing}</div>
-<div class="hrows">${hs.map((h) => html`<button type="button" class="hrow" @click=${() => this.openHike(h)} aria-label=${h.name + ", open in AllTrails"}>
-<span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}</span><b>${h.name.replace(/\s+Trail$/i, "")}</b><span class="hst">${this.hikeStats(h)}</span>${big && h.why ? html`<span class="hwhy">${h.why}</span>` : nothing}</button>`)}</div></div>`;
+    const set = Date.parse(String(this.S(this.C.sun)?.attributes.next_setting || ""));
+    const sunset = isFinite(set) && set - this.now < 20 * 3600e3 ? "Sunset " + hmA(new Date(set)) : "";
+    const ico = (k: string) => k === "mi" ? svg`<path d="M1 9 C4 3 8 11 11 5 S15 3 15 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>`
+      : k === "up" ? svg`<path d="M1 13 L6 6 L9 9 L15 2 M10 2 H15 V7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>`
+      : svg`<path d="M2 10 L3.5 5.5 C3.8 4.6 4.5 4 5.5 4 H10.5 C11.5 4 12.2 4.6 12.5 5.5 L14 10 V13 H2 Z M4.5 13 V14.5 M11.5 13 V14.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>`;
+    const stat = (k: string, v: string) => html`<span class="hs"><svg viewBox="0 0 16 16" aria-hidden="true">${ico(k)}</svg>${v}</span>`;
+    return html`<div class=${"tile htile" + (big ? " big" : "")}>${ridge()}<span class="hsun" aria-hidden="true"></span>
+<div class="hhead"><div style="min-width: 0"><span class="eb">${wkend}</span>${big && sunset ? html`<div class="hset">${sunset}</div>` : nothing}</div>${hs[0] && hs[0].forecast ? html`<span class="hfc">${hs[0].forecast}</span>` : nothing}</div>
+<div class="hrows">${hs.map((h) => {
+      const g = this.hikeGrade(h);
+      return html`<button type="button" class=${"hrow " + (h.kind === "moderate" ? "mod" : "easy")} @click=${() => this.openHike(h)} aria-label=${h.name + ", open in AllTrails"}>
+${this.hikeHill(h)}
+<span class="hmain"><span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}${g.word ? html` · <em>${g.word}</em>` : nothing}</span>
+<b>${h.name.replace(/\s+Trail$/i, "")}</b>
+<span class="hst">${h.miles ? stat("mi", h.miles + " mi") : nothing}${h.gain ? stat("up", h.gain.toLocaleString() + " ft") : nothing}${h.drive ? stat("car", h.drive + " min") : nothing}</span>
+${big && h.why ? html`<span class="hwhy">${h.why}</span>` : nothing}</span>
+<span class="hchev" aria-hidden="true">›</span></button>`;
+    })}</div></div>`;
   }
   private hikeStory(): TemplateResult {
     const hs = this.hikes();

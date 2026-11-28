@@ -41,12 +41,6 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .slot>.zw{zoom:.8;width:100%;height:100%;flex:none;display:flex}.zw>.tile{flex:1;min-height:0;min-width:0}
 .slot.lift{z-index:16;transform:scale(1.02);box-shadow:0 0 0 4px #F6D49A,0 24px 60px rgba(0,0,0,.35);transition:transform .3s}
 .liftbadge{position:absolute;top:10px;right:12px;z-index:2;background:#2B1A12;color:#F6D49A;font-size:11px;letter-spacing:1.1px;text-transform:uppercase;font-weight:600;padding:4px 9px;border-radius:99px;pointer-events:none}
-.slot.sL .htile{padding:20px 22px;gap:12px}
-.slot.sL .htile .eb{font-size:13px}.slot.sL .hfc{font-size:14px}
-.slot.sL .hrows{gap:12px}
-.slot.sL .hrow{padding:14px 16px;border-radius:18px}
-.slot.sL .hrow b{font-size:30px}.slot.sL .hrow .hst{font-size:14px}.slot.sL .hkind{font-size:12px}
-.hwhy{grid-column:1 / -1;font-size:13.5px;color:#F6E2D0;line-height:1.35;margin-top:3px}
 .tile.itile.compact{justify-content:center;gap:6px;padding:10px 12px}
 .itile .crow{display:flex;align-items:center;justify-content:space-between;width:100%}
 .cnum{border:0;background:none;color:#fff;font-family:var(--serif);font-size:40px;line-height:1;padding:0}
@@ -508,10 +502,31 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .htile .eb{color:#FFE3C4;white-space:nowrap;flex:none}
 .hfc{font-size:12px;color:#FFE9D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hrows{position:relative;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;justify-content:flex-end}
-.hrow{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:baseline;text-align:left;border:0;border-radius:14px;padding:7px 10px;min-height:44px;background:rgba(24,20,30,.38);color:#FFF7EC;backdrop-filter:blur(2px)}
+.hrow{position:relative;display:flex;align-items:center;gap:10px;text-align:left;border:0;border-radius:16px;padding:8px 10px 8px 8px;min-height:44px;background:rgba(24,20,30,.42);color:#FFF7EC;backdrop-filter:blur(3px);box-shadow:inset 0 0 0 1px rgba(255,236,214,.08)}
+.hrow .hhill{flex:none;width:58px;height:40px;border-radius:10px;background:rgba(255,236,214,.07)}
+.hrow.easy .hhill path:first-child{fill:rgba(190,222,170,.28)}.hrow.easy .hhill path:nth-child(2){stroke:#D5EBC4}
+.hmain{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px}
 .hrow b{font-family:var(--serif);font-weight:400;font-size:19px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hrow .hst{grid-column:1 / -1;font-size:12px;color:#F1DCCB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hkind{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;color:#FFD3A6}
+.hst{display:flex;gap:10px;font-size:12px;color:#F1DCCB;white-space:nowrap;overflow:hidden}
+.hs{display:inline-flex;align-items:center;gap:4px}.hs svg{width:13px;height:13px;flex:none;opacity:.85}
+.hkind{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;color:#FFD3A6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hkind em{font-style:normal;color:#FFE9D2;opacity:.85}
+.hrow.easy .hkind{color:#CFE7BD}
+.hchev{flex:none;font-size:22px;line-height:1;color:#FFD3A6;opacity:.8;margin-left:-2px}
+.hsun{position:absolute;width:90px;height:90px;border-radius:50%;left:58%;top:26%;background:radial-gradient(circle,#FFE6B8 0%,#FFC98A 38%,rgba(255,190,120,0) 70%);opacity:.8;pointer-events:none}
+.hset{font-size:12.5px;color:#FFE9D2;margin-top:2px}
+.hfc{background:rgba(24,20,30,.28);padding:3px 9px;border-radius:99px}
+.htile.big{padding:20px 22px;gap:12px}
+.htile.big .eb{font-size:13px}.htile.big .hfc{font-size:14px}.htile.big .hset{font-size:14px}
+.htile.big .hsun{width:170px;height:170px;top:18%;left:52%}
+.htile.big .hrows{gap:12px}
+.htile.big .hrow{padding:14px 14px 14px 12px;border-radius:20px;align-items:flex-start;gap:14px}
+.htile.big .hhill{width:96px;height:64px;border-radius:14px}
+.htile.big .hrow b{font-size:30px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.htile.big .hst{font-size:14px;gap:14px;margin-top:4px}.htile.big .hs svg{width:15px;height:15px}
+.htile.big .hkind{font-size:12px}
+.htile.big .hchev{align-self:center;font-size:30px}
+.htile .hwhy{font-size:13.5px;color:#F6E2D0;line-height:1.35;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .hikestory{position:relative;padding-bottom:70px}
 .hikestory>*:not(.ridge){position:relative}
 .hcards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px}
