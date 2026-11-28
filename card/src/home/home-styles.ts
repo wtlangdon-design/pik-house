@@ -294,6 +294,15 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .ph-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -12px;padding:0 12px 4px;scrollbar-width:none;overscroll-behavior-x:contain}
 .ph-row::-webkit-scrollbar{display:none}
 .ph-card{flex:none;width:min(78vw,340px);height:200px;scroll-snap-align:start;display:flex}
+.ph-lbl{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);font-weight:600;margin:4px 2px -4px}
+.ph-mini{flex:none;width:min(40vw,168px);height:128px;scroll-snap-align:start;display:flex}
+.ph-mini>*{flex:1;width:100%;height:100%}
+.mtile{border:0;border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;text-align:left;color:#F3EDE3;box-sizing:border-box;min-width:0;overflow:hidden}
+.mtile .eb{color:rgba(243,237,227,.7);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtile b{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mtile small{font-size:12.5px;color:rgba(243,237,227,.78);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:auto}
+.mplay{align-self:flex-start;font-size:12px;font-weight:600;background:#F3E9F1;color:#3A2140;border-radius:99px;padding:4px 10px;margin-top:2px}
+.ph-mini .tile.itile.compact{border-radius:20px}
 .ph-card>*{flex:1;width:100%;height:100%}
 .phone .panel{padding:14px 16px}
 .phone .row .n{display:none}

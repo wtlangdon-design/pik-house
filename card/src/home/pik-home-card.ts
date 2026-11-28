@@ -1616,6 +1616,38 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
     })}</div></div>`;
   }
 
+  /** A small glance tile for the phone's "The house" row. */
+  private mini(id: string, e: Energy | null, timers: PoolTimer[], mp: HState | undefined): TemplateResult {
+    const t = (eb: string, big: string, sub: string, bg: string, tap?: () => void, extra?: TemplateResult) => html`<button type="button" class="mtile" style=${"background: " + bg} @click=${() => tap && tap()}><span class="eb">${eb}</span><b>${big}</b><small>${sub}</small>${extra || nothing}</button>`;
+    if (id === "inside") { this.tsize = "C"; const b = this.insideTile(); this.tsize = "W"; return b; }
+    if (id === "outside") {
+      const w = this.S(this.C.weather), al = this.outside()[0];
+      return t(al ? "Outside · " + al.eb.replace(/^outside\s*·\s*/i, "") : "Outside", this.outTemp(), al ? al.big : this.wxWord() + (this.hi !== null ? " · high " + this.hi + "°" : ""), al ? "#1E3550" : "#2A3A4E", () => w && this.moreInfo(this.C.weather!));
+    }
+    if (id === "lights") {
+      const n = (this.C.lights || []).reduce((a, g) => a + g.entities.filter((x) => this.S(x)?.state === "on").length, 0);
+      return t("Lights", n ? n + " on" : "All off", "Tap for every light", "#2E2A24", () => { this.log("inside", "open"); this.lightsRoom = ""; this.sheet = "lights"; this.requestUpdate(); });
+    }
+    if (id === "energy" && e) return t("Energy", e.solar > 0.1 ? e.solar.toFixed(1) + " kW" : e.pct + "%", e.solar > 0.1 ? "sun · Powerwall " + e.pct + "%" : e.out ? "Grid down, on the battery" : "in the Powerwall", "#1B2733", () => { this.sheet = "energy"; this.requestUpdate(); });
+    if (id === "music" && mp) {
+      const playing = mp.state === "playing", a = mp.attributes as Record<string, unknown>;
+      return t(playing ? "Playing" : mp.state === "paused" ? "Paused" : "Music", String(a.media_title || "Nothing playing"), String(a.media_artist || ""), "#3A2140", () => { this.log("music", "tap"); this.svc("media_player", "media_play_pause", {}, { entity_id: this.C.echo!.media_player }); }, html`<span class="mplay">${playing ? "Pause" : "Play"}</span>`);
+    }
+    if (id === "timers" && timers.length) {
+      const x = timers.slice().sort((a, b) => a.end - b.end)[0], left = Math.max(0, Math.round((x.end - this.now) / 1000));
+      return t(timers.length > 1 ? "Timers · " + timers.length : "Timer", x.rang ? "Done" : Math.floor(left / 60) + ":" + p2(left % 60), x.label || "Kitchen timer", "#4A2E1A");
+    }
+    if (id === "smoker" && this.C.smoke) {
+      const ps = this.C.smoke.probes.map((pid) => this.S(pid)).filter((x): x is HState => !!x && !isNaN(parseFloat(x.state)));
+      const pit = ps.find((x) => String((x.attributes as Record<string, unknown>).kind || "") === "smoker");
+      const food = ps.filter((x) => x !== pit).sort((a, b) => parseFloat(b.state) - parseFloat(a.state))[0];
+      const fa = food ? (food.attributes as Record<string, unknown>) : {};
+      return t("Smoker", food ? Math.round(parseFloat(food.state)) + "°" : pit ? Math.round(parseFloat(pit.state)) + "°" : "—", [fa.food ? String(fa.food) : "", pit ? "pit " + Math.round(parseFloat(pit.state)) + "°" : ""].filter(Boolean).join(" · "), "#2A1A14", () => this.C.smoke!.path && this.navigate(this.C.smoke!.path));
+    }
+    if (id === "deliveries") { const d = this.deliveries()[0]; if (d) return t("On the way", d.title, d.detail || d.label, "#23362E", d.primary); }
+    return html``;
+  }
+
   private phoneLayer(): TemplateResult {
     const d = new Date(this.now);
     const people = this.C.people || [];
@@ -1626,24 +1658,28 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
     const timers = poolTimers(this.H, this.C.timers || 12);
     const mp = this.C.echo && this.S(this.C.echo.media_player);
     const smokeOn = !!this.C.smoke && this.S(this.C.smoke.active)?.state === "on";
-    // the swipe row: the same ranking as the kitchen tiles, plus lights
-    const cards: Array<{ id: string; score: number; body: () => TemplateResult }> = [
-      { id: "timers", score: timers.length ? 100 : -99, body: () => this.timersTile(timers) },
-      { id: "smoker", score: smokeOn ? this.rank("smoker", 60) : -99, body: () => this.smokeTile() },
-      { id: "energy", score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, body: () => this.energyTile(e!) },
+    // two themed rows that swipe on their own: the house right now (small glance tiles), and plans and picks (big cards)
+    const house: Array<{ id: string; show: boolean }> = [
+      { id: "timers", show: timers.length > 0 },
+      { id: "smoker", show: smokeOn },
+      { id: "deliveries", show: this.deliveries().length > 0 },
+      { id: "outside", show: !!this.S(this.C.weather) },
+      { id: "inside", show: !!this.S(this.C.thermostat) },
+      { id: "lights", show: (this.C.lights || []).length > 0 },
+      { id: "energy", show: !!e },
+      { id: "music", show: !!mp },
+    ];
+    const picks: Array<{ id: string; score: number; body: () => TemplateResult }> = [
+      { id: "trip", score: this.tripScore(), body: () => this.tripTile() },
+      { id: "dinners", score: this.dinnersScore(), body: () => this.dinnersTile() },
+      { id: "hikes", score: this.hikes().length ? this.rank("hikes", 0.9 + this.hikeBoost()) : -99, body: () => this.hikesTile() },
       { id: "plants", score: this.groups().length ? this.rank("plants", 1.5 + (this.groups().some((g) => g.dry) ? 3 : 0)) : -99, body: () => this.plantsTile() },
       { id: "cellar", score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, body: () => this.cellarTile() },
-      { id: "hikes", score: this.hikes().length ? this.rank("hikes", 0.9 + this.hikeBoost()) : -99, body: () => this.hikesTile() },
-      { id: "trip", score: this.tripScore(), body: () => this.tripTile() },
-      { id: "deliveries", score: this.deliveries().length ? this.rank("deliveries", 40) : -99, body: () => this.deliveriesTile() },
-      { id: "outside", score: this.outsideScore(), body: () => this.outsideTile() },
-      { id: "dinners", score: this.dinnersScore(), body: () => this.dinnersTile() },
       { id: "week", score: this.week() ? this.rank("week", this.weekBoost()) : -99, body: () => this.weekTile() },
-      { id: "lights", score: (this.C.lights || []).length ? this.rank("inside", 1.4) : -99, body: () => this.lightsTile() },
-      { id: "inside", score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, body: () => { this.tsize = "C"; const b = this.insideTile(); this.tsize = "W"; return b; } },
-      { id: "music", score: mp ? this.rank("music", 1 + (mp.state === "playing" ? 2.5 : 0)) : -99, body: () => this.musicTile() },
     ];
-    const row = cards.filter((c) => c.score > -50).sort((a, b) => b.score - a.score);
+    const houseRow = house.filter((h) => h.show).map((h) => h.id);
+    const pickRow = picks.filter((c) => c.score > -50).sort((a, b) => b.score - a.score);
+    const row = houseRow.map((id) => ({ id })).concat(pickRow.map((c) => ({ id: c.id })));
     const sug = this.rules().filter((r) => r.state === "suggested").length;
     return html`<div class="phonewrap">
 <div class="ph-top">
@@ -1658,7 +1694,10 @@ ${moms.map((m) => this.banner(m))}
       const where = !st ? "" : st.state === "home" ? "home" : st.state === "not_home" ? "out" : st.state;
       return html`<button type="button" class="uchip" @click=${() => this.moreInfo(p.person)}><span class="av xs" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></span>${p.name}${where ? " · " + where : ""}</button>`;
     })}</div>
-${(row.length < 3 ? [row] : [row.filter((_c, i) => i % 2 === 0), row.filter((_c, i) => i % 2 === 1)]).map((r) => html`<div class="ph-row">${r.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>`)}
+<div class="ph-lbl">The house</div>
+<div class="ph-row mini">${houseRow.map((id) => html`<div class="ph-mini">${this.mini(id, e, timers, mp)}</div>`)}</div>
+${pickRow.length ? html`<div class="ph-lbl">Plans and picks</div>
+<div class="ph-row">${pickRow.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>` : nothing}
 ${this.nowPanel(today, feed, row.map((c) => c.id))}
 <div style="display: flex; justify-content: center; padding: 4px 0 18px"><button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button></div>
 </div>`;
