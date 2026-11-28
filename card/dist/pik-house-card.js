@@ -1982,13 +1982,14 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .htile.big .eb{font-size:13px}.htile.big .hfc{font-size:14px}.htile.big .hset{font-size:14px}
 .htile.big .hsun{width:170px;height:170px;top:18%;left:52%}
 .htile.big .hrows{gap:12px}
-.htile.big .hrow{padding:14px 14px 14px 12px;border-radius:20px;align-items:flex-start;gap:14px}
-.htile.big .hhill{width:96px;height:64px;border-radius:14px}
 .htile.big .hrow b{font-size:30px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .htile.big .hst{font-size:14px;gap:14px;margin-top:4px}.htile.big .hs svg{width:15px;height:15px}
 .htile.big .hkind{font-size:12px}
-.htile.big .hchev{align-self:center;font-size:30px}
-.htile .hwhy{font-size:13.5px;color:#F6E2D0;line-height:1.35;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.htile.big .hrow{display:block;padding:14px 40px 14px 16px;border-radius:20px;overflow:hidden}
+.htile.big .hhill{position:absolute;right:8px;bottom:6px;width:46%;height:58%;background:none;opacity:.5}
+.htile.big .hmain{position:relative}
+.htile.big .hchev{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:30px}
+.htile .hwhy{font-size:13.5px;color:#F6E2D0;line-height:1.35;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hikestory{position:relative;padding-bottom:70px}
 .hikestory>*:not(.ridge){position:relative}
 .hcards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px}
