@@ -1246,7 +1246,7 @@ ${prep ? html`<div class="dprep">For tomorrow: ${prep}</div>` : nothing}
 ${groupRing(g, 76)}
 <div class="pcmain"><div class="pchead"><b>${g.room}</b><span class="pcpct">${g.live ? g.m + "%" : "—"}</span></div>
 <div class="pcsub">${g.ind}${g.plants ? " · " + g.plants + " plants" : ""}</div>
-<div class="pbar"><i style=${"width: " + fill + "%"}></i><em style=${"left: " + line + "%"}></em></div>
+<div class="mbar"><i style=${"width: " + fill + "%"}></i><em style=${"left: " + line + "%"}></em></div>
 <div class="pcstat">${status}</div></div></div>`;
     };
     return html`<div class="story plantstory">

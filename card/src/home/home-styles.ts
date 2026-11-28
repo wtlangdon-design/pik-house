@@ -326,10 +326,10 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .pcard.dry .pcpct,.pcard.dry .pcstat{color:#C2671F}
 .pcsub{font-size:13px;color:var(--mute2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pkey .pcsub{white-space:normal;line-height:1.4}
-.pbar{position:relative;height:8px;border-radius:99px;background:rgba(94,138,90,.15);margin-top:2px}
-.pbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#8DB37F,#4F7D4B)}
-.pcard.dry .pbar i{background:linear-gradient(90deg,#F0B25E,#E3893B)}
-.pbar em{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:#C2671F;border-radius:2px}
+.mbar{position:relative;height:8px;border-radius:99px;background:rgba(94,138,90,.15);margin-top:2px}
+.mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#8DB37F,#4F7D4B)}
+.pcard.dry .mbar i{background:linear-gradient(90deg,#F0B25E,#E3893B)}
+.mbar em{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:#C2671F;border-radius:2px}
 .pcstat{font-size:13px;font-weight:600;color:var(--green)}
 .namechips{display:flex;flex-wrap:wrap;gap:6px}.namechips span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
 
