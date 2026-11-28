@@ -1355,11 +1355,13 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
       { id: "trip", topic: "trip" as Topic, score: this.tripScore(), fr: "1.6fr", body: () => this.tripTile() },
       { id: "deliveries", topic: "deliveries" as Topic, score: this.deliveries().length ? this.rank("deliveries", 40) : -99, fr: "1.4fr", body: () => this.deliveriesTile() },
       { id: "outside", topic: "weather" as Topic, score: this.outsideScore(), fr: "1.2fr", body: () => this.outsideTile() },
+      { id: "weather", topic: "weather" as Topic, score: this.S(this.C.weather) && !this.outside().length ? this.rank("weather", 0.8) : -99, fr: "1fr", body: () => this.weatherTile() },
       { id: "dinners", topic: "dinners" as Topic, score: this.dinnersScore(), fr: "1.4fr", body: () => this.dinnersTile() },
       { id: "week", topic: "week" as Topic, score: this.week() ? this.rank("week", this.weekBoost()) : -99, fr: "1.6fr", body: () => this.weekTile() },
     ];
     const shown = cand.filter((c) => c.score > -50).sort((x, y) => y.score - x.score);
-    const SMALL = ["music", "cellar"], BIG = ["hikes", "trip", "smoker", "timers", "deliveries"];
+    // the right-hand column is the house right now; the big grid is plans and picks, plus anything urgent
+    const SMALL = ["energy", "music", "weather"], BIG = ["hikes", "trip", "smoker", "timers", "deliveries"];
     const inside = shown.find((c) => c.id === "inside");
     const small = shown.filter((c) => SMALL.includes(c.id)).slice(0, 2);
     let main = shown.filter((c) => c.id !== "inside" && !SMALL.includes(c.id));
@@ -1386,7 +1388,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     this.tsize = t.size;
     const body = t.body();
     this.tsize = "W";
-    return html`<div class=${"slot s" + t.size + (lift === t.id ? " lift" : "")} style=${t.area ? "grid-area: " + t.area : ""}>${body}${lift === t.id ? html`<span class="liftbadge">Pik is talking about this</span>` : nothing}</div>`;
+    return html`<div class=${"slot s" + t.size + (lift === t.id ? " lift" : "")} style=${t.area ? "grid-area: " + t.area : ""}>${t.size === "S" ? html`<div class="zw">${body}</div>` : body}${lift === t.id ? html`<span class="liftbadge">Pik is talking about this</span>` : nothing}</div>`;
   }
   /** Which tile Pik's answer is about, so it can stay lit while he talks. */
   private aboutTile(a: string, ids: string[]): string {
@@ -1401,6 +1403,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
       ["hikes", () => /\b(hike|hikes|hiking|trail|trailhead)\b/.test(t) || words(this.hikes().map((h) => h.name.replace(/\s+(trail|loop)$/i, "").split(" and ")[0]))],
       ["dinners", () => /\b(dinner|dinners|thaw|recipe)\b/.test(t) || words(this.dinners().map((x) => x.title))],
       ["outside", () => /\b(freeze|frost|smoke|air quality|weather alert|cover the|bring in)\b/.test(t)],
+      ["weather", () => /\b(weather|forecast|rain|snow|sunny|cloudy|degrees out|temperature outside)\b/.test(t)],
       ["plants", () => /\b(plants?|water(ing)?|thirst|soil)\b/.test(t) || words(this.groups().map((g) => g.room))],
       ["energy", () => /\b(powerwall|solar|battery|the grid|kwh|kilowatt)\b/.test(t)],
       ["week", () => /\bthis week\b/.test(t)],
@@ -1616,36 +1619,32 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
     })}</div></div>`;
   }
 
-  /** A small glance tile for the phone's "The house" row. */
-  private mini(id: string, e: Energy | null, timers: PoolTimer[], mp: HState | undefined): TemplateResult {
-    const t = (eb: string, big: string, sub: string, bg: string, tap?: () => void, extra?: TemplateResult) => html`<button type="button" class="mtile" style=${"background: " + bg} @click=${() => tap && tap()}><span class="eb">${eb}</span><b>${big}</b><small>${sub}</small>${extra || nothing}</button>`;
-    if (id === "inside") { this.tsize = "C"; const b = this.insideTile(); this.tsize = "W"; return b; }
-    if (id === "outside") {
-      const w = this.S(this.C.weather), al = this.outside()[0];
-      return t(al ? al.eb.replace(/^outside\s*·\s*/i, "") : "Outside", this.outTemp(), al ? al.big : this.wxWord() + (this.hi !== null ? " · high " + this.hi + "°" : ""), al ? "#1E3550" : "#2A3A4E", () => w && this.moreInfo(this.C.weather!));
-    }
-    if (id === "lights") {
-      const n = (this.C.lights || []).reduce((a, g) => a + g.entities.filter((x) => this.S(x)?.state === "on").length, 0);
-      return t("Lights", n ? n + " on" : "All off", "Tap for every light", "#2E2A24", () => { this.log("inside", "open"); this.lightsRoom = ""; this.sheet = "lights"; this.requestUpdate(); });
-    }
-    if (id === "energy" && e) return t("Energy", e.solar > 0.1 ? e.solar.toFixed(1) + " kW" : e.pct + "%", e.solar > 0.1 ? "sun · Powerwall " + e.pct + "%" : e.out ? "Grid down, on the battery" : "in the Powerwall", "#1B2733", () => { this.sheet = "energy"; this.requestUpdate(); });
-    if (id === "music" && mp) {
-      const playing = mp.state === "playing", a = mp.attributes as Record<string, unknown>;
-      return t(playing ? "Playing" : mp.state === "paused" ? "Paused" : "Music", String(a.media_title || "Nothing playing"), String(a.media_artist || ""), "#3A2140", () => { this.log("music", "tap"); this.svc("media_player", "media_play_pause", {}, { entity_id: this.C.echo!.media_player }); }, html`<span class="mplay">${playing ? "Pause" : "Play"}</span>`);
-    }
-    if (id === "timers" && timers.length) {
-      const x = timers.slice().sort((a, b) => a.end - b.end)[0], left = Math.max(0, Math.round((x.end - this.now) / 1000));
-      return t(timers.length > 1 ? "Timers · " + timers.length : "Timer", x.rang ? "Done" : Math.floor(left / 60) + ":" + p2(left % 60), x.label || "Kitchen timer", "#4A2E1A");
-    }
-    if (id === "smoker" && this.C.smoke) {
-      const ps = this.C.smoke.probes.map((pid) => this.S(pid)).filter((x): x is HState => !!x && !isNaN(parseFloat(x.state)));
-      const pit = ps.find((x) => String((x.attributes as Record<string, unknown>).kind || "") === "smoker");
-      const food = ps.filter((x) => x !== pit).sort((a, b) => parseFloat(b.state) - parseFloat(a.state))[0];
-      const fa = food ? (food.attributes as Record<string, unknown>) : {};
-      return t("Smoker", food ? Math.round(parseFloat(food.state)) + "°" : pit ? Math.round(parseFloat(pit.state)) + "°" : "—", [fa.food ? String(fa.food) : "", pit ? "pit " + Math.round(parseFloat(pit.state)) + "°" : ""].filter(Boolean).join(" · "), "#2A1A14", () => this.C.smoke!.path && this.navigate(this.C.smoke!.path));
-    }
-    if (id === "deliveries") { const d = this.deliveries()[0]; if (d) return t("On the way", d.title, d.detail || d.label, "#23362E", d.primary); }
+  /** The phone's "The house" row: the same tiles as the kitchen, drawn smaller. */
+  private houseTile(id: string, e: Energy | null, timers: PoolTimer[]): TemplateResult {
+    if (id === "timers") return this.timersTile(timers);
+    if (id === "smoker") return this.smokeTile();
+    if (id === "deliveries") return this.deliveriesTile();
+    if (id === "outside") return this.outside().length ? this.outsideTile() : this.weatherTile();
+    if (id === "inside") return this.insideTile();
+    if (id === "lights") return this.lightsTile();
+    if (id === "energy" && e) return this.energyTile(e);
+    if (id === "music") return this.musicTile();
     return html``;
+  }
+  /** Outside on an ordinary day: the sky as it is (day, night, clouds, rain or snow), the temperature and the high. */
+  private weatherTile(): TemplateResult {
+    const w = this.S(this.C.weather);
+    const st = w ? w.state : "";
+    const night = this.S("sun.sun")?.state === "below_horizon";
+    const kind = /rain|pour|lightning/.test(st) ? "rain" : /snow|hail/.test(st) ? "snow" : /cloud|fog/.test(st) ? "cloud" : night ? "night" : "sun";
+    const a = (w ? w.attributes : {}) as Record<string, unknown>;
+    const lo = this.low;
+    return html`<button type="button" class=${"tile wtile " + kind + (night ? " dark" : "")} @click=${() => w && this.moreInfo(this.C.weather!)}>
+<svg class="wart" viewBox="0 0 120 90" aria-hidden="true">${kind === "sun" ? svg`<circle cx="86" cy="30" r="17" fill="#FFD48A"></circle><circle cx="86" cy="30" r="26" fill="#FFD48A" opacity=".22"></circle>` : kind === "night" ? svg`<path d="M92 14 a18 18 0 1 0 12 30 a14 14 0 1 1 -12 -30z" fill="#F3E7C6"></path><circle cx="40" cy="20" r="1.4" fill="#F3E7C6"></circle><circle cx="58" cy="10" r="1" fill="#F3E7C6"></circle><circle cx="22" cy="34" r="1.1" fill="#F3E7C6"></circle>` : svg`<ellipse cx="78" cy="34" rx="30" ry="14" fill="#FFFFFF" opacity=".85"></ellipse><ellipse cx="62" cy="40" rx="22" ry="11" fill="#FFFFFF" opacity=".7"></ellipse>${kind === "rain" ? svg`<path d="M60 56 l-4 10 M74 56 l-4 10 M88 56 l-4 10" stroke="#BFD8F2" stroke-width="2.4" stroke-linecap="round"></path>` : kind === "snow" ? svg`<circle cx="60" cy="60" r="2.2" fill="#fff"></circle><circle cx="74" cy="66" r="2.2" fill="#fff"></circle><circle cx="88" cy="60" r="2.2" fill="#fff"></circle>` : nothing}`}</svg>
+<span class="eb">Outside</span>
+<div class="wbig">${this.outTemp()}</div>
+<div class="wsub">${condWord(st)}${this.hi !== null ? " · high " + this.hi + "°" : ""}${lo !== null ? " · low " + lo + "°" : ""}${typeof a.wind_speed === "number" && (a.wind_speed as number) >= 15 ? " · windy" : ""}</div>
+</button>`;
   }
 
   private phoneLayer(): TemplateResult {
@@ -1695,7 +1694,7 @@ ${moms.map((m) => this.banner(m))}
       return html`<button type="button" class="uchip" @click=${() => this.moreInfo(p.person)}><span class="av xs" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></span>${p.name}${where ? " · " + where : ""}</button>`;
     })}</div>
 <div class="ph-lbl">The house</div>
-<div class="ph-row mini">${houseRow.map((id) => html`<div class="ph-mini">${this.mini(id, e, timers, mp)}</div>`)}</div>
+<div class="ph-row mini">${houseRow.map((id) => html`<div class="ph-mini"><div class="zw">${this.houseTile(id, e, timers)}</div></div>`)}</div>
 ${pickRow.length ? html`<div class="ph-lbl">Plans and picks</div>
 <div class="ph-row">${pickRow.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>` : nothing}
 ${this.nowPanel(today, feed, row.map((c) => c.id))}
