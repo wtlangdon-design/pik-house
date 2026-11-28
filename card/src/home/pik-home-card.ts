@@ -1072,6 +1072,7 @@ ${heat ? svg`<path d="M44 64 c-5 0 -8 -3 -8 -7 c0 -4 4 -6 5 -10 c3 3 2 5 2 6 c1 
 </div>`;
   }
 
+  /** Now playing: the album art fills the tile, title and artist over it, a progress line with times, and back, play and next. Tap the art for volume and the rest. */
   private musicTile(): TemplateResult {
     const id = this.C.echo!.media_player!;
     const mp = this.S(id)!;
@@ -1081,18 +1082,27 @@ ${heat ? svg`<path d="M44 64 c-5 0 -8 -3 -8 -7 c0 -4 4 -6 5 -10 c3 3 2 5 2 6 c1 
     const dur = Number(a.media_duration), pos = Number(a.media_position), upd = Date.parse(String(a.media_position_updated_at || ""));
     const at = isFinite(pos) ? pos + (playing && isFinite(upd) ? (this.now - upd) / 1000 : 0) : NaN;
     const frac = isFinite(dur) && dur > 0 && isFinite(at) ? Math.min(1, at / dur) : 0;
-    return html`<div class=${"tile mtile" + (playing ? " playing" : "")}>
-${art ? html`<img class="mbg" src=${art} alt="">` : nothing}
+    const mmss = (x: number) => Math.floor(x / 60) + ":" + p2(Math.floor(x % 60));
+    const go = (svc: string) => { this.log("music", "tap"); this.svc("media_player", svc, {}, { entity_id: id }); };
+    const vinyl = html`<svg class="mvinyl" viewBox="0 0 54 54" aria-hidden="true">${svg`<circle cx="27" cy="27" r="26" fill="#14111C"></circle>${[23, 20, 17, 14].map((r) => svg`<circle cx="27" cy="27" r=${r} fill="none" stroke="#fff" stroke-opacity=".07"></circle>`)}<circle cx="27" cy="27" r="8" fill="#C4703E"></circle><circle cx="27" cy="27" r="1.6" fill="#14111C"></circle><path d="M9 17 A20 20 0 0 1 21 7" stroke="#fff" stroke-opacity=".2" stroke-width="2" fill="none"></path>`}</svg>`;
+    const icon = (k: string) => k === "prev" ? html`<svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M12 1 L4 7 L12 13 Z" fill="currentColor"></path><rect x="1.5" y="1" width="2" height="12" fill="currentColor"></rect></svg>`
+      : k === "next" ? html`<svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1 L10 7 L2 13 Z" fill="currentColor"></path><rect x="10.5" y="1" width="2" height="12" fill="currentColor"></rect></svg>`
+      : k === "pause" ? html`<svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" fill="currentColor"></rect><rect x="8.5" y="1" width="3.5" height="12" fill="currentColor"></rect></svg>`
+      : html`<svg width="18" height="18" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1 L12 7 L3 13 Z" fill="currentColor"></path></svg>`;
+    return html`<div class=${"tile mtile" + (playing ? " playing" : "") + (art ? " hasart" : " noart")}>
+${art ? html`<img class="mfull" src=${art} alt=""><span class="mshade" aria-hidden="true"></span>` : vinyl}
 <div class="mhead"><span class="eb">${playing ? "Playing" : on ? "Paused" : "Music"}</span>${playing ? html`<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>` : nothing}</div>
-<div class="mrow">${art ? html`<img class="mart" src=${art} alt="">` : html`<svg class="vinyl" width="50" height="50" viewBox="0 0 54 54" aria-hidden="true">${svg`<circle cx="27" cy="27" r="26" fill="#14111C"></circle>${[22, 18, 14].map((r) => svg`<circle cx="27" cy="27" r=${r} fill="none" stroke="#fff" stroke-opacity=".07"></circle>`)}<circle cx="27" cy="27" r="8" fill="#C4703E"></circle><circle cx="27" cy="27" r="1.6" fill="#14111C"></circle><path d="M10 16 A20 20 0 0 1 22 8" stroke="#fff" stroke-opacity=".18" stroke-width="2" fill="none"></path>`}</svg>`}
-<div style="min-width: 0"><div class="mtitle">${on ? String(a.media_title || a.media_artist || "Something good") : "Nothing on"}</div>
-<div class=${"msub" + (on ? "" : " wrap")}>${on ? String(a.media_artist || a.app_name || "") : this.C.music_device ? "Tap one to start it on the Echo" : "Say “Hey Luna, play…”"}</div></div></div>
+<button type="button" class="mmeta" @click=${() => this.open("music", () => this.moreInfo(id))} aria-label="Volume and more">
+<div class="mtitle">${on ? String(a.media_title || a.media_artist || "Something good") : "Nothing on"}</div>
+<div class=${"msub" + (on ? "" : " wrap")}>${on ? String(a.media_artist || a.app_name || "") : this.C.music_device ? "Tap one to start it on the Echo" : "Say “Hey Luna, play…”"}</div></button>
 ${!on && this.C.music_device ? html`<div class="mpicks">${this.musicPicks().map((p) => html`<button type="button" class="mpick" @click=${() => this.playPick(p)}>${p.label}</button>`)}</div>` : nothing}
-${on ? html`<div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></div>
-<div class="mctl"><button type="button" class="rb ink" aria-label=${playing ? "Pause" : "Play"} @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_play_pause", {}, { entity_id: id }); }}>${playing ? html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" fill="currentColor"></rect><rect x="8.5" y="1" width="3.5" height="12" fill="currentColor"></rect></svg>` : html`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1 L12 7 L3 13 Z" fill="currentColor"></path></svg>`}</button>
-<button type="button" class="rb" aria-label="Next" @click=${() => { this.log("music", "tap"); this.svc("media_player", "media_next_track", {}, { entity_id: id }); }}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 1 L10 7 L2 13 Z" fill="currentColor"></path><rect x="10.5" y="1" width="2" height="12" fill="currentColor"></rect></svg></button></div>` : nothing}
+${on ? html`<div class="mprog"><div class="mbar2"><i style=${"width: " + frac * 100 + "%"}></i></div>${isFinite(at) && isFinite(dur) && dur > 0 ? html`<div class="mtimes"><span>${mmss(at)}</span><span>−${mmss(Math.max(0, dur - at))}</span></div>` : nothing}</div>
+<div class="mctl"><button type="button" class="rb" aria-label="Previous" @click=${() => go("media_previous_track")}>${icon("prev")}</button>
+<button type="button" class="rb ink big" aria-label=${playing ? "Pause" : "Play"} @click=${() => go("media_play_pause")}>${icon(playing ? "pause" : "play")}</button>
+<button type="button" class="rb" aria-label="Next" @click=${() => go("media_next_track")}>${icon("next")}</button></div>` : nothing}
 </div>`;
   }
+
 
   /** Quick picks for the idle music tile: yours from the config, otherwise ones that fit the moment. */
   private musicPicks(): Array<{ label: string; say: string }> {
