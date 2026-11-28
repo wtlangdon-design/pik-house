@@ -1622,7 +1622,7 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
     if (id === "inside") { this.tsize = "C"; const b = this.insideTile(); this.tsize = "W"; return b; }
     if (id === "outside") {
       const w = this.S(this.C.weather), al = this.outside()[0];
-      return t(al ? "Outside · " + al.eb.replace(/^outside\s*·\s*/i, "") : "Outside", this.outTemp(), al ? al.big : this.wxWord() + (this.hi !== null ? " · high " + this.hi + "°" : ""), al ? "#1E3550" : "#2A3A4E", () => w && this.moreInfo(this.C.weather!));
+      return t(al ? al.eb.replace(/^outside\s*·\s*/i, "") : "Outside", this.outTemp(), al ? al.big : this.wxWord() + (this.hi !== null ? " · high " + this.hi + "°" : ""), al ? "#1E3550" : "#2A3A4E", () => w && this.moreInfo(this.C.weather!));
     }
     if (id === "lights") {
       const n = (this.C.lights || []).reduce((a, g) => a + g.entities.filter((x) => this.S(x)?.state === "on").length, 0);
