@@ -157,17 +157,6 @@ script:
                     end_date_time: "{{ end_dt | trim }}"
                     location: "{{ location | default('', true) }}"
                     description: "{{ desc_full }}"
-      - action: script.feed_post
-        data:
-          who: "{{ sender | trim }}"
-          id: "cal-{{ summary | slugify }}"
-          title: "On both calendars: {{ summary }}"
-          category: reminder
-          label: "Calendar · from Pik"
-          detail: >-
-            {{ (as_datetime(start_date_time).strftime('%a %b %-d, %-I:%M %p') if not all_day else as_datetime(start_date).strftime('%a %b %-d') ~ ' (all day)') }}{{ ' · ' ~ location if location | default('', true) else '' }}
-          primary_label: Nice
-          expires_hours: 24
 
 automation:
   - id: pik_today_plans
