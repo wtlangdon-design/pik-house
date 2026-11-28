@@ -52,7 +52,7 @@ type Part = "morning" | "midday" | "evening" | "night";
 type Talk = "listen" | "think" | "speak";
 interface Rule { uid: string; words: string; topic: string; effect: string; when: string; until: string; state: string; why?: string; by?: string }
 interface Energy { solar: number; house: number; bat: number; grid: number | null; pct: number; hours: number | null; main: string; sub: string; out: boolean }
-interface FeedRow { uid: string; fid: string; open: string; done: () => void; title: string; label: string; detail: string; urgent: boolean; who: string; at: number; cat: string; topic: Topic; primary: () => void; secondary: () => void; secLabel: string }
+interface FeedRow { uid: string; fid: string; expires: boolean; open: string; done: () => void; title: string; label: string; detail: string; urgent: boolean; who: string; at: number; cat: string; topic: Topic; primary: () => void; secondary: () => void; secLabel: string }
 interface TodayRow { key: string; t: string; tsub?: string; color: string; what: string; note: string; past?: boolean; tap?: () => void }
 interface Moment { key: string; kind: "timer" | "doorbell" | "leave" | "storm" | "cooking"; topic: Topic; body: () => TemplateResult }
 interface Slot { id: string; topic: Topic; area: string; size: "L" | "W" | "S" | "C"; cols: [number, number]; body: () => TemplateResult }
@@ -618,7 +618,7 @@ export class PikHomeCard extends LitElement {
       const p = j.primary || {}, sec = j.secondary || null;
       const done = () => this.svc("todo", "update_item", { item: it.uid, status: "completed" }, { entity_id: this.C.feed_list });
       out.push({
-        uid: it.uid, fid: String(j.id || ""), open: typeof p.open === "string" && /^https:\/\//.test(p.open) ? p.open : "", done, title: it.summary, label: j.label || "", detail: j.detail || "", urgent: !!j.urgent, who, at: j.at ? Date.parse(String(j.at)) : 0, cat: j.category || "home", topic,
+        uid: it.uid, fid: String(j.id || ""), expires: !!j.expires, open: typeof p.open === "string" && /^https:\/\//.test(p.open) ? p.open : "", done, title: it.summary, label: j.label || "", detail: j.detail || "", urgent: !!j.urgent, who, at: j.at ? Date.parse(String(j.at)) : 0, cat: j.category || "home", topic,
         secLabel: sec && sec.label ? sec.label : "Dismiss",
         primary: () => {
           this.log(topic, "open");
@@ -1416,7 +1416,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     const d = new Date(this.now);
     const people = this.C.people || [];
     const today = this.today();
-    const feed = this.feed().filter((f) => f.cat !== "package" && !this.isDelivery(f)).slice(0, 5);
+    const feed = this.feed().filter((f) => f.cat !== "package" && !this.isDelivery(f)).slice(0, 10);
     const { main, stack } = this.tiles();
     const talking = !!this.talk || !!(this.a && this._t3);
     const pikCls = this.muted ? "p-muted" : this.talk ? "p-" + this.talk : "p-rest";
@@ -1441,7 +1441,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
 <div class="who"><span>Pik</span></div>
 <div class=${"line" + (this.headline().length > 110 ? " s3" : this.headline().length > 70 ? " s2" : "")}>${this.headline()}</div>
 </div>
-${this.nowPanel(today, feed)}
+${this.nowPanel(today, feed, main.concat(stack).map((t) => t.id))}
 <div class="leftfoot">
 ${v ? html`<button type="button" class=${"chip" + (this.muted ? " on" : "")} aria-pressed=${this.muted ? "true" : "false"} @click=${() => this.toggleMic()}>${this.muted ? "Mic off" : "Mic on"}</button>` : nothing}
 <button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button>
@@ -1454,16 +1454,35 @@ ${stack.length ? html`<div class="tstack">${stack.map((t) => this.tslot(t, lift)
 ${talking ? this.stage(pikCls, side) : nothing}
 </div>`;
   }
-  /** One list for both screens: today's plans first, then the house notes, newest first. */
-  private nowPanel(today: TodayRow[], feed: FeedRow[]): TemplateResult {
+  /**
+   * Now: the shared heads-up for the next day or so. What's planned, plus anything one of you (or the house) needs the
+   * other to know or do. No receipts ("added to both calendars"), nothing a tile on screen already shows, and notes
+   * fade after two days unless they set their own end.
+   */
+  private nowFeed(feed: FeedRow[], shown: string[]): FeedRow[] {
+    const has = (id: string) => shown.includes(id);
+    const now = this.now;
+    return feed.filter((f) => {
+      if (f.fid.startsWith("cal-") || /^on both calendars:/i.test(f.title)) return false;
+      if (has("outside") && f.topic === "weather") return false;
+      if (has("hikes") && /\bhikes?\b|\btrail\b/i.test(f.title)) return false;
+      if (has("dinners") && /\bdinners?\b|\bthaw\b/i.test(f.title)) return false;
+      if (has("trip") && /\b(flight|airport|gate)\b/i.test(f.title)) return false;
+      if (has("deliveries") && this.isDelivery(f)) return false;
+      if (!f.urgent && !f.expires && f.at && now - f.at > 48 * 3600e3) return false;
+      return true;
+    });
+  }
+  private nowPanel(today: TodayRow[], allFeed: FeedRow[], shown: string[]): TemplateResult {
     const people = this.C.people || [];
+    const feed = this.nowFeed(allFeed, shown);
     return html`<div class="panel now">
 <div class="phead"><span class="eb">Now</span><span class="legend">${people.map((p) => html`<i style=${"background: " + p.color}></i>${p.name}`)}<i style="background: #5E8A5A"></i>Both</span></div>
 <div class="rows">${repeat(today, (r) => r.key, (r) => html`<button type="button" class=${"nrow" + (r.past ? " past" : "")} @click=${() => r.tap && r.tap()}>
 <span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w"><b>${r.what}</b>${r.note ? html`<small>${r.note}</small>` : nothing}</span></button>`)}${repeat(feed, (f) => f.uid, (f) => {
       const p = this.person(f.who);
       return html`<div class=${"nrow f" + (f.urgent ? " urgent" : "")}>
-<span class="t">${f.at ? ago(f.at) : ""}</span>${p ? html`<span class="av xs" style=${"background: " + p.color}>${p.name[0]}</span>` : html`<span class="av xs house" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></span>`}
+<span class="t">${p ? p.name : "House"}</span>${p ? html`<span class="av xs" style=${"background: " + p.color}>${p.name[0]}</span>` : html`<span class="av xs house" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></span>`}
 <button type="button" class="w fb" @click=${f.primary}><b>${f.title}</b><small>${[p ? p.name + "'s Pik" : f.label, !p && f.detail ? f.detail : ""].filter(Boolean).join(" · ")}</small></button>
 <button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
     })}${!today.length && !feed.length ? html`<div class="empty">Nothing on the calendar and nothing waiting. Send either Pik a plan, a screenshot or a booking and it shows up here for both of you.</div>` : nothing}</div>
@@ -1601,7 +1620,7 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
     const d = new Date(this.now);
     const people = this.C.people || [];
     const today = this.today();
-    const feed = this.feed().filter((f) => f.cat !== "package" && !this.isDelivery(f)).slice(0, 6);
+    const feed = this.feed().filter((f) => f.cat !== "package" && !this.isDelivery(f)).slice(0, 10);
     const moms = this.moments();
     const e = this.energy();
     const timers = poolTimers(this.H, this.C.timers || 12);
@@ -1640,7 +1659,7 @@ ${moms.map((m) => this.banner(m))}
       return html`<button type="button" class="uchip" @click=${() => this.moreInfo(p.person)}><span class="av xs" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></span>${p.name}${where ? " · " + where : ""}</button>`;
     })}</div>
 ${(row.length < 3 ? [row] : [row.filter((_c, i) => i % 2 === 0), row.filter((_c, i) => i % 2 === 1)]).map((r) => html`<div class="ph-row">${r.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>`)}
-${this.nowPanel(today, feed)}
+${this.nowPanel(today, feed, row.map((c) => c.id))}
 <div style="display: flex; justify-content: center; padding: 4px 0 18px"><button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button></div>
 </div>`;
   }
