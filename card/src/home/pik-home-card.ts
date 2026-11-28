@@ -323,7 +323,8 @@ export class PikHomeCard extends LitElement {
   private rank(t: Topic, base: number): number {
     const rs = this.activeRules().filter((r) => r.topic === t);
     if (rs.some((r) => r.effect === "never")) return -99;
-    let s = base + this.learned(t);
+    // habits shape the order, but never so much that a brand-new or time-sensitive tile can't get in
+    let s = base + Math.max(-4, Math.min(4, this.learned(t)));
     rs.forEach((r) => { if (r.effect === "always") s += 50; if (r.effect === "more") s += 3; if (r.effect === "less") s -= 3; });
     return s;
   }
@@ -506,9 +507,10 @@ export class PikHomeCard extends LitElement {
   /** Friday evening and weekend mornings are when a hike idea is worth the space. */
   private hikeBoost(): number {
     const d = new Date(this.now), wd = d.getDay(), h = d.getHours();
-    if (wd === 5 && h >= 15) return 2.5;
-    if ((wd === 6 || wd === 0) && h < 13) return 3;
-    if (wd === 6 && h < 17) return 1;
+    // big enough to take a tile from the everyday ones (energy, music, the cellar) when it's actually hiking time
+    if (wd === 5 && h >= 15) return 4;
+    if ((wd === 6 || wd === 0) && h < 13) return 5;
+    if (wd === 6 && h < 17) return 2;
     return 0;
   }
   private tripScore(): number {
@@ -520,7 +522,7 @@ export class PikHomeCard extends LitElement {
   private dinnersScore(): number {
     if (!this.dinners().length) return -99;
     const h = new Date(this.now).getHours();
-    return this.rank("dinners", h >= 14 && h < 20 ? 3 : 1);
+    return this.rank("dinners", h >= 14 && h < 20 ? 5 : 1);
   }
   private hikeStats(h: Hike): string {
     return [h.miles ? h.miles + " mi" : "", h.gain ? h.gain.toLocaleString() + " ft up" : "", h.drive ? h.drive + " min drive" : ""].filter(Boolean).join(" · ");
@@ -1206,7 +1208,7 @@ ${prep ? html`<div class="dprep">For tomorrow: ${prep}</div>` : nothing}
 
   private hikesTile(): TemplateResult {
     const hs = this.hikes();
-    const wkend = this.hikeBoost() >= 2.5 && new Date(this.now).getDay() !== 5 ? "Today's hikes" : "Weekend hikes";
+    const wkend = this.hikeBoost() >= 5 ? "Today's hikes" : "Weekend hikes";
     return html`<div class="tile htile">${ridge()}
 <div class="hhead"><span class="eb">${wkend}</span>${hs[0] && hs[0].forecast ? html`<span class="hfc">${hs[0].forecast}</span>` : nothing}</div>
 <div class="hrows">${hs.map((h) => html`<button type="button" class="hrow" @click=${() => this.openHike(h)} aria-label=${h.name + ", open in AllTrails"}>
@@ -1233,18 +1235,34 @@ ${prep ? html`<div class="dprep">For tomorrow: ${prep}</div>` : nothing}
     const live = gs.filter((g) => g.live);
     const focus = dry[0] || live.slice().sort((a, b) => (a.m - a.thr) - (b.m - b.thr))[0];
     const names = focus ? this.plantPics().all.filter((p) => p.group === focus.room).map((p) => p.name) : [];
-    return html`<div class="story" style="flex-direction: row; gap: 48px; align-items: stretch">
-<div style="width: 380px; flex: none; display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center; padding-top: 10px">
-${focus ? html`${groupRing(focus, 260)}<div class="bigpct">${focus.m}%<small> soil moisture</small></div>
+    const total = gs.reduce((a, g) => a + (g.plants || 0), 0);
+    // each group as a card: ring, name, its tell-tale plant, a bar with the thirst line, and how far it is from needing water
+    const card = (g: (typeof gs)[number]) => {
+      const gap = g.m - g.thr;
+      const fill = g.live ? Math.max(2, Math.min(100, (g.m / 60) * 100)) : 0;
+      const line = Math.max(0, Math.min(100, (g.thr / 60) * 100));
+      const status = !g.live ? "No reading" : g.dry ? "Water today" : gap <= 3 ? "Water soon" : gap + " points to spare";
+      return html`<div class=${"pcard" + (g.dry ? " dry" : gap <= 3 && g.live ? " soon" : "")}>
+${groupRing(g, 76)}
+<div class="pcmain"><div class="pchead"><b>${g.room}</b><span class="pcpct">${g.live ? g.m + "%" : "—"}</span></div>
+<div class="pcsub">${g.ind}${g.plants ? " · " + g.plants + " plants" : ""}</div>
+<div class="pbar"><i style=${"width: " + fill + "%"}></i><em style=${"left: " + line + "%"}></em></div>
+<div class="pcstat">${status}</div></div></div>`;
+    };
+    return html`<div class="story plantstory">
+<div class="pfocus">
+${focus ? html`${groupRing(focus, 300)}<div class="bigpct">${focus.m}%<small> soil moisture</small></div>
 <div><div class="kicker" style=${"color: " + (focus.dry ? "#C2671F" : "var(--green)")}>${focus.dry ? "Thirstiest right now" : "Next to need water"}</div>
-<div class="h1" style="font-size: 44px">${focus.room}</div>
-<div style="font-size: 16px; color: var(--mute2); margin-top: 6px">${focus.dry ? focus.plants + " plants. Start with the " + focus.ind + "." : (focus.m - focus.thr) + " points above its thirst line. The " + focus.ind + " tells you first."}</div></div>` : nothing}
+<div class="h1" style="font-size: 48px">${focus.room}</div>
+<div class="pfsub">${focus.dry ? focus.plants + " plants. Start with the " + focus.ind + "." : (focus.m - focus.thr) + (focus.m - focus.thr === 1 ? " point" : " points") + " above its thirst line. The " + focus.ind + " tells you first."}</div></div>` : nothing}
 </div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 22px">
+<div class="pright">
 <div class="h1" style="font-size: 50px">${dry.length ? dry.map((g) => g.room).join(" and ") + (dry.length === 1 ? " needs" : " need") + " water." : "Everyone's happy. No watering today."}</div>
-<div class="ringgrid">${gs.map((g) => html`<div class="gcell">${groupRing(g, 110)}<b>${g.room}</b><span class=${g.dry ? "hot" : ""}>${g.live ? g.m + "%" : "—"}</span></div>`)}</div>
-${focus && focus.dry && names.length ? html`<div class="glass" style="padding: 16px 20px"><div class="eb" style="margin-bottom: 10px">The ${focus.room.toLowerCase()} route · ${names.length} plants</div><div class="namechips">${names.slice(0, 14).map((n) => html`<span>${n}</span>`)}</div></div>` : nothing}
-</div></div>`;
+<div class="pgrid">${gs.map(card)}
+<div class="pcard pkey"><div class="pcmain"><b>${total ? total + " plants in " + gs.length + " groups" : gs.length + " groups"}</b>
+<div class="pcsub">Each bar fills as the soil gets wetter. The tick is that group's thirst line: at or below it, water.</div>
+${focus && focus.dry && names.length ? html`<div class="namechips" style="margin-top: 8px">${names.slice(0, 8).map((n) => html`<span>${n}</span>`)}</div>` : nothing}</div></div>
+</div></div></div>`;
   }
   private cellarStory(): TemplateResult {
     const ws = this.wines();
