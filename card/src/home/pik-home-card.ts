@@ -1639,7 +1639,7 @@ ${moms.map((m) => this.banner(m))}
       const where = !st ? "" : st.state === "home" ? "home" : st.state === "not_home" ? "out" : st.state;
       return html`<button type="button" class="uchip" @click=${() => this.moreInfo(p.person)}><span class="av xs" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></span>${p.name}${where ? " · " + where : ""}</button>`;
     })}</div>
-<div class=${"ph-row" + (row.length < 3 ? " one" : "")}>${row.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>
+${(row.length < 3 ? [row] : [row.filter((_c, i) => i % 2 === 0), row.filter((_c, i) => i % 2 === 1)]).map((r) => html`<div class="ph-row">${r.map((c) => html`<div class="ph-card">${c.body()}</div>`)}</div>`)}
 ${this.nowPanel(today, feed)}
 <div style="display: flex; justify-content: center; padding: 4px 0 18px"><button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button></div>
 </div>`;
