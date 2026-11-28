@@ -96,9 +96,12 @@ script:
         selector:
           number: { min: 0.1, max: 720, step: 0.1 }
       who:
-        description: "Who sent it: tyler or charlie (leave out for the house itself). Pik fills this in from whoever is talking to it."
+        description: >-
+          Who sent it: tyler or charlie when one of you asked your Pik to tell the other; house for
+          anything automatic (a scheduled task, a reminder, a sensor). Left out, it's the person whose
+          Home Assistant login made the call, so automatic posts should say house.
         selector:
-          select: { options: [tyler, charlie] }
+          select: { options: [tyler, charlie, house] }
     sequence:
       - action: todo.get_items
         target: { entity_id: todo.house_feed }
@@ -108,7 +111,7 @@ script:
           # Who sent it: the field, or the Home Assistant user behind the call (each Pik signs in as its person).
           sender: >-
             {% set w = who | default('', true) | lower %}
-            {% if w in ['tyler', 'charlie'] %}{{ w }}{% else %}
+            {% if w in ['tyler', 'charlie'] %}{{ w }}{% elif w == 'house' %}{% else %}
               {% set p = states.person | selectattr('attributes.user_id', 'defined') | selectattr('attributes.user_id', 'eq', context.user_id) | map(attribute='name') | first | default('') | lower %}
               {{ 'tyler' if 'tyler' in p else 'charlie' if 'charlie' in p else '' }}{% endif %}
           desc: >-

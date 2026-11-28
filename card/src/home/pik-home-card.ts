@@ -1374,14 +1374,14 @@ ${v ? html`<button type="button" class=${"chip" + (this.muted ? " on" : "")} ari
       : nothing}${today.length < 4 ? html`<div class="empty" style="border-top: 1px solid var(--line2)">${today.length ? "That's everything today." : "Nothing on the calendar today."} Send either Pik a plan, a screenshot or a booking and it lands here for both of you.</div>` : nothing}</div>
 </div>
 <div class="panel">
-<div class="phead"><span class="eb">From your Piks</span></div>
+<div class="phead"><span class="eb">For the house</span></div>
 <div class="rows">${feed.length ? repeat(feed, (f) => f.uid, (f) => {
       const p = this.person(f.who);
       return html`<div class=${"fitem" + (f.urgent ? " urgent" : "")}>
 ${p ? html`<div class="av sm" style=${"background: " + p.color}>${p.name[0]}</div>` : html`<div class="av sm house" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></div>`}
 <button type="button" class="fb" @click=${f.primary}><div class="ft">${f.title}</div><div class="fs">${[p ? p.name + "'s Pik" : f.label, f.at ? ago(f.at) : "", !p && f.detail ? f.detail : ""].filter(Boolean).join(" · ")}</div></button>
 <button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
-    }) : html`<div class="empty">Nothing waiting. When either of you tells your Pik something for the house, it shows up here.</div>`}</div>
+    }) : html`<div class="empty">Nothing waiting. Things the house needs from you, and anything either of you tells your Pik for the other, show up here.</div>`}</div>
 </div>
 </div>
 <div class="tiles" style=${"grid-template-columns: " + tiles.map((t) => t.fr).join(" ")}>${tiles.map((t) => t.body())}</div>
@@ -1550,7 +1550,7 @@ ${today.map((r) => html`<button type="button" class="row" @click=${() => r.tap &
 ${today.length < 3 ? html`<div class="empty" style="border-top: 1px solid var(--line2)">${today.length ? "That's everything today." : "Nothing on the calendar today."} Send either Pik a plan and it lands here for both of you.</div>` : nothing}
 </div>
 <div class="panel">
-<div class="phead"><span class="eb">From your Piks</span></div>
+<div class="phead"><span class="eb">For the house</span></div>
 ${feed.length ? repeat(feed, (f) => f.uid, (f) => {
       const p = this.person(f.who);
       return html`<div class=${"fitem" + (f.urgent ? " urgent" : "")}>

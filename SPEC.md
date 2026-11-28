@@ -483,7 +483,7 @@ The bottom row shows up to five tiles. Each has a score from what's happening pl
 | Energy, Plants, Inside, Music, Cellar | energy, plants, inside, music, cellar | Always, ranked | Powerwall, soil sensors, Ecobee, Echo, Wine cellar list |
 | Weekend hikes | hikes | Until Sunday 8 PM; up Friday from 3 PM and weekend mornings; a full-screen story too | `todo.weekend_hikes` via `script.hikes_set` (weekly Claude task, Fridays) |
 | Trip | trip | 30 hours before a calendar event with "flight" in its title, until 15 minutes after; near the front from 6 hours out | Shared calendar; `input_text.pik_trip` (Google Maps drive and leave-by, from 4 hours out); FAA Delays sensors; airline feed cards (`flight-*`); RNO parking |
-| On the way | deliveries | While a `delivery-*` feed card is open (those cards leave the "From your Piks" list) | `pik_out_and_about.yaml` |
+| On the way | deliveries | While a `delivery-*` feed card is open (those cards leave the "For the house" list) | `pik_out_and_about.yaml` |
 | Outside | weather | A fire alert, PM2.5 over 35, a weather alert, or (from noon) a forecast low of 32° or less with the `cold_spots` to cover | `outside:` config, `air_pm25` |
 | Dinners this week | dinners | Any planned dinner from today on; up from 2 to 8 PM | `todo.dinners` via `script.meal_plan_set` (due date = the night) |
 | This week | week | Sunday to Tuesday after Sunday's note; tap for the full-screen story | `sensor.pik_week_report`, written by AI Task Sundays at 9 AM |

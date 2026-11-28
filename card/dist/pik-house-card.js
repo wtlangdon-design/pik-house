@@ -2199,11 +2199,11 @@ ${v?c`<button type="button" class=${"chip"+(this.muted?" on":"")} aria-pressed=$
 <span class="t">${b.t}${b.tsub?c`<small>${b.tsub}</small>`:m}</span><span class="c" style=${"background: "+b.color}></span><span class="w">${b.what}</span><span class="n">${b.note}</span></button>`):m}${i.length<4?c`<div class="empty" style="border-top: 1px solid var(--line2)">${i.length?"That's everything today.":"Nothing on the calendar today."} Send either Pik a plan, a screenshot or a booking and it lands here for both of you.</div>`:m}</div>
 </div>
 <div class="panel">
-<div class="phead"><span class="eb">From your Piks</span></div>
+<div class="phead"><span class="eb">For the house</span></div>
 <div class="rows">${s.length?ct(s,b=>b.uid,b=>{let x=this.person(b.who);return c`<div class=${"fitem"+(b.urgent?" urgent":"")}>
 ${x?c`<div class="av sm" style=${"background: "+x.color}>${x.name[0]}</div>`:c`<div class="av sm house" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></div>`}
 <button type="button" class="fb" @click=${b.primary}><div class="ft">${b.title}</div><div class="fs">${[x?x.name+"'s Pik":b.label,b.at?mi(b.at):"",!x&&b.detail?b.detail:""].filter(Boolean).join(" \xB7 ")}</div></button>
-<button type="button" class="fx" aria-label=${b.secLabel} @click=${b.secondary}>×</button></div>`}):c`<div class="empty">Nothing waiting. When either of you tells your Pik something for the house, it shows up here.</div>`}</div>
+<button type="button" class="fx" aria-label=${b.secLabel} @click=${b.secondary}>×</button></div>`}):c`<div class="empty">Nothing waiting. Things the house needs from you, and anything either of you tells your Pik for the other, show up here.</div>`}</div>
 </div>
 </div>
 <div class="tiles" style=${"grid-template-columns: "+n.map(b=>b.fr).join(" ")}>${n.map(b=>b.body())}</div>
@@ -2252,7 +2252,7 @@ ${i.map(v=>c`<button type="button" class="row" @click=${()=>v.tap&&v.tap()}><spa
 ${i.length<3?c`<div class="empty" style="border-top: 1px solid var(--line2)">${i.length?"That's everything today.":"Nothing on the calendar today."} Send either Pik a plan and it lands here for both of you.</div>`:m}
 </div>
 <div class="panel">
-<div class="phead"><span class="eb">From your Piks</span></div>
+<div class="phead"><span class="eb">For the house</span></div>
 ${s.length?ct(s,v=>v.uid,v=>{let b=this.person(v.who);return c`<div class=${"fitem"+(v.urgent?" urgent":"")}>
 ${b?c`<div class="av sm" style=${"background: "+b.color}>${b.name[0]}</div>`:c`<div class="av sm house" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></div>`}
 <button type="button" class="fb" @click=${v.primary}><div class="ft">${v.title}</div><div class="fs">${[b?b.name+"'s Pik":v.label,v.at?mi(v.at):""].filter(Boolean).join(" \xB7 ")}</div></button>
