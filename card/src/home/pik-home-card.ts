@@ -55,6 +55,7 @@ interface Energy { solar: number; house: number; bat: number; grid: number | nul
 interface FeedRow { uid: string; fid: string; open: string; done: () => void; title: string; label: string; detail: string; urgent: boolean; who: string; at: number; cat: string; topic: Topic; primary: () => void; secondary: () => void; secLabel: string }
 interface TodayRow { key: string; t: string; tsub?: string; color: string; what: string; note: string; past?: boolean; tap?: () => void }
 interface Moment { key: string; kind: "timer" | "doorbell" | "leave" | "storm" | "cooking"; topic: Topic; body: () => TemplateResult }
+interface Slot { id: string; topic: Topic; area: string; size: "L" | "W" | "S" | "C"; left: boolean; body: () => TemplateResult }
 interface Hike { name: string; kind: string; miles: number; gain: number; drive: number; why: string; url: string; forecast: string; until: number }
 interface Story { id: string; topic: Topic; score: number; render: () => TemplateResult; theme: string }
 
@@ -375,7 +376,7 @@ export class PikHomeCard extends LitElement {
       if (t === "speak") this.startCaps();
     } else if (this.talk) {
       clearTimeout(this._t3);
-      if (this.talk === "speak" && this.a) this._t3 = window.setTimeout(() => { this.talk = null; this.requestUpdate(); }, 7000);
+      if (this.talk === "speak" && this.a) this._t3 = window.setTimeout(() => { this.talk = null; this._t3 = undefined; this.requestUpdate(); }, 8000);
       else this.talk = null;
     }
   }
@@ -1046,6 +1047,13 @@ ${t ? html`<div class="chips"><span class="echip"><b>${t.solar.toFixed(1)}</b> k
     const arc = (t: number) => { const [x0, y0] = pt(lo), [x1, y1] = pt(t); const large = (t - lo) / (hi - lo) * 270 > 180 ? 1 : 0; return `M${x0} ${y0} A${R} ${R} 0 ${large} 1 ${x1} ${y1}`; };
     const nudge = (d: number) => { if (!isFinite(sp)) return; this.log("inside", "tap"); this.svc("climate", "set_temperature", { temperature: Math.round((sp + d) * 2) / 2 }, { entity_id: this.C.thermostat }); };
     const isNum = (x: number) => isFinite(x);
+    if (this.tsize === "C") return html`<div class=${"tile itile compact" + (heat ? " heat" : cool ? " cool" : "")}>
+<span class="eb">Inside</span>
+<div class="crow"><button type="button" class="nudge" aria-label="Cooler" @click=${() => nudge(-0.5)}>−</button>
+<button type="button" class="cnum" @click=${() => this.open("inside", () => this.moreInfo(this.C.thermostat!))} aria-label="Thermostat">${isNum(cur) ? Math.round(cur) + "°" : "—"}</button>
+<button type="button" class="nudge" aria-label="Warmer" @click=${() => nudge(0.5)}>+</button></div>
+<div class="isub">${heat ? "Heating to " + sp + "°" : cool ? "Cooling to " + sp + "°" : isNum(sp) ? "Set to " + sp + "°" : ""}</div>
+</div>`;
     return html`<div class=${"tile itile" + (heat ? " heat" : cool ? " cool" : "")}>
 <span class="eb">Inside</span>
 <div class="dialrow">
@@ -1209,10 +1217,11 @@ ${prep ? html`<div class="dprep">For tomorrow: ${prep}</div>` : nothing}
   private hikesTile(): TemplateResult {
     const hs = this.hikes();
     const wkend = this.hikeBoost() >= 5 ? "Today's hikes" : "Weekend hikes";
+    const big = this.tsize === "L";
     return html`<div class="tile htile">${ridge()}
 <div class="hhead"><span class="eb">${wkend}</span>${hs[0] && hs[0].forecast ? html`<span class="hfc">${hs[0].forecast}</span>` : nothing}</div>
 <div class="hrows">${hs.map((h) => html`<button type="button" class="hrow" @click=${() => this.openHike(h)} aria-label=${h.name + ", open in AllTrails"}>
-<span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}</span><b>${h.name.replace(/\s+Trail$/i, "")}</b><span class="hst">${this.hikeStats(h)}</span></button>`)}</div></div>`;
+<span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}</span><b>${h.name.replace(/\s+Trail$/i, "")}</b><span class="hst">${this.hikeStats(h)}</span>${big && h.why ? html`<span class="hwhy">${h.why}</span>` : nothing}</button>`)}</div></div>`;
   }
   private hikeStory(): TemplateResult {
     const hs = this.hikes();
@@ -1321,7 +1330,13 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
   }
   private wxWord(): string { const w = this.S(this.C.weather); return w ? condWord(w.state) : ""; }
 
-  private tiles(): Array<{ id: string; fr: string; body: () => TemplateResult }> {
+  /** The size the tile being drawn has: L (big), W (wide), S (small, in the right-hand column), C (compact strip). */
+  private tsize: "L" | "W" | "S" | "C" = "W";
+  /**
+   * The tile grid: the most important tiles take the big spots on the left (4 columns, 6 half-rows), music and the
+   * cellar stack in a narrow column on the right under a compact thermostat strip. Fewer tiles get bigger spots.
+   */
+  private tiles(): { main: Slot[]; stack: Slot[] } {
     const timers = this.H ? poolTimers(this.H, this.C.timers || 12) : [];
     const e = this.energy();
     const dry = this.groups().filter((g) => g.dry);
@@ -1343,9 +1358,58 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
       { id: "dinners", topic: "dinners" as Topic, score: this.dinnersScore(), fr: "1.4fr", body: () => this.dinnersTile() },
       { id: "week", topic: "week" as Topic, score: this.week() ? this.rank("week", this.weekBoost()) : -99, fr: "1.6fr", body: () => this.weekTile() },
     ];
-    const order = cand.map((c) => c.id);
-    const pick = cand.filter((c) => c.score > -50).sort((a, b) => b.score - a.score).slice(0, 5);
-    return pick.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    const shown = cand.filter((c) => c.score > -50).sort((x, y) => y.score - x.score);
+    const SMALL = ["music", "cellar"], BIG = ["hikes", "trip", "smoker", "timers", "deliveries"];
+    const inside = shown.find((c) => c.id === "inside");
+    const small = shown.filter((c) => SMALL.includes(c.id)).slice(0, 2);
+    let main = shown.filter((c) => c.id !== "inside" && !SMALL.includes(c.id));
+    main = main.slice(0, main.length >= 6 && !BIG.includes(main[0].id) ? 6 : 5);
+    const AREAS: Record<number, string[]> = {
+      1: ["1 / 1 / 7 / 5"],
+      2: ["1 / 1 / 7 / 3", "1 / 3 / 7 / 5"],
+      3: ["1 / 1 / 7 / 3", "1 / 3 / 4 / 5", "4 / 3 / 7 / 5"],
+      4: ["1 / 1 / 5 / 3", "1 / 3 / 3 / 5", "3 / 3 / 5 / 5", "5 / 1 / 7 / 5"],
+      5: ["1 / 1 / 5 / 3", "1 / 3 / 3 / 5", "3 / 3 / 5 / 5", "5 / 1 / 7 / 3", "5 / 3 / 7 / 5"],
+      6: ["1 / 1 / 3 / 3", "1 / 3 / 3 / 5", "3 / 1 / 5 / 3", "3 / 3 / 5 / 5", "5 / 1 / 7 / 3", "5 / 3 / 7 / 5"],
+    };
+    const areas = AREAS[main.length] || [];
+    const slots: Slot[] = main.map((c, i) => {
+      const [r0, c0, r1, c1] = areas[i].split("/").map((x) => Number(x.trim()));
+      return { id: c.id, topic: c.topic, area: areas[i], size: r1 - r0 >= 4 && c1 - c0 >= 2 ? "L" : "W", left: c0 === 1 && c1 <= 3, body: c.body };
+    });
+    const stack: Slot[] = [];
+    if (inside) stack.push({ id: "inside", topic: "inside", area: "", size: small.length ? "C" : "S", left: false, body: inside.body });
+    small.forEach((c) => stack.push({ id: c.id, topic: c.topic, area: "", size: "S", left: false, body: c.body }));
+    return { main: slots, stack };
+  }
+  private tslot(t: Slot, lift: string): TemplateResult {
+    this.tsize = t.size;
+    const body = t.body();
+    this.tsize = "W";
+    return html`<div class=${"slot s" + t.size + (lift === t.id ? " lift" : "")} style=${t.area ? "grid-area: " + t.area : ""}>${body}${lift === t.id ? html`<span class="liftbadge">Pik is talking about this</span>` : nothing}</div>`;
+  }
+  /** Which tile Pik's answer is about, so it can stay lit while he talks. */
+  private aboutTile(a: string, ids: string[]): string {
+    const t = (a || "").toLowerCase();
+    if (!t) return "";
+    const words = (xs: string[]) => xs.filter((x) => x && x.length > 3).some((x) => t.includes(x.toLowerCase()));
+    const tests: Array<[string, () => boolean]> = [
+      ["trip", () => /\b(flight|airport|gate|boarding|leave by)\b/.test(t)],
+      ["smoker", () => /\b(smoker|probe|brisket|pork butt|ribs? on the smoker)\b/.test(t)],
+      ["timers", () => /\btimers?\b/.test(t)],
+      ["deliveries", () => /\b(delivery|deliveries|doordash|instacart|grubhub|order)\b/.test(t)],
+      ["hikes", () => /\b(hike|hikes|hiking|trail|trailhead)\b/.test(t) || words(this.hikes().map((h) => h.name.replace(/\s+(trail|loop)$/i, "").split(" and ")[0]))],
+      ["dinners", () => /\b(dinner|dinners|thaw|recipe)\b/.test(t) || words(this.dinners().map((x) => x.title))],
+      ["outside", () => /\b(freeze|frost|smoke|air quality|weather alert|cover the|bring in)\b/.test(t)],
+      ["plants", () => /\b(plants?|water(ing)?|thirst|soil)\b/.test(t) || words(this.groups().map((g) => g.room))],
+      ["energy", () => /\b(powerwall|solar|battery|the grid|kwh|kilowatt)\b/.test(t)],
+      ["week", () => /\bthis week\b/.test(t)],
+      ["cellar", () => /\b(wine|bottle|bottles|cellar)\b/.test(t)],
+      ["music", () => /\b(song|playing|music|album|playlist)\b/.test(t)],
+      ["inside", () => /\b(thermostat|heat|heating|cooling|degrees inside)\b/.test(t)],
+    ];
+    for (const [id, test] of tests) if (ids.includes(id) && test()) return id;
+    return "";
   }
 
   private homeLayer(): TemplateResult {
@@ -1353,56 +1417,67 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     const people = this.C.people || [];
     const today = this.today();
     const feed = this.feed().filter((f) => f.cat !== "package" && !this.isDelivery(f)).slice(0, 5);
-    const tiles = this.tiles();
+    const { main, stack } = this.tiles();
     const talking = !!this.talk || !!(this.a && this._t3);
-    const pages = this.pages(this.a), ci = Math.min(this.capIdx, pages.length - 1);
-    const line = talking ? (this.talk === "listen" ? "I'm listening…" : this.talk === "think" ? "Let me think…" : pages[ci] || "") : this.headline();
-    const sz = line.length > 130 ? " s3" : line.length > 80 ? " s2" : "";
     const pikCls = this.muted ? "p-muted" : this.talk ? "p-" + this.talk : "p-rest";
     const sug = this.rules().filter((r) => r.state === "suggested").length;
     const v = this.V;
-    return html`<div class="home">
+    const answering = talking && this.talk !== "listen" && this.talk !== "think" && !!this.a;
+    const lift = answering ? this.aboutTile(this.a, main.concat(stack).map((t) => t.id)) : "";
+    const liftSlot = main.find((t) => t.id === lift);
+    const side = !lift ? "mid" : liftSlot && liftSlot.left ? "right" : "left";
+    return html`<div class=${"home" + (talking ? " talking" : "")}>
 <div class="left">
 <div class="clock"><b>${hm(d)}</b><span>${d.toLocaleTimeString([], { hour: "numeric" }).replace(/^\d+\s?/, "")} · ${d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</span></div>
 <div class="wxl">${this.outTemp()} ${this.wxWord().toLowerCase()}${this.hi !== null ? ", high of " + this.hi : ""}${this.S(this.C.thermostat) ? " · " + Math.round(Number(this.S(this.C.thermostat)!.attributes.current_temperature || 0)) + "° inside" : ""}</div>
-<button type="button" class=${"pikbtn pik " + pikCls} aria-label="Talk to Pik" @click=${() => this.tapPik()}>${pikArt("Pik")}</button>
-<div class="bubble" aria-live="polite">
-<div class="who"><span>${talking ? "You asked" : "Pik"}</span>${talking && pages.length > 1 ? html`<span class="cdots">${pages.map((_p, k) => html`<i class=${k === ci ? "on" : ""}></i>`)}</span>` : nothing}</div>
-${talking && this.q ? html`<div class="q">“${this.q}”</div>` : nothing}
-<div class=${"line" + sz}>${line}</div>
+<div class="uschips">${people.map((p) => {
+      const st = this.S(p.person);
+      const where = !st ? "" : st.state === "home" ? "home" : st.state === "not_home" ? "out" : st.state;
+      return html`<button type="button" class="uchip" @click=${() => this.moreInfo(p.person)}><span class="av xs" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></span>${p.name}${where ? " · " + where : ""}</button>`;
+    })}</div>
+<div class="halo"><button type="button" class=${"pikbtn pik " + pikCls} aria-label="Talk to Pik" @click=${() => this.tapPik()}>${pikArt("Pik")}</button></div>
+<div class="bubble" aria-live=${talking ? "off" : "polite"}>
+<div class="who"><span>Pik</span></div>
+<div class=${"line" + (this.headline().length > 110 ? " s3" : this.headline().length > 70 ? " s2" : "")}>${this.headline()}</div>
+</div>
+<div class="panel now">
+<div class="phead"><span class="eb">Now</span><span class="legend">${people.map((p) => html`<i style=${"background: " + p.color}></i>${p.name}`)}<i style="background: #5E8A5A"></i>Both</span></div>
+<div class="rows">${repeat(today, (r) => r.key, (r) => html`<button type="button" class=${"nrow" + (r.past ? " past" : "")} @click=${() => r.tap && r.tap()}>
+<span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w"><b>${r.what}</b>${r.note ? html`<small>${r.note}</small>` : nothing}</span></button>`)}${repeat(feed, (f) => f.uid, (f) => {
+      const p = this.person(f.who);
+      return html`<div class=${"nrow f" + (f.urgent ? " urgent" : "")}>
+<span class="t">${f.at ? ago(f.at) : ""}</span>${p ? html`<span class="av xs" style=${"background: " + p.color}>${p.name[0]}</span>` : html`<span class="av xs house" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></span>`}
+<button type="button" class="w fb" @click=${f.primary}><b>${f.title}</b><small>${[p ? p.name + "'s Pik" : f.label, !p && f.detail ? f.detail : ""].filter(Boolean).join(" · ")}</small></button>
+<button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
+    })}${!today.length && !feed.length ? html`<div class="empty">Nothing on the calendar and nothing waiting. Send either Pik a plan, a screenshot or a booking and it shows up here for both of you.</div>` : nothing}</div>
 </div>
 <div class="leftfoot">
 ${v ? html`<button type="button" class=${"chip" + (this.muted ? " on" : "")} aria-pressed=${this.muted ? "true" : "false"} @click=${() => this.toggleMic()}>${this.muted ? "Mic off" : "Mic on"}</button>` : nothing}
 <button type="button" class="chip" @click=${() => { this.sheet = "notes"; this.requestUpdate(); }}>Pik's notes${sug ? html` <b style="color: var(--clay)">· ${sug} new</b>` : nothing}</button>
 </div>
 </div>
-<div class="main">
-<div class="us">${people.map((p) => {
-      const st = this.S(p.person);
-      const where = !st ? "" : st.state === "home" ? "home" : st.state === "not_home" ? "out" : st.state;
-      const nx = this.nextFor(p.key);
-      return html`<button type="button" class="person" @click=${() => this.moreInfo(p.person)}>
-<div class="av" style=${"background: " + p.color}>${p.name[0]}<span class="dot" style=${"background: " + (where === "home" ? "#6FBF73" : "#C9BBA8")}></span></div>
-<div style="min-width: 0"><b>${p.name}${where ? " · " + where : ""}</b><span>${nx ? "Next: " + nx.summary + " · " + whenWord(nx.start) : "Nothing else on the calendar"}</span></div></button>`;
-    })}</div>
-<div class="panel">
-<div class="phead"><span class="eb">Today, together</span><span class="legend">${people.map((p) => html`<i style=${"background: " + p.color}></i>${p.name}`)}<i style="background: #5E8A5A"></i>Both</span></div>
-<div class="rows">${today.length ? repeat(today, (r) => r.key, (r) => html`<button type="button" class=${"row" + (r.past ? " past" : "")} @click=${() => r.tap && r.tap()}>
-<span class="t">${r.t}${r.tsub ? html`<small>${r.tsub}</small>` : nothing}</span><span class="c" style=${"background: " + r.color}></span><span class="w">${r.what}</span><span class="n">${r.note}</span></button>`)
-      : nothing}${today.length < 4 ? html`<div class="empty" style="border-top: 1px solid var(--line2)">${today.length ? "That's everything today." : "Nothing on the calendar today."} Send either Pik a plan, a screenshot or a booking and it lands here for both of you.</div>` : nothing}</div>
+<div class=${"tgrid" + (stack.length ? "" : " nostack")}>
+<div class="tmain">${main.map((t) => this.tslot(t, lift))}</div>
+${stack.length ? html`<div class="tstack">${stack.map((t) => this.tslot(t, lift))}</div>` : nothing}
 </div>
-<div class="panel">
-<div class="phead"><span class="eb">For the house</span></div>
-<div class="rows">${feed.length ? repeat(feed, (f) => f.uid, (f) => {
-      const p = this.person(f.who);
-      return html`<div class=${"fitem" + (f.urgent ? " urgent" : "")}>
-${p ? html`<div class="av sm" style=${"background: " + p.color}>${p.name[0]}</div>` : html`<div class="av sm house" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9H3z"></path></svg></div>`}
-<button type="button" class="fb" @click=${f.primary}><div class="ft">${f.title}</div><div class="fs">${[p ? p.name + "'s Pik" : f.label, f.at ? ago(f.at) : "", !p && f.detail ? f.detail : ""].filter(Boolean).join(" · ")}</div></button>
-<button type="button" class="fx" aria-label=${f.secLabel} @click=${f.secondary}>×</button></div>`;
-    }) : html`<div class="empty">Nothing waiting. Things the house needs from you, and anything either of you tells your Pik for the other, show up here.</div>`}</div>
+${talking ? this.stage(pikCls, side) : nothing}
+</div>`;
+  }
+  /** Pik takes the stage: everything dims, his answer rises in a big card, and the tile he's talking about stays lit. */
+  private stage(pikCls: string, side: string): TemplateResult {
+    const pages = this.pages(this.a), ci = Math.min(this.capIdx, pages.length - 1);
+    const line = this.talk === "listen" ? (this.q || "I'm listening…") : this.talk === "think" ? "Let me think…" : pages[ci] || "";
+    const sz = line.length > 100 ? " s3" : line.length > 60 ? " s2" : "";
+    const end = () => { clearTimeout(this._t3); this._t3 = undefined; this.talk = null; this.requestUpdate(); };
+    return html`<div class="stscrim" @click=${end}></div>
+<div class=${"stage " + side} aria-live="polite">
+<div class="sthead">
+<div class="sthalo"><span class="sring" aria-hidden="true"></span><span class="sring r2" aria-hidden="true"></span><div class=${"pik " + pikCls}>${pikArt("Pik")}</div></div>
+<div class="stmeta"><div class="stwho"><span class="eb">Pik</span>${this.talk === "speak" ? html`<span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>` : nothing}</div>
+${this.q && this.talk !== "listen" ? html`<div class="stq">You asked: “${this.q}”</div>` : this.talk === "listen" ? html`<div class="stq">Listening…</div>` : nothing}</div>
 </div>
-</div>
-<div class="tiles" style=${"grid-template-columns: " + tiles.map((t) => t.fr).join(" ")}>${tiles.map((t) => t.body())}</div>
+<div class=${"stline" + sz + (this.talk === "listen" && !this.q ? " dim" : "")}>${line}</div>
+${pages.length > 1 && this.talk !== "listen" && this.talk !== "think" ? html`<div class="stprog">${pages.map((_p, k) => html`<i class=${k <= ci ? "on" : ""}></i>`)}</div>` : nothing}
 </div>`;
   }
 
