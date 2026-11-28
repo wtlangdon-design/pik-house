@@ -312,6 +312,25 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .gcell b{font-size:13px;line-height:1.2}.gcell span{font-family:var(--serif);font-size:24px;line-height:1}.gcell span.hot{color:#C2671F}
 .ringgrid{padding-bottom:0}
 .bigpct{font-family:var(--serif);font-size:56px;line-height:1}.bigpct small{font-family:var(--sans);font-size:14px;color:var(--mute)}
+.plantstory{flex-direction:row;gap:52px;align-items:stretch;padding-bottom:72px}
+.pfocus{width:400px;flex:none;display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:center;text-align:center}
+.pfsub{font-size:18px;line-height:1.4;color:var(--mute2);margin-top:8px;max-width:360px}
+.pright{flex:1;min-width:0;display:flex;flex-direction:column;gap:22px}
+.pgrid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:14px}
+.pcard{display:flex;align-items:center;gap:18px;background:rgba(252,248,241,.62);border:1px solid rgba(94,138,90,.18);border-radius:22px;padding:12px 20px;min-height:0;backdrop-filter:blur(6px)}
+.pcard.dry{background:rgba(255,236,214,.8);border-color:rgba(227,137,59,.45)}
+.pcard.soon{border-color:rgba(227,137,59,.3)}
+.pcmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.pchead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.pchead b{font-size:18px}.pcpct{font-family:var(--serif);font-size:30px;line-height:1}
+.pcard.dry .pcpct,.pcard.dry .pcstat{color:#C2671F}
+.pcsub{font-size:13px;color:var(--mute2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pkey .pcsub{white-space:normal;line-height:1.4}
+.pbar{position:relative;height:8px;border-radius:99px;background:rgba(94,138,90,.15);margin-top:2px}
+.pbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#8DB37F,#4F7D4B)}
+.pcard.dry .pbar i{background:linear-gradient(90deg,#F0B25E,#E3893B)}
+.pbar em{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:#C2671F;border-radius:2px}
+.pcstat{font-size:13px;font-weight:600;color:var(--green)}
 .namechips{display:flex;flex-wrap:wrap;gap:6px}.namechips span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
 
 /* ---------- Inside & music ---------- */
