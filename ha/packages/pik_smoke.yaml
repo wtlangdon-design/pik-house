@@ -214,11 +214,11 @@ template:
 automation:
   - id: smoke_start
     alias: "Smoking: the Inkbird started reading"
-    description: "Turns the cook on. If the last cook ended more than 3 hours ago it's a new cook: probes set up more than 3 hours ago are cleared (ones just set, like Thanksgiving's, stay), and the start time is set."
+    description: "Turns the cook on once a probe reaches 100°F (an Inkbird sitting on the counter at room temperature doesn't count). If the last cook ended more than 3 hours ago it's a new cook: probes set up more than 3 hours ago are cleared (ones just set, like Thanksgiving's, stay), and the start time is set."
     mode: single
     triggers:
       - trigger: template
-        value_template: "{{ [\"sensor.smoke_probe_1\",\"sensor.smoke_probe_2\",\"sensor.smoke_probe_3\",\"sensor.smoke_probe_4\"] | select('has_value') | list | count > 0 }}"
+        value_template: "{{ [\"sensor.smoke_probe_1\",\"sensor.smoke_probe_2\",\"sensor.smoke_probe_3\",\"sensor.smoke_probe_4\"] | select('has_value') | map('states') | map('float', 0) | select('ge', 100) | list | count > 0 }}"
         for: { minutes: 1 }
     conditions:
       - condition: state
@@ -257,6 +257,22 @@ automation:
       - trigger: template
         value_template: "{{ [\"sensor.smoke_probe_1\",\"sensor.smoke_probe_2\",\"sensor.smoke_probe_3\",\"sensor.smoke_probe_4\"] | select('has_value') | list | count == 0 }}"
         for: { minutes: 30 }
+    conditions:
+      - condition: state
+        entity_id: input_boolean.smoke_on
+        state: "on"
+    actions:
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.smoke_on }
+
+  - id: smoke_cold
+    alias: "Smoking: every probe has been under 100° for 45 minutes"
+    description: "Ends the cook when nothing is hot any more: the food is done and cooled, or the Inkbird was left on at room temperature. Keeps what each probe was in."
+    mode: single
+    triggers:
+      - trigger: template
+        value_template: "{% set v = [\"sensor.smoke_probe_1\",\"sensor.smoke_probe_2\",\"sensor.smoke_probe_3\",\"sensor.smoke_probe_4\"] | select('has_value') | map('states') | map('float', 0) | list %}{{ v | count > 0 and v | max < 100 }}"
+        for: { minutes: 45 }
     conditions:
       - condition: state
         entity_id: input_boolean.smoke_on
