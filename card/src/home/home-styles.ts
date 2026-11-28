@@ -291,9 +291,10 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .phone .us{display:grid;grid-template-columns:1fr;gap:8px}
 @media (min-width:560px){.phone .us{grid-template-columns:1fr 1fr}}
 .phone .person{padding:11px 14px}.phone .av{width:40px;height:40px}
-.ph-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -12px;padding:0 12px 4px;scrollbar-width:none}
+.ph-row{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,200px);grid-auto-columns:min(78vw,340px);gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -12px;padding:0 12px 4px;scrollbar-width:none}
+.ph-row.one{grid-template-rows:200px}
 .ph-row::-webkit-scrollbar{display:none}
-.ph-card{flex:none;width:min(78vw,340px);height:210px;scroll-snap-align:start;display:flex}
+.ph-card{min-width:0;min-height:0;scroll-snap-align:start;display:flex}
 .ph-card>*{flex:1;width:100%;height:100%}
 .phone .panel{padding:14px 16px}
 .phone .row .n{display:none}
