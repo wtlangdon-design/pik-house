@@ -252,7 +252,13 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .thumb span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile.wall{background:linear-gradient(180deg,#3B2418,#24150F);color:#F5ECE4;padding:10px 10px 12px;display:flex;flex-direction:column;gap:8px}
 .minirack{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;flex:1;min-height:0}
-.minirack .niche{height:auto!important;min-height:0}
+.minirack .niche{height:auto!important;min-height:0;flex:1}
+.wcell{display:flex;flex-direction:column;gap:5px;min-width:0;min-height:0}
+.wtag{text-align:center;line-height:1.15;min-width:0;padding:0 1px}
+.wtag b{display:block;font-family:var(--serif);font-weight:400;font-size:14px;color:#F7E9DF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wtag span{display:block;font-size:10.5px;color:#CDB6AE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wtag.red b::before,.wtag.rose b::before,.wtag.white b::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:2px;background:#9B2C3E}
+.wtag.rose b::before{background:#E7A08B}.wtag.white b::before{background:#E3D28E}
 .wtxt .eb{color:#E2A6A0}.wtxt .sub{color:#D8C6C1;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .niche{position:relative;border:0;padding:6px 4px 4px;border-radius:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 18%,#FFF4E2 0%,#F1DEC2 55%,#C9A983 100%);box-shadow:inset 0 0 0 2px rgba(60,34,20,.55),inset 0 -10px 18px rgba(80,45,20,.25);display:flex;align-items:flex-end;justify-content:center}
 .niche img{height:100%;width:100%;object-fit:contain;transform:scale(1.32);transform-origin:50% 92%;mix-blend-mode:multiply;filter:saturate(1.05) contrast(1.05);position:relative;z-index:1}

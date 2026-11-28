@@ -1168,7 +1168,12 @@ ${ring(t)}<div class="tl"><b>${t.rang ? "Done" : this.left(t)}</b><span>${t.labe
     const n = ws.reduce((a, w) => a + w.count, 0);
     const df = this.drinkFirst();
     return html`<button type="button" class="tile wall" @click=${() => this.open("cellar", () => this.C.cellar && this.C.cellar.path && this.navigate(this.C.cellar.path))}>
-<div class="minirack">${ws.slice(0, 4).map((w) => niche(w, 96, undefined, w.name === df))}</div>
+<div class="minirack">${ws.slice(0, 4).map((w) => {
+      const grape = (w.grape || "").replace(/^Cabernet Sauvignon$/i, "Cabernet").replace(/^Sauvignon Blanc$/i, "Sauv Blanc").replace(/\s*blend$/i, " blend");
+      const yr = /\d{4}/.test(String(w.vintage)) ? "’" + String(w.vintage).slice(-2) : "";
+      const who = (w.producer || w.name.replace(/^(19|20)\d\d\s+/, "")).replace(/\s+(Winery|Vineyards?|Wines|Cellars|Estate)$/i, "");
+      return html`<div class="wcell">${niche(w, 96, undefined, w.name === df)}<div class=${"wtag " + w.kind}><b>${grape || (w.kind === "rose" ? "Rosé" : w.kind === "white" ? "White" : "Red")}</b><span>${who}${yr ? " " + yr : ""}</span></div></div>`;
+    })}</div>
 <div class="wtxt"><span class="eb">Cellar · ${n}</span><div class="sub">${df ? "Drink first: " + df.replace(/^(19|20)\d\d\s+/, "") : this.dayPart === "evening" ? "Something for tonight?" : ws.length + " wines"}</div></div></button>`;
   }
 
