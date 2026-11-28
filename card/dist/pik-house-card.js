@@ -1500,7 +1500,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .slot>.tile{flex:1;min-height:0}
 .tstack .slot{flex:1}.tstack .slot.sC{flex:none}
 .tstack .slot.sS{overflow:hidden;border-radius:24px}
-.slot>.zw{zoom:.8;width:125%;height:125%;flex:none;display:flex}.zw>.tile{flex:1;min-height:0;min-width:0}
+.slot>.zw{zoom:.8;width:100%;height:100%;flex:none;display:flex}.zw>.tile{flex:1;min-height:0;min-width:0}
 .slot.lift{z-index:16;transform:scale(1.02);box-shadow:0 0 0 4px #F6D49A,0 24px 60px rgba(0,0,0,.35);transition:transform .3s}
 .liftbadge{position:absolute;top:10px;right:12px;z-index:2;background:#2B1A12;color:#F6D49A;font-size:11px;letter-spacing:1.1px;text-transform:uppercase;font-weight:600;padding:4px 9px;border-radius:99px;pointer-events:none}
 .slot.sL .htile{padding:20px 22px;gap:12px}
@@ -1760,7 +1760,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .ph-card{flex:none;width:min(78vw,340px);height:200px;scroll-snap-align:start;display:flex}
 .ph-lbl{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);font-weight:600;margin:4px 2px -4px}
 .ph-mini{flex:none;width:min(58vw,240px);height:164px;scroll-snap-align:start;display:flex;overflow:hidden;border-radius:20px}
-.ph-mini>.zw{zoom:.8;width:125%;height:125%;flex:none;display:flex}
+.ph-mini>.zw{zoom:.8;width:100%;height:100%;flex:none;display:flex}
 .ph-mini>.zw>*{flex:1;width:100%;height:100%}
 .tile.wtile{position:relative;border:0;color:#14243A;text-align:left;justify-content:flex-end;gap:2px;overflow:hidden;background:linear-gradient(180deg,#8EC0E6 0%,#C9E2F3 100%)}
 .tile.wtile.cloud{background:linear-gradient(180deg,#9AA9B8 0%,#D3DCE4 100%)}
