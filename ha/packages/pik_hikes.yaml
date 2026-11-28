@@ -1,0 +1,141 @@
+# Weekend hikes: the Hikes tile on the kitchen screen.
+#
+# Every Friday afternoon Tyler's weekly Claude task looks up two trails near Reno on AllTrails that suit
+# the weekend's weather (one moderate, one easier) and calls script.hikes_set. The two trails live in the
+# "Weekend hikes" Local To-do list (todo.weekend_hikes), one item per trail; the card's Hikes tile and
+# its ambient story read that list live. Tapping a trail opens its AllTrails page. The tile hides itself
+# after Sunday evening (each item's `until`), so a stale weekend never shows.
+#
+# Item shape: the summary is the trail's name; the description is JSON:
+#   { "kind": "moderate" | "easy", "miles": 5.9, "gain_ft": 1187, "drive_min": 15,
+#     "why": "Waterfall at the end; low enough to stay mild.", "url": "https://www.alltrails.com/trail/…",
+#     "forecast": "Sat 58° / Sun 50°, dry", "until": "2026-11-29T20:00:00-08:00", "at": "…" }
+#
+# Needs a Local To-do list named "Weekend hikes" (Settings → Devices & services → Add integration →
+# Local To-do), and script.hikes_set exposed to Assist so the Claude connector can call it.
+
+script:
+  hikes_set:
+    alias: "Hikes: set this weekend's trails"
+    description: >-
+      Replaces the two trails on the kitchen screen's Weekend hikes tile. Use it for the weekly hike
+      suggestion, or when Tyler or Charlie asks to change this weekend's hikes. Give one moderate trail
+      (3-7 miles) and one easier or shorter trail, both picked for this weekend's weather near Reno.
+      Numbers come from AllTrails: miles, elevation gain in feet, and the drive from Reno in minutes.
+      why is one short sentence in plain words (what's there and why it suits this weekend's weather).
+      url is the trail's AllTrails page (https://www.alltrails.com/trail/..., no tracking parameters).
+      forecast is one short line for the weekend at the trailheads, e.g. "Sat 58°, Sun 50°, dry".
+    mode: single
+    fields:
+      forecast:
+        description: "The weekend at the trailheads, one short line, e.g. Sat 58°, Sun 50°, dry"
+        selector:
+          text:
+      moderate_name:
+        description: "Moderate trail's name, e.g. Hunter Creek Trail"
+        required: true
+        selector:
+          text:
+      moderate_miles:
+        description: "Its length in miles"
+        required: true
+        selector:
+          number: { min: 0.1, max: 30, step: 0.1, mode: box }
+      moderate_gain_ft:
+        description: "Its elevation gain in feet"
+        selector:
+          number: { min: 0, max: 10000, mode: box }
+      moderate_drive_min:
+        description: "Drive from Reno, minutes"
+        selector:
+          number: { min: 0, max: 180, mode: box }
+      moderate_why:
+        description: "One short sentence: what's there and why it suits this weekend"
+        selector:
+          text:
+      moderate_url:
+        description: "Its AllTrails page, https://www.alltrails.com/trail/..."
+        selector:
+          text:
+      easy_name:
+        description: "Easier trail's name, e.g. Tom Cooke and Steamboat Ditch Loop"
+        required: true
+        selector:
+          text:
+      easy_miles:
+        description: "Its length in miles"
+        required: true
+        selector:
+          number: { min: 0.1, max: 30, step: 0.1, mode: box }
+      easy_gain_ft:
+        description: "Its elevation gain in feet"
+        selector:
+          number: { min: 0, max: 10000, mode: box }
+      easy_drive_min:
+        description: "Drive from Reno, minutes"
+        selector:
+          number: { min: 0, max: 180, mode: box }
+      easy_why:
+        description: "One short sentence: what's there and why it suits this weekend"
+        selector:
+          text:
+      easy_url:
+        description: "Its AllTrails page, https://www.alltrails.com/trail/..."
+        selector:
+          text:
+    sequence:
+      - variables:
+          # Sunday 8 PM of this weekend (on a Sunday, today 8 PM; Monday to Thursday, the coming Sunday).
+          until: >-
+            {% set days = (6 - now().weekday()) % 7 %}
+            {{ (today_at('20:00') + timedelta(days=days)).isoformat() }}
+          trails: >-
+            {% set ns = namespace(out=[]) %}
+            {% for k in ['moderate', 'easy'] %}
+              {% set f = {
+                'moderate': [moderate_name | default(''), moderate_miles | default(0), moderate_gain_ft | default(0), moderate_drive_min | default(0), moderate_why | default(''), moderate_url | default('')],
+                'easy': [easy_name | default(''), easy_miles | default(0), easy_gain_ft | default(0), easy_drive_min | default(0), easy_why | default(''), easy_url | default('')]
+              }[k] %}
+              {% set url = f[5] | string | trim %}
+              {% set url = url.split('?')[0] if url is match('^https://(www\\.)?alltrails\\.com/') else '' %}
+              {% if f[0] | string | trim %}
+                {% set ns.out = ns.out + [{
+                  'name': (f[0] | string | trim)[:80],
+                  'desc': {
+                    'kind': k,
+                    'miles': f[1] | float(0) | round(1),
+                    'gain_ft': f[2] | float(0) | round(0) | int,
+                    'drive_min': f[3] | float(0) | round(0) | int,
+                    'why': (f[4] | string | trim)[:220],
+                    'url': url,
+                    'forecast': (forecast | default('', true) | string | trim)[:80],
+                    'until': until,
+                    'at': now().isoformat()
+                  } | to_json
+                }] %}
+              {% endif %}
+            {% endfor %}{{ ns.out }}
+      - action: todo.get_items
+        target: { entity_id: todo.weekend_hikes }
+        data: { status: [needs_action, completed] }
+        response_variable: got
+      - variables:
+          old: "{{ got['todo.weekend_hikes']['items'] | map(attribute='uid') | list }}"
+      - if: "{{ old | count > 0 }}"
+        then:
+          - action: todo.remove_item
+            target: { entity_id: todo.weekend_hikes }
+            data: { item: "{{ old }}" }
+      - repeat:
+          for_each: "{{ trails }}"
+          sequence:
+            - action: todo.add_item
+              target: { entity_id: todo.weekend_hikes }
+              data:
+                item: "{{ repeat.item.name }}"
+                description: "{{ repeat.item.desc }}"
+      - variables:
+          result: >-
+            {{ {'saved': trails | map(attribute='name') | list, 'shows_until': until} }}
+      - stop: "Saved"
+        response_variable: result

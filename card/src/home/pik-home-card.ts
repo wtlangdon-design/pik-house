@@ -40,20 +40,26 @@ export interface PikHomeConfig extends LiveConfig {
   ambient_after?: number; // seconds untouched before the stories start (default 120)
   story_seconds?: number; // each story's time on screen (default 12)
   quiet_hours?: [number, number]; // night clock between these hours (default 23 → 7)
+  hikes?: { list: string };       // todo.weekend_hikes: the two trails for this weekend (ha/packages/pik_hikes.yaml)
+  trip?: { info?: string; delays?: Array<{ name: string; entity: string }> }; // input_text.pik_trip (live drive time) and the FAA delay sensors
+  outside?: { alerts?: string; fire?: string; cold_spots?: Array<{ name: string; hard?: boolean }> }; // weather alerts, a fire-alert entity (later), what to cover on a freeze
+  dinners?: { list: string };     // todo.dinners (ha/packages/pik_dinners.yaml)
+  week_report?: string;           // sensor.pik_week_report (ha/packages/pik_week.yaml)
 }
 
-type Topic = "calendar" | "piks" | "energy" | "plants" | "cellar" | "weather" | "inside" | "music" | "doorbell" | "deliveries" | "smoker" | "timers" | "cooking";
+type Topic = "calendar" | "piks" | "energy" | "plants" | "cellar" | "weather" | "inside" | "music" | "doorbell" | "deliveries" | "smoker" | "timers" | "cooking" | "hikes" | "trip" | "dinners" | "week";
 type Part = "morning" | "midday" | "evening" | "night";
 type Talk = "listen" | "think" | "speak";
 interface Rule { uid: string; words: string; topic: string; effect: string; when: string; until: string; state: string; why?: string; by?: string }
 interface Energy { solar: number; house: number; bat: number; grid: number | null; pct: number; hours: number | null; main: string; sub: string; out: boolean }
-interface FeedRow { uid: string; title: string; label: string; detail: string; urgent: boolean; who: string; at: number; cat: string; topic: Topic; primary: () => void; secondary: () => void; secLabel: string }
+interface FeedRow { uid: string; fid: string; open: string; done: () => void; title: string; label: string; detail: string; urgent: boolean; who: string; at: number; cat: string; topic: Topic; primary: () => void; secondary: () => void; secLabel: string }
 interface TodayRow { key: string; t: string; tsub?: string; color: string; what: string; note: string; past?: boolean; tap?: () => void }
 interface Moment { key: string; kind: "timer" | "doorbell" | "leave" | "storm" | "cooking"; topic: Topic; body: () => TemplateResult }
+interface Hike { name: string; kind: string; miles: number; gain: number; drive: number; why: string; url: string; forecast: string; until: number }
 interface Story { id: string; topic: Topic; score: number; render: () => TemplateResult; theme: string }
 
 const CAT_TOPIC: Record<string, Topic> = { plant: "plants", water: "plants", weather: "weather", air: "weather", bill: "calendar", reminder: "calendar", home: "inside", light: "inside", package: "deliveries", energy: "energy", door: "doorbell" };
-const TOPIC_NAME: Record<string, string> = { calendar: "Plans", piks: "Your Piks", energy: "Energy", plants: "Plants", cellar: "Wine", weather: "Weather", inside: "Heat & lights", music: "Music", doorbell: "Doorbell", deliveries: "Deliveries", smoker: "Smoker", timers: "Timers", cooking: "Cooking" };
+const TOPIC_NAME: Record<string, string> = { calendar: "Plans", piks: "Your Piks", energy: "Energy", plants: "Plants", cellar: "Wine", weather: "Weather", inside: "Heat & lights", music: "Music", doorbell: "Doorbell", deliveries: "Deliveries", smoker: "Smoker", timers: "Timers", cooking: "Cooking", hikes: "Hikes", trip: "Trips", dinners: "Dinners", week: "This week" };
 const WHITE = /(chardonnay|riesling|sauvignon blanc|pinot gris|pinot grigio|albari|blanc|white|champagne|prosecco|cava|sparkling|viognier|chenin|gr[üu]ner|vermentino|moscato)/i;
 const ROSE = /(ros[ée]|blush)/i;
 
@@ -81,6 +87,14 @@ function fromWho(e: CalEvent): string {
 const startMs = (e: CalEvent) => (/T/.test(e.start) ? Date.parse(e.start) : new Date(e.start + "T00:00:00").getTime());
 const endMs = (e: CalEvent) => (/T/.test(e.end) ? Date.parse(e.end) : new Date(e.end + "T00:00:00").getTime());
 
+/** Layered ridgelines behind the hikes tile and story. */
+function ridge(big = false): TemplateResult {
+  return html`<svg class=${"ridge" + (big ? " big" : "")} viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+<path d="M0 70 L40 52 L70 62 L110 34 L150 58 L190 40 L230 60 L270 30 L310 55 L350 44 L400 60 L400 120 L0 120Z" fill="rgba(255,255,255,.10)"></path>
+<path d="M0 88 L50 70 L90 82 L140 60 L180 80 L230 66 L280 84 L330 64 L370 78 L400 72 L400 120 L0 120Z" fill="rgba(0,0,0,.16)"></path>
+<path d="M0 104 L60 92 L120 100 L170 88 L230 102 L290 90 L350 100 L400 94 L400 120 L0 120Z" fill="rgba(0,0,0,.24)"></path></svg>`;
+}
+
 export class PikHomeCard extends LitElement {
   static styles = [homeStyles, pikStyles];
 
@@ -92,6 +106,8 @@ export class PikHomeCard extends LitElement {
   private plantItems: TodoItem[] = [];
   private cellarItems: TodoItem[] = [];
   private ruleItems: TodoItem[] = [];
+  private hikeItems: TodoItem[] = [];
+  private dinnerItems: TodoItem[] = [];
   private calEvents: CalEvent[] = [];
   private calAt = 0;
   private calBusy = false;
@@ -213,6 +229,8 @@ export class PikHomeCard extends LitElement {
     todo(this.C.plants_list, (i) => { this.plantItems = i; });
     todo(this.C.cellar && this.C.cellar.list, (i) => { this.cellarItems = i; });
     todo(this.C.rules, (i) => { this.ruleItems = i; });
+    todo(this.C.hikes && this.C.hikes.list, (i) => { this.hikeItems = i; });
+    todo(this.C.dinners && this.C.dinners.list, (i) => { this.dinnerItems = i; });
     if (this.C.weather) subs.push(c.subscribeMessage<{ forecast?: Array<{ temperature?: number; templow?: number }> }>((m) => {
       const f = (m.forecast || [])[0];
       this.hi = f && typeof f.temperature === "number" ? Math.round(f.temperature) : null;
@@ -475,6 +493,117 @@ export class PikHomeCard extends LitElement {
     return c.length ? c[0].name : "";
   }
 
+  /** This weekend's trails (moderate first). Gone once the weekend's `until` passes. */
+  private hikes(): Hike[] {
+    const now = this.now;
+    return this.hikeItems.filter((i) => i.status === "needs_action").map((i) => {
+      const j = parseDesc(i.description) as Record<string, unknown>;
+      const n = (k: string) => (typeof j[k] === "number" ? (j[k] as number) : Number(j[k]) || 0);
+      const url = String(j.url || "");
+      return { name: i.summary, kind: String(j.kind || ""), miles: n("miles"), gain: n("gain_ft"), drive: n("drive_min"), why: String(j.why || ""), url: /^https:\/\/(www\.)?alltrails\.com\//.test(url) ? url : "", forecast: String(j.forecast || ""), until: j.until ? Date.parse(String(j.until)) : 0 };
+    }).filter((h) => !h.until || h.until > now).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "moderate" ? -1 : 1)).slice(0, 2);
+  }
+  /** Friday evening and weekend mornings are when a hike idea is worth the space. */
+  private hikeBoost(): number {
+    const d = new Date(this.now), wd = d.getDay(), h = d.getHours();
+    if (wd === 5 && h >= 15) return 2.5;
+    if ((wd === 6 || wd === 0) && h < 13) return 3;
+    if (wd === 6 && h < 17) return 1;
+    return 0;
+  }
+  private tripScore(): number {
+    const t = this.trip();
+    if (!t) return -99;
+    return t.dep - this.now < 6 * 3600e3 ? this.rank("trip", 45) : this.rank("trip", 3);
+  }
+  private outsideScore(): number { const xs = this.outside(); return xs.length ? this.rank("weather", xs[0].score) : -99; }
+  private dinnersScore(): number {
+    if (!this.dinners().length) return -99;
+    const h = new Date(this.now).getHours();
+    return this.rank("dinners", h >= 14 && h < 20 ? 3 : 1);
+  }
+  private hikeStats(h: Hike): string {
+    return [h.miles ? h.miles + " mi" : "", h.gain ? h.gain.toLocaleString() + " ft up" : "", h.drive ? h.drive + " min drive" : ""].filter(Boolean).join(" · ");
+  }
+  private openHike(h: Hike): void {
+    this.log("hikes", "open");
+    if (h.url) window.open(h.url, "_blank", "noopener");
+    else this.flash("No AllTrails link for that one.");
+  }
+
+  // ---------------- trip, deliveries, outside, dinners, the week ----------------
+
+  /** The next flight on the shared calendar, from 30 hours before until 15 minutes after it leaves. */
+  private trip(): { e: CalEvent; dep: number; leave: number; drive: string; delays: string[]; change: FeedRow | null } | null {
+    const now = this.now;
+    const e = this.calEvents.find((x) => /\bflight\b/i.test(x.summary) && /T/.test(x.start) && startMs(x) > now - 15 * 60000 && startMs(x) - now < 30 * 3600e3);
+    if (!e) return null;
+    const dep = startMs(e);
+    let leave = 0, drive = "";
+    const raw = this.C.trip && this.C.trip.info ? this.S(this.C.trip.info)?.state || "" : "";
+    if (raw.startsWith("{")) {
+      try {
+        const j = JSON.parse(raw);
+        if (Math.abs(Date.parse(j.start) - dep) < 60000 && now - Date.parse(j.at) < 20 * 60000) { leave = Date.parse(j.leave_at) || 0; drive = String(j.drive || ""); }
+      } catch (_) { /* not set yet */ }
+    }
+    const delays = ((this.C.trip && this.C.trip.delays) || []).filter((d) => this.S(d.entity)?.state === "on").map((d) => d.name);
+    const change = this.feed().find((f) => f.fid.startsWith("flight-") && now - f.at < 12 * 3600e3) || null;
+    return { e, dep, leave, drive, delays, change };
+  }
+  private isDelivery(f: FeedRow): boolean { return f.fid.startsWith("delivery-") && !f.fid.startsWith("delivery-msg"); }
+  private deliveries(): FeedRow[] { return this.feed().filter((f) => this.isDelivery(f)).slice(0, 2); }
+  /** What's worth knowing outside right now, most important first (nothing = no tile). */
+  private outside(): Array<{ kind: "fire" | "smoke" | "alert" | "freeze"; eb: string; big: string; line: string; score: number }> {
+    const out: Array<{ kind: "fire" | "smoke" | "alert" | "freeze"; eb: string; big: string; line: string; score: number }> = [];
+    const o = this.C.outside || {};
+    const bad = ["", "off", "none", "unknown", "unavailable", "No alerts", "0"];
+    const fire = o.fire ? this.S(o.fire) : undefined;
+    if (fire && !bad.includes(fire.state)) out.push({ kind: "fire", eb: "Fire alert", big: String(fire.attributes.friendly_name || "Fire nearby"), line: fire.state, score: 8 });
+    const pm = num(this.S(this.C.air_pm25));
+    if (pm !== null && pm > 35) out.push({ kind: "smoke", eb: "Air outside", big: "Smoky air", line: "PM2.5 at " + Math.round(pm) + ". Keep the windows shut" + (pm > 55 ? " and skip anything outdoors." : "."), score: pm > 55 ? 8 : 6 });
+    const al = o.alerts ? this.S(o.alerts) : undefined;
+    if (al && !bad.includes(al.state)) out.push({ kind: "alert", eb: "Weather alert", big: al.state.split(/[;,]/)[0], line: "From the National Weather Service.", score: 4 });
+    const h = new Date(this.now).getHours();
+    if (this.low !== null && this.low <= 32 && h >= 12) {
+      const hard = this.low <= 25;
+      const spots = (o.cold_spots || []).filter((c) => hard || !c.hard).map((c) => c.name);
+      out.push({ kind: "freeze", eb: (hard ? "Hard freeze" : "Freeze") + " tonight", big: "Low of " + this.low + "°", line: spots.length ? "Cover or bring in: " + spots.join("; ") + "." : "Bring tender pots in before dark.", score: 3 + (hard ? 2 : 0) });
+    }
+    return out.sort((a, b) => b.score - a.score);
+  }
+  /** Planned dinners from today on, by day. */
+  private dinners(): Array<{ day: string; title: string; notes: string; url: string; by: string }> {
+    const d = new Date(this.now);
+    const today = d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate());
+    return this.dinnerItems.filter((i) => i.status === "needs_action" && i.due && String(i.due).slice(0, 10) >= today).map((i) => {
+      const j = parseDesc(i.description) as Record<string, unknown>;
+      const url = String(j.url || "");
+      return { day: String(i.due).slice(0, 10), title: i.summary, notes: String(j.notes || ""), url: /^https:\/\//.test(url) ? url : "", by: String(j.by || "") };
+    }).sort((a, b) => (a.day < b.day ? -1 : 1)).slice(0, 7);
+  }
+  private dayWord(day: string): string {
+    const d = new Date(day + "T12:00:00"), t = new Date(this.now); t.setHours(12, 0, 0, 0);
+    const n = Math.round((d.getTime() - t.getTime()) / 864e5);
+    return n === 0 ? "Tonight" : n === 1 ? "Tomorrow" : d.toLocaleDateString([], { weekday: "short" });
+  }
+  /** Sunday's "this week at the house" note, for three days. */
+  private week(): { head: string; lines: string[]; at: number } | null {
+    const st = this.S(this.C.week_report);
+    if (!st || ["", "unknown", "unavailable"].includes(st.state)) return null;
+    const at = Date.parse(String(st.attributes.at || st.last_changed));
+    if (!at || this.now - at > 3 * 864e5) return null;
+    const lines = Array.isArray(st.attributes.lines) ? (st.attributes.lines as unknown[]).map(String) : [];
+    return { head: st.state, lines, at };
+  }
+  private weekBoost(): number { const wd = new Date(this.now).getDay(); return wd === 0 ? 3.5 : wd === 1 ? 2 : 1; }
+  private openWeekStory(): void {
+    this.log("week", "open");
+    const i = this.stories().findIndex((s) => s.id === "week");
+    if (i < 0) return;
+    this.layer = "ambient"; this.storyIdx = i; this.storyAt = Date.now(); this.requestUpdate();
+  }
+
   private feed(): FeedRow[] {
     const now = this.now;
     const out: FeedRow[] = [];
@@ -486,7 +615,7 @@ export class PikHomeCard extends LitElement {
       const p = j.primary || {}, sec = j.secondary || null;
       const done = () => this.svc("todo", "update_item", { item: it.uid, status: "completed" }, { entity_id: this.C.feed_list });
       out.push({
-        uid: it.uid, title: it.summary, label: j.label || "", detail: j.detail || "", urgent: !!j.urgent, who, at: j.at ? Date.parse(String(j.at)) : 0, cat: j.category || "home", topic,
+        uid: it.uid, fid: String(j.id || ""), open: typeof p.open === "string" && /^https:\/\//.test(p.open) ? p.open : "", done, title: it.summary, label: j.label || "", detail: j.detail || "", urgent: !!j.urgent, who, at: j.at ? Date.parse(String(j.at)) : 0, cat: j.category || "home", topic,
         secLabel: sec && sec.label ? sec.label : "Dismiss",
         primary: () => {
           this.log(topic, "open");
@@ -540,7 +669,7 @@ export class PikHomeCard extends LitElement {
     };
     todays.forEach((e) => rows.push(evRow(e, false)));
     this.feed().filter((f) => f.cat === "package").forEach((f) => rows.push({ key: f.uid, t: "Today", color: "#5E8A5A", what: f.title, note: f.label, tap: f.primary }));
-    if (this.low !== null && this.low <= 32 && new Date(now).getHours() < 22) rows.push({ key: "freeze", t: "Tonight", color: "#6FA3C7", what: "Freeze, low of " + this.low + "°", note: "pots and hoses in" });
+    if (this.low !== null && this.low <= 32 && new Date(now).getHours() < (this.C.outside ? 12 : 22)) rows.push({ key: "freeze", t: "Tonight", color: "#6FA3C7", what: "Freeze, low of " + this.low + "°", note: "pots and hoses in" });
     if (rows.length < 4) tomorrow.slice(0, 4 - rows.length).forEach((e) => rows.push(evRow(e, true)));
     return rows.slice(0, 6);
   }
@@ -759,6 +888,8 @@ ${temps.length ? html`<div class="tile smoke" style="border-radius: 26px"><span 
       { id: "plants", topic: "plants", theme: "garden", score: this.groups().length ? this.rank("plants", 0.8 + (dry.length ? 3 : 0)) : -99, render: () => this.plantStory() },
       { id: "cellar", topic: "cellar", theme: "cellar", score: this.bottles().length ? this.rank("cellar", 0.6 + (part === "evening" ? 1.2 : 0)) : -99, render: () => this.cellarStory() },
       { id: "piks", topic: "piks", theme: "morning", score: pikMsg ? this.rank("piks", 3) : -99, render: () => this.pikStory(pikMsg!) },
+      { id: "week", topic: "week", theme: "morning", score: this.week() ? this.rank("week", this.weekBoost()) : -99, render: () => this.weekStory() },
+      { id: "hikes", topic: "hikes", theme: "trail", score: this.hikes().length ? this.rank("hikes", 0.5 + this.hikeBoost()) : -99, render: () => this.hikeStory() },
     ];
     return list.filter((s) => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
   }
@@ -1021,6 +1152,76 @@ ${ring(t)}<div class="tl"><b>${t.rang ? "Done" : this.left(t)}</b><span>${t.labe
 <div class="wtxt"><span class="eb">Cellar · ${n}</span><div class="sub">${df ? "Drink first: " + df.replace(/^(19|20)\d\d\s+/, "") : this.dayPart === "evening" ? "Something for tonight?" : ws.length + " wines"}</div></div></button>`;
   }
 
+  private tripTile(): TemplateResult {
+    const t = this.trip()!;
+    const dep = new Date(t.dep);
+    const lots = ((this.C.airport && this.C.airport.lots) || []).map((l) => ({ n: l.short || l.name, v: num(this.S(l.entity)) })).filter((x) => x.v !== null) as Array<{ n: string; v: number }>;
+    const name = t.e.summary.replace(/^\s*flight\s*/i, "");
+    const arrive = new Date(t.dep - 2 * 3600e3);
+    return html`<div class="tile trtile">
+<div class="hhead"><span class="eb">Flight · ${whenWord(t.e.start, this.now)}</span>${t.delays.length ? html`<span class="tchip">${(this.C.airport && this.C.airport.name) || "Airport"}: ${t.delays[0].toLowerCase()}</span>` : nothing}</div>
+<div class="big">${name || t.e.summary}</div>
+<div class="sub">${t.leave ? html`<b>Leave by ${hmA(new Date(t.leave))}</b> · ${t.drive} drive` : html`Departs ${hmA(dep)} · be at the airport by ${hmA(arrive)}`}</div>
+${t.change ? html`<div class="tchg">${t.change.title}</div>` : nothing}
+${lots.length ? html`<div class="tlots">${lots.slice(0, 4).map((l) => html`<span><b>${l.v > 0 ? l.v : "Full"}</b>${l.n}</span>`)}</div>` : nothing}
+</div>`;
+  }
+  private deliveriesTile(): TemplateResult {
+    const ds = this.deliveries();
+    return html`<div class="tile dtile"><span class="eb">On the way${ds.length > 1 ? " · " + ds.length : ""}</span>
+${ds.map((f) => html`<div class="drow"><b>${f.title}</b>${f.detail ? html`<span class="dsub">${f.detail}</span>` : nothing}
+<div class="dbtn">${f.open ? html`<button type="button" class="pill sun" @click=${() => { this.log("deliveries", "open"); window.open(f.open, "_blank", "noopener"); }}>Live map</button>` : nothing}<button type="button" class="pill ghost" @click=${() => { this.log("deliveries", "tap"); f.done(); this.flash("Okay, cleared."); }}>Got it</button></div></div>`)}</div>`;
+  }
+  private outsideTile(): TemplateResult {
+    const xs = this.outside();
+    const top = xs[0];
+    return html`<div class=${"tile otile " + top.kind}><span class="eb">${top.eb}</span>
+<div class="big">${top.big}</div><div class="sub">${top.line}</div>
+${xs.slice(1, 3).map((x) => html`<div class="oxtra"><b>${x.eb}:</b> ${x.big}</div>`)}</div>`;
+  }
+  private dinnersTile(): TemplateResult {
+    const ds = this.dinners();
+    const tonight = ds.find((d) => this.dayWord(d.day) === "Tonight");
+    const tmrw = ds.find((d) => this.dayWord(d.day) === "Tomorrow");
+    const prep = tmrw && /thaw|soak|marinat|brine|overnight|defrost/i.test(tmrw.notes) ? tmrw.notes : "";
+    const rest = ds.filter((d) => d !== tonight).slice(0, prep ? 2 : 3);
+    return html`<div class="tile ditile"><span class="eb">Dinners this week</span>
+${tonight ? html`<button type="button" class="dtonight" @click=${() => { this.log("dinners", "open"); if (tonight.url) window.open(tonight.url, "_blank", "noopener"); else this.flash(tonight.title + (tonight.notes ? " · " + tonight.notes : "")); }}><span>Tonight</span><b>${tonight.title}</b>${tonight.url ? html`<i>Recipe ›</i>` : nothing}</button>`
+      : html`<div class="dtonight none"><span>Tonight</span><b>Nothing planned</b></div>`}
+${prep ? html`<div class="dprep">For tomorrow: ${prep}</div>` : nothing}
+<div class="dlist">${rest.map((d) => html`<span><i>${this.dayWord(d.day)}</i>${d.title}</span>`)}</div></div>`;
+  }
+  private weekTile(): TemplateResult {
+    const w = this.week()!;
+    return html`<button type="button" class="tile wktile" @click=${() => this.openWeekStory()}><span class="eb">This week · from Pik</span>
+<div class="wkhead">${w.head}</div>${w.lines.slice(0, 2).map((l) => html`<div class="wkline">${l}</div>`)}</button>`;
+  }
+  private weekStory(): TemplateResult {
+    const w = this.week()!;
+    return html`<div class="story" style="justify-content: center; gap: 26px">
+<div class="kicker" style="color: var(--clay)">This week at the house · ${new Date(w.at).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}</div>
+<div class="h1" style="font-size: 60px; max-width: 1050px">${w.head}</div>
+<div class="wklist">${w.lines.map((l) => html`<div>${l}</div>`)}</div></div>`;
+  }
+
+  private hikesTile(): TemplateResult {
+    const hs = this.hikes();
+    const wkend = this.hikeBoost() >= 2.5 && new Date(this.now).getDay() !== 5 ? "Today's hikes" : "Weekend hikes";
+    return html`<div class="tile htile">${ridge()}
+<div class="hhead"><span class="eb">${wkend}</span>${hs[0] && hs[0].forecast ? html`<span class="hfc">${hs[0].forecast}</span>` : nothing}</div>
+<div class="hrows">${hs.map((h) => html`<button type="button" class="hrow" @click=${() => this.openHike(h)} aria-label=${h.name + ", open in AllTrails"}>
+<span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}</span><b>${h.name.replace(/\s+Trail$/i, "")}</b><span class="hst">${this.hikeStats(h)}</span></button>`)}</div></div>`;
+  }
+  private hikeStory(): TemplateResult {
+    const hs = this.hikes();
+    const fc = hs[0] && hs[0].forecast;
+    return html`<div class="story hikestory">${ridge(true)}
+<div class="kicker" style="color: #8A4320">This weekend · AllTrails${fc ? " · " + fc : ""}</div>
+<div class="h1" style="font-size: 54px; color: #2B1A12">${hs.length > 1 ? "Two hikes to try" : "A hike to try"}</div>
+<div class="hcards">${hs.map((h) => html`<button type="button" class="hcard" @click=${(ev: Event) => { ev.stopPropagation(); this.openHike(h); }}>
+<span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}</span><div class="hname">${h.name}</div><div class="hst">${this.hikeStats(h)}</div>${h.why ? html`<div class="hwhy">${h.why}</div>` : nothing}<span class="hgo">Open in AllTrails ›</span></button>`)}</div></div>`;
+  }
+
   private energyStory(): TemplateResult {
     const e = this.energy();
     if (!e) return html``;
@@ -1117,6 +1318,12 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
       { id: "inside", topic: "inside" as Topic, score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, fr: "1.1fr", body: () => this.insideTile() },
       { id: "music", topic: "music" as Topic, score: mp ? this.rank("music", 1 + (playing ? 2.5 : 0)) : -99, fr: "1.1fr", body: () => this.musicTile() },
       { id: "cellar", topic: "cellar" as Topic, score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, fr: "1.4fr", body: () => this.cellarTile() },
+      { id: "hikes", topic: "hikes" as Topic, score: this.hikes().length ? this.rank("hikes", 0.9 + this.hikeBoost()) : -99, fr: "1.4fr", body: () => this.hikesTile() },
+      { id: "trip", topic: "trip" as Topic, score: this.tripScore(), fr: "1.6fr", body: () => this.tripTile() },
+      { id: "deliveries", topic: "deliveries" as Topic, score: this.deliveries().length ? this.rank("deliveries", 40) : -99, fr: "1.4fr", body: () => this.deliveriesTile() },
+      { id: "outside", topic: "weather" as Topic, score: this.outsideScore(), fr: "1.2fr", body: () => this.outsideTile() },
+      { id: "dinners", topic: "dinners" as Topic, score: this.dinnersScore(), fr: "1.4fr", body: () => this.dinnersTile() },
+      { id: "week", topic: "week" as Topic, score: this.week() ? this.rank("week", this.weekBoost()) : -99, fr: "1.6fr", body: () => this.weekTile() },
     ];
     const order = cand.map((c) => c.id);
     const pick = cand.filter((c) => c.score > -50).sort((a, b) => b.score - a.score).slice(0, 5);
@@ -1127,7 +1334,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
     const d = new Date(this.now);
     const people = this.C.people || [];
     const today = this.today();
-    const feed = this.feed().filter((f) => f.cat !== "package").slice(0, 5);
+    const feed = this.feed().filter((f) => f.cat !== "package" && !this.isDelivery(f)).slice(0, 5);
     const tiles = this.tiles();
     const talking = !!this.talk || !!(this.a && this._t3);
     const pages = this.pages(this.a), ci = Math.min(this.capIdx, pages.length - 1);
@@ -1295,7 +1502,7 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
     const d = new Date(this.now);
     const people = this.C.people || [];
     const today = this.today();
-    const feed = this.feed().filter((f) => f.cat !== "package").slice(0, 6);
+    const feed = this.feed().filter((f) => f.cat !== "package" && !this.isDelivery(f)).slice(0, 6);
     const moms = this.moments();
     const e = this.energy();
     const timers = poolTimers(this.H, this.C.timers || 12);
@@ -1308,6 +1515,12 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
       { id: "energy", score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, body: () => this.energyTile(e!) },
       { id: "plants", score: this.groups().length ? this.rank("plants", 1.5 + (this.groups().some((g) => g.dry) ? 3 : 0)) : -99, body: () => this.plantsTile() },
       { id: "cellar", score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, body: () => this.cellarTile() },
+      { id: "hikes", score: this.hikes().length ? this.rank("hikes", 0.9 + this.hikeBoost()) : -99, body: () => this.hikesTile() },
+      { id: "trip", score: this.tripScore(), body: () => this.tripTile() },
+      { id: "deliveries", score: this.deliveries().length ? this.rank("deliveries", 40) : -99, body: () => this.deliveriesTile() },
+      { id: "outside", score: this.outsideScore(), body: () => this.outsideTile() },
+      { id: "dinners", score: this.dinnersScore(), body: () => this.dinnersTile() },
+      { id: "week", score: this.week() ? this.rank("week", this.weekBoost()) : -99, body: () => this.weekTile() },
       { id: "lights", score: (this.C.lights || []).length ? this.rank("inside", 1.4) : -99, body: () => this.lightsTile() },
       { id: "inside", score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, body: () => this.insideTile() },
       { id: "music", score: mp ? this.rank("music", 1 + (mp.state === "playing" ? 2.5 : 0)) : -99, body: () => this.musicTile() },
@@ -1367,8 +1580,8 @@ ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : noth
       else {
         const i = this.storyIdx % list.length;
         const s = list[i];
-        const dark = ["energy", "cellar", "night"].includes(s.theme);
-        const BG: Record<string, string> = { morning: "linear-gradient(180deg, #F7E3C8 0%, #F3EADD 70%)", energy: "#0F1720", garden: "#EEF0E4", cellar: "radial-gradient(ellipse at 70% 30%, #4A2A22 0%, #2B1A16 55%, #1C110E 100%)", night: "radial-gradient(ellipse at 30% 20%, #26305A 0%, #1B2240 45%, #121730 100%)" };
+        const dark = ["energy", "cellar", "night", "trail"].includes(s.theme);
+        const BG: Record<string, string> = { morning: "linear-gradient(180deg, #F7E3C8 0%, #F3EADD 70%)", energy: "#0F1720", garden: "#EEF0E4", cellar: "radial-gradient(ellipse at 70% 30%, #4A2A22 0%, #2B1A16 55%, #1C110E 100%)", night: "radial-gradient(ellipse at 30% 20%, #26305A 0%, #1B2240 45%, #121730 100%)", trail: "linear-gradient(180deg, #F2C48D 0%, #D98E5B 38%, #6E5A6B 70%, #2E3340 100%)" };
         body = html`<div class="amb" style=${"background: " + (BG[s.theme] || "#F3EADD")} @click=${() => this.wake()}>${s.render()}${s.id !== "night" ? this.sfoot(list, i, dark) : nothing}</div>`;
       }
     } else body = this.homeLayer();

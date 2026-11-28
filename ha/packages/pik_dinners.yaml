@@ -1,0 +1,115 @@
+# Dinners this week: the Dinners tile on the kitchen screen.
+#
+# Either of you tells your Pik what's for dinner ("Tuesday is the miso salmon, Friday we're out", or a
+# recipe link for Thursday). Pik calls script.meal_plan_set once per day. Each dinner is one item in the
+# "Dinners" Local To-do list (todo.dinners): the summary is the dish, the due date is the day, and the
+# description is JSON { "notes": "thaw the salmon Monday night", "url": "https://…", "by": "tyler" }.
+# The tile shows tonight big and the next few days under it; tapping tonight opens the recipe link.
+# Past days clear themselves each morning.
+#
+# Needs a Local To-do list named "Dinners", and both scripts exposed to Assist.
+
+script:
+  meal_plan_set:
+    alias: "Dinners: plan a night"
+    description: >-
+      Puts one dinner on the kitchen screen's Dinners tile, replacing whatever was planned for that day.
+      Use it when Tyler or Charlie says what's for dinner on a day ("Tuesday is tacos", "Friday we're out",
+      a recipe link for Thursday). Call it once per day. date is the day (YYYY-MM-DD, local time).
+      title is the dish in a few words ("Miso salmon", "Out: dinner at Bar Moderno", "Leftovers").
+      notes is anything to remember, especially prep the day before ("thaw the salmon Monday night").
+      recipe_url is a link to the recipe, if there is one.
+    mode: queued
+    max: 14
+    fields:
+      date:
+        description: "The day, YYYY-MM-DD"
+        required: true
+        selector:
+          date:
+      title:
+        description: "The dish, a few words"
+        required: true
+        selector:
+          text:
+      notes:
+        description: "Prep or anything to remember (optional)"
+        selector:
+          text:
+      recipe_url:
+        description: "https link to the recipe (optional)"
+        selector:
+          text:
+    sequence:
+      - variables:
+          day: "{{ (date | string)[:10] }}"
+          url: >-
+            {% set u = recipe_url | default('', true) | string | trim %}{{ u if u is match('^https://') else '' }}
+          by: >-
+            {% set p = states.person | selectattr('attributes.user_id', 'defined') | selectattr('attributes.user_id', 'eq', context.user_id) | map(attribute='name') | first | default('') | lower %}
+            {{ 'tyler' if 'tyler' in p else 'charlie' if 'charlie' in p else '' }}
+      - action: todo.get_items
+        target: { entity_id: todo.dinners }
+        data: { status: [needs_action, completed] }
+        response_variable: got
+      - variables:
+          same: "{{ got['todo.dinners']['items'] | selectattr('due', 'defined') | selectattr('due', 'eq', day) | map(attribute='uid') | list }}"
+      - if: "{{ same | count > 0 }}"
+        then:
+          - action: todo.remove_item
+            target: { entity_id: todo.dinners }
+            data: { item: "{{ same }}" }
+      - action: todo.add_item
+        target: { entity_id: todo.dinners }
+        data:
+          item: "{{ (title | string | trim)[:80] }}"
+          due_date: "{{ day }}"
+          description: "{{ {'notes': (notes | default('', true) | string | trim)[:200], 'url': url, 'by': by | trim} | to_json }}"
+      - variables:
+          result: "{{ {'saved': title, 'day': day} }}"
+      - stop: "Saved"
+        response_variable: result
+
+  meal_plan_clear:
+    alias: "Dinners: clear a night"
+    description: "Takes a day off the Dinners tile (\"Friday's not happening\"). date is YYYY-MM-DD."
+    mode: queued
+    fields:
+      date:
+        description: "The day, YYYY-MM-DD"
+        required: true
+        selector:
+          date:
+    sequence:
+      - action: todo.get_items
+        target: { entity_id: todo.dinners }
+        data: { status: [needs_action, completed] }
+        response_variable: got
+      - variables:
+          same: "{{ got['todo.dinners']['items'] | selectattr('due', 'defined') | selectattr('due', 'eq', (date | string)[:10]) | map(attribute='uid') | list }}"
+      - if: "{{ same | count > 0 }}"
+        then:
+          - action: todo.remove_item
+            target: { entity_id: todo.dinners }
+            data: { item: "{{ same }}" }
+
+automation:
+  - id: pik_dinners_tidy
+    alias: "Dinners: clear past days"
+    mode: single
+    triggers:
+      - trigger: time
+        at: "04:10:00"
+    actions:
+      - action: todo.get_items
+        target: { entity_id: todo.dinners }
+        data: { status: [needs_action, completed] }
+        response_variable: got
+      - variables:
+          old: >-
+            {{ got['todo.dinners']['items'] | selectattr('due', 'defined') | selectattr('due', 'lt', now().date() | string) | map(attribute='uid') | list }}
+      - if: "{{ old | count > 0 }}"
+        then:
+          - action: todo.remove_item
+            target: { entity_id: todo.dinners }
+            data: { item: "{{ old }}" }

@@ -12,6 +12,7 @@
 #                              (e.g. calendar.tyler, calendar.charlie)
 #   input_text.pik_maps_entry  the Google Maps Travel Time config entry id
 #   input_text.pik_leave_sent  which events already got their leave alert (kept short)
+#   input_text.pik_trip        the next flight's live drive time and leave-by (the screen's Trip tile)
 #
 # The shared notebook is two Local To-do lists that both Piks read and write: todo.house_notes
 # (likes, dislikes, facts about the house and the two of you) and todo.places (where you've been,
@@ -21,6 +22,9 @@ input_text:
   pik_calendars: { name: "Pik: calendars for both of you", max: 255 }
   pik_maps_entry: { name: "Pik: Google Maps travel time entry", max: 64 }
   pik_leave_sent: { name: "Pik: leave alerts sent", max: 255 }
+  # The kitchen screen's Trip tile: the next flight's drive time and leave-by, refreshed every 5 minutes
+  # from 4 hours before it (JSON: t, start, drive, leave_at, at).
+  pik_trip: { name: "Pik: next flight drive time", max: 255 }
 
 script:
   pik_push:
@@ -257,6 +261,13 @@ automation:
                 flight: "{{ repeat.item.summary is search('(?i)\\bflight\\b') }}"
                 early: "{{ 120 if flight else 0 }}"
                 leave_at: "{{ (as_datetime(repeat.item.start) - timedelta(seconds=secs | int, minutes=early | int)).isoformat() }}"
+            - if: "{{ flight and secs | int > 0 }}"
+              then:
+                - action: input_text.set_value
+                  target: { entity_id: input_text.pik_trip }
+                  data:
+                    value: >-
+                      {{ {'t': repeat.item.summary[:60], 'start': repeat.item.start, 'drive': trip.routes[0].duration_text, 'leave_at': leave_at, 'at': now().isoformat()} | to_json }}
             - if: "{{ secs | int > 0 and now() >= as_datetime(leave_at) - timedelta(minutes=30) }}"
               then:
                 - variables:
