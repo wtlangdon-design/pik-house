@@ -408,4 +408,25 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .lrow.on .sw{background:#E3A24A}.lrow.on .sw i{left:21px}
 .ldim{width:calc(100% - 28px);margin:0 14px 10px;accent-color:#E3A24A;height:28px}
 @media (prefers-reduced-motion: reduce){.flow,.amb,.mom,.sheet,.flink{animation:none!important}}
+.tile.htile{position:relative;border:0;color:#FFF7EC;padding:11px 12px 10px;gap:7px;background:linear-gradient(180deg,#E7A66C 0%,#B8664A 42%,#5B4A5E 78%,#2F3141 100%)}
+.ridge{position:absolute;left:0;right:0;bottom:0;width:100%;height:58%;pointer-events:none}
+.ridge.big{height:46%}
+.hhead{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.htile .eb{color:#FFE3C4;white-space:nowrap;flex:none}
+.hfc{font-size:12px;color:#FFE9D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrows{position:relative;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;justify-content:flex-end}
+.hrow{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:baseline;text-align:left;border:0;border-radius:14px;padding:7px 10px;min-height:44px;background:rgba(24,20,30,.38);color:#FFF7EC;backdrop-filter:blur(2px)}
+.hrow b{font-family:var(--serif);font-weight:400;font-size:19px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow .hst{grid-column:1 / -1;font-size:12px;color:#F1DCCB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hkind{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;color:#FFD3A6}
+.hikestory{position:relative;padding-bottom:70px}
+.hikestory>*:not(.ridge){position:relative}
+.hcards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px}
+.hcard{display:flex;flex-direction:column;gap:8px;text-align:left;border:0;border-radius:26px;padding:22px 26px;background:rgba(28,22,34,.42);color:#FFF7EC;backdrop-filter:blur(3px)}
+.hcard .hkind{font-size:13px}
+.hname{font-family:var(--serif);font-size:40px;line-height:1.02}
+.hcard .hst{font-size:18px;color:#F6E2D0}
+.hwhy{font-size:17px;line-height:1.4;color:#F1E4DA}
+.hgo{margin-top:4px;font-size:14px;font-weight:600;color:#FFD3A6}
+.phone .hcards{grid-template-columns:1fr}
 `;

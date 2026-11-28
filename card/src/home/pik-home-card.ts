@@ -40,9 +40,10 @@ export interface PikHomeConfig extends LiveConfig {
   ambient_after?: number; // seconds untouched before the stories start (default 120)
   story_seconds?: number; // each story's time on screen (default 12)
   quiet_hours?: [number, number]; // night clock between these hours (default 23 → 7)
+  hikes?: { list: string };       // todo.weekend_hikes: the two trails for this weekend (ha/packages/pik_hikes.yaml)
 }
 
-type Topic = "calendar" | "piks" | "energy" | "plants" | "cellar" | "weather" | "inside" | "music" | "doorbell" | "deliveries" | "smoker" | "timers" | "cooking";
+type Topic = "calendar" | "piks" | "energy" | "plants" | "cellar" | "weather" | "inside" | "music" | "doorbell" | "deliveries" | "smoker" | "timers" | "cooking" | "hikes";
 type Part = "morning" | "midday" | "evening" | "night";
 type Talk = "listen" | "think" | "speak";
 interface Rule { uid: string; words: string; topic: string; effect: string; when: string; until: string; state: string; why?: string; by?: string }
@@ -50,10 +51,11 @@ interface Energy { solar: number; house: number; bat: number; grid: number | nul
 interface FeedRow { uid: string; title: string; label: string; detail: string; urgent: boolean; who: string; at: number; cat: string; topic: Topic; primary: () => void; secondary: () => void; secLabel: string }
 interface TodayRow { key: string; t: string; tsub?: string; color: string; what: string; note: string; past?: boolean; tap?: () => void }
 interface Moment { key: string; kind: "timer" | "doorbell" | "leave" | "storm" | "cooking"; topic: Topic; body: () => TemplateResult }
+interface Hike { name: string; kind: string; miles: number; gain: number; drive: number; why: string; url: string; forecast: string; until: number }
 interface Story { id: string; topic: Topic; score: number; render: () => TemplateResult; theme: string }
 
 const CAT_TOPIC: Record<string, Topic> = { plant: "plants", water: "plants", weather: "weather", air: "weather", bill: "calendar", reminder: "calendar", home: "inside", light: "inside", package: "deliveries", energy: "energy", door: "doorbell" };
-const TOPIC_NAME: Record<string, string> = { calendar: "Plans", piks: "Your Piks", energy: "Energy", plants: "Plants", cellar: "Wine", weather: "Weather", inside: "Heat & lights", music: "Music", doorbell: "Doorbell", deliveries: "Deliveries", smoker: "Smoker", timers: "Timers", cooking: "Cooking" };
+const TOPIC_NAME: Record<string, string> = { calendar: "Plans", piks: "Your Piks", energy: "Energy", plants: "Plants", cellar: "Wine", weather: "Weather", inside: "Heat & lights", music: "Music", doorbell: "Doorbell", deliveries: "Deliveries", smoker: "Smoker", timers: "Timers", cooking: "Cooking", hikes: "Hikes" };
 const WHITE = /(chardonnay|riesling|sauvignon blanc|pinot gris|pinot grigio|albari|blanc|white|champagne|prosecco|cava|sparkling|viognier|chenin|gr[üu]ner|vermentino|moscato)/i;
 const ROSE = /(ros[ée]|blush)/i;
 
@@ -81,6 +83,14 @@ function fromWho(e: CalEvent): string {
 const startMs = (e: CalEvent) => (/T/.test(e.start) ? Date.parse(e.start) : new Date(e.start + "T00:00:00").getTime());
 const endMs = (e: CalEvent) => (/T/.test(e.end) ? Date.parse(e.end) : new Date(e.end + "T00:00:00").getTime());
 
+/** Layered ridgelines behind the hikes tile and story. */
+function ridge(big = false): TemplateResult {
+  return html`<svg class=${"ridge" + (big ? " big" : "")} viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+<path d="M0 70 L40 52 L70 62 L110 34 L150 58 L190 40 L230 60 L270 30 L310 55 L350 44 L400 60 L400 120 L0 120Z" fill="rgba(255,255,255,.10)"></path>
+<path d="M0 88 L50 70 L90 82 L140 60 L180 80 L230 66 L280 84 L330 64 L370 78 L400 72 L400 120 L0 120Z" fill="rgba(0,0,0,.16)"></path>
+<path d="M0 104 L60 92 L120 100 L170 88 L230 102 L290 90 L350 100 L400 94 L400 120 L0 120Z" fill="rgba(0,0,0,.24)"></path></svg>`;
+}
+
 export class PikHomeCard extends LitElement {
   static styles = [homeStyles, pikStyles];
 
@@ -92,6 +102,7 @@ export class PikHomeCard extends LitElement {
   private plantItems: TodoItem[] = [];
   private cellarItems: TodoItem[] = [];
   private ruleItems: TodoItem[] = [];
+  private hikeItems: TodoItem[] = [];
   private calEvents: CalEvent[] = [];
   private calAt = 0;
   private calBusy = false;
@@ -213,6 +224,7 @@ export class PikHomeCard extends LitElement {
     todo(this.C.plants_list, (i) => { this.plantItems = i; });
     todo(this.C.cellar && this.C.cellar.list, (i) => { this.cellarItems = i; });
     todo(this.C.rules, (i) => { this.ruleItems = i; });
+    todo(this.C.hikes && this.C.hikes.list, (i) => { this.hikeItems = i; });
     if (this.C.weather) subs.push(c.subscribeMessage<{ forecast?: Array<{ temperature?: number; templow?: number }> }>((m) => {
       const f = (m.forecast || [])[0];
       this.hi = f && typeof f.temperature === "number" ? Math.round(f.temperature) : null;
@@ -473,6 +485,33 @@ export class PikHomeCard extends LitElement {
     const y = new Date().getFullYear();
     const c = this.bottles().filter((b) => b.kind !== "red" && b.vintage && b.vintage <= y - 2).sort((a, b) => (a.vintage || 0) - (b.vintage || 0));
     return c.length ? c[0].name : "";
+  }
+
+  /** This weekend's trails (moderate first). Gone once the weekend's `until` passes. */
+  private hikes(): Hike[] {
+    const now = this.now;
+    return this.hikeItems.filter((i) => i.status === "needs_action").map((i) => {
+      const j = parseDesc(i.description) as Record<string, unknown>;
+      const n = (k: string) => (typeof j[k] === "number" ? (j[k] as number) : Number(j[k]) || 0);
+      const url = String(j.url || "");
+      return { name: i.summary, kind: String(j.kind || ""), miles: n("miles"), gain: n("gain_ft"), drive: n("drive_min"), why: String(j.why || ""), url: /^https:\/\/(www\.)?alltrails\.com\//.test(url) ? url : "", forecast: String(j.forecast || ""), until: j.until ? Date.parse(String(j.until)) : 0 };
+    }).filter((h) => !h.until || h.until > now).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "moderate" ? -1 : 1)).slice(0, 2);
+  }
+  /** Friday evening and weekend mornings are when a hike idea is worth the space. */
+  private hikeBoost(): number {
+    const d = new Date(this.now), wd = d.getDay(), h = d.getHours();
+    if (wd === 5 && h >= 15) return 2.5;
+    if ((wd === 6 || wd === 0) && h < 13) return 3;
+    if (wd === 6 && h < 17) return 1;
+    return 0;
+  }
+  private hikeStats(h: Hike): string {
+    return [h.miles ? h.miles + " mi" : "", h.gain ? h.gain.toLocaleString() + " ft up" : "", h.drive ? h.drive + " min drive" : ""].filter(Boolean).join(" · ");
+  }
+  private openHike(h: Hike): void {
+    this.log("hikes", "open");
+    if (h.url) window.open(h.url, "_blank", "noopener");
+    else this.flash("No AllTrails link for that one.");
   }
 
   private feed(): FeedRow[] {
@@ -759,6 +798,7 @@ ${temps.length ? html`<div class="tile smoke" style="border-radius: 26px"><span 
       { id: "plants", topic: "plants", theme: "garden", score: this.groups().length ? this.rank("plants", 0.8 + (dry.length ? 3 : 0)) : -99, render: () => this.plantStory() },
       { id: "cellar", topic: "cellar", theme: "cellar", score: this.bottles().length ? this.rank("cellar", 0.6 + (part === "evening" ? 1.2 : 0)) : -99, render: () => this.cellarStory() },
       { id: "piks", topic: "piks", theme: "morning", score: pikMsg ? this.rank("piks", 3) : -99, render: () => this.pikStory(pikMsg!) },
+      { id: "hikes", topic: "hikes", theme: "trail", score: this.hikes().length ? this.rank("hikes", 0.5 + this.hikeBoost()) : -99, render: () => this.hikeStory() },
     ];
     return list.filter((s) => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
   }
@@ -1021,6 +1061,24 @@ ${ring(t)}<div class="tl"><b>${t.rang ? "Done" : this.left(t)}</b><span>${t.labe
 <div class="wtxt"><span class="eb">Cellar · ${n}</span><div class="sub">${df ? "Drink first: " + df.replace(/^(19|20)\d\d\s+/, "") : this.dayPart === "evening" ? "Something for tonight?" : ws.length + " wines"}</div></div></button>`;
   }
 
+  private hikesTile(): TemplateResult {
+    const hs = this.hikes();
+    const wkend = this.hikeBoost() >= 2.5 && new Date(this.now).getDay() !== 5 ? "Today's hikes" : "Weekend hikes";
+    return html`<div class="tile htile">${ridge()}
+<div class="hhead"><span class="eb">${wkend}</span>${hs[0] && hs[0].forecast ? html`<span class="hfc">${hs[0].forecast}</span>` : nothing}</div>
+<div class="hrows">${hs.map((h) => html`<button type="button" class="hrow" @click=${() => this.openHike(h)} aria-label=${h.name + ", open in AllTrails"}>
+<span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}</span><b>${h.name.replace(/\s+Trail$/i, "")}</b><span class="hst">${this.hikeStats(h)}</span></button>`)}</div></div>`;
+  }
+  private hikeStory(): TemplateResult {
+    const hs = this.hikes();
+    const fc = hs[0] && hs[0].forecast;
+    return html`<div class="story hikestory">${ridge(true)}
+<div class="kicker" style="color: #8A4320">This weekend · AllTrails${fc ? " · " + fc : ""}</div>
+<div class="h1" style="font-size: 54px; color: #2B1A12">${hs.length > 1 ? "Two hikes to try" : "A hike to try"}</div>
+<div class="hcards">${hs.map((h) => html`<button type="button" class="hcard" @click=${(ev: Event) => { ev.stopPropagation(); this.openHike(h); }}>
+<span class="hkind">${h.kind === "moderate" ? "Moderate" : "Easier"}</span><div class="hname">${h.name}</div><div class="hst">${this.hikeStats(h)}</div>${h.why ? html`<div class="hwhy">${h.why}</div>` : nothing}<span class="hgo">Open in AllTrails ›</span></button>`)}</div></div>`;
+  }
+
   private energyStory(): TemplateResult {
     const e = this.energy();
     if (!e) return html``;
@@ -1117,6 +1175,7 @@ ${first ? html`<div style="color: #F0B25E">• Tomorrow ${/T/.test(first.start) 
       { id: "inside", topic: "inside" as Topic, score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, fr: "1.1fr", body: () => this.insideTile() },
       { id: "music", topic: "music" as Topic, score: mp ? this.rank("music", 1 + (playing ? 2.5 : 0)) : -99, fr: "1.1fr", body: () => this.musicTile() },
       { id: "cellar", topic: "cellar" as Topic, score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, fr: "1.4fr", body: () => this.cellarTile() },
+      { id: "hikes", topic: "hikes" as Topic, score: this.hikes().length ? this.rank("hikes", 0.9 + this.hikeBoost()) : -99, fr: "1.4fr", body: () => this.hikesTile() },
     ];
     const order = cand.map((c) => c.id);
     const pick = cand.filter((c) => c.score > -50).sort((a, b) => b.score - a.score).slice(0, 5);
@@ -1308,6 +1367,7 @@ ${dimmable(e) && isOn ? html`<input class="ldim" type="range" min="1" max="100" 
       { id: "energy", score: e ? this.rank("energy", 2 + (e.out ? 6 : 0)) : -99, body: () => this.energyTile(e!) },
       { id: "plants", score: this.groups().length ? this.rank("plants", 1.5 + (this.groups().some((g) => g.dry) ? 3 : 0)) : -99, body: () => this.plantsTile() },
       { id: "cellar", score: this.cellarItems.length ? this.rank("cellar", 1 + (this.dayPart === "evening" ? 1 : 0)) : -99, body: () => this.cellarTile() },
+      { id: "hikes", score: this.hikes().length ? this.rank("hikes", 0.9 + this.hikeBoost()) : -99, body: () => this.hikesTile() },
       { id: "lights", score: (this.C.lights || []).length ? this.rank("inside", 1.4) : -99, body: () => this.lightsTile() },
       { id: "inside", score: this.S(this.C.thermostat) ? this.rank("inside", 1.2) : -99, body: () => this.insideTile() },
       { id: "music", score: mp ? this.rank("music", 1 + (mp.state === "playing" ? 2.5 : 0)) : -99, body: () => this.musicTile() },
@@ -1367,8 +1427,8 @@ ${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : noth
       else {
         const i = this.storyIdx % list.length;
         const s = list[i];
-        const dark = ["energy", "cellar", "night"].includes(s.theme);
-        const BG: Record<string, string> = { morning: "linear-gradient(180deg, #F7E3C8 0%, #F3EADD 70%)", energy: "#0F1720", garden: "#EEF0E4", cellar: "radial-gradient(ellipse at 70% 30%, #4A2A22 0%, #2B1A16 55%, #1C110E 100%)", night: "radial-gradient(ellipse at 30% 20%, #26305A 0%, #1B2240 45%, #121730 100%)" };
+        const dark = ["energy", "cellar", "night", "trail"].includes(s.theme);
+        const BG: Record<string, string> = { morning: "linear-gradient(180deg, #F7E3C8 0%, #F3EADD 70%)", energy: "#0F1720", garden: "#EEF0E4", cellar: "radial-gradient(ellipse at 70% 30%, #4A2A22 0%, #2B1A16 55%, #1C110E 100%)", night: "radial-gradient(ellipse at 30% 20%, #26305A 0%, #1B2240 45%, #121730 100%)", trail: "linear-gradient(180deg, #F2C48D 0%, #D98E5B 38%, #6E5A6B 70%, #2E3340 100%)" };
         body = html`<div class="amb" style=${"background: " + (BG[s.theme] || "#F3EADD")} @click=${() => this.wake()}>${s.render()}${s.id !== "night" ? this.sfoot(list, i, dark) : nothing}</div>`;
       }
     } else body = this.homeLayer();

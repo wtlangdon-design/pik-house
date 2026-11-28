@@ -19,6 +19,7 @@ views:
         timers: 12
         calendar: calendar.tyler_charlie   # the shared calendar; until it's connected the header shows a placeholder
         cellar: { list: todo.wine_cellar, path: /dashboard-cellar/cellar }
+        hikes: { list: todo.weekend_hikes }   # the Weekend hikes tile (ha/packages/pik_hikes.yaml); filled every Friday afternoon
         airport:
           name: RNO
           lots:

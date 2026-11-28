@@ -22,6 +22,9 @@ You can reach Tyler and Charlie's home hub through the **Pik House** connector. 
 **Deliveries, flights, parking**
 - The hub watches Instacart, Grubhub, airline and Tonal notifications on our phones and puts them on the house screen. If asked how full RNO parking is, read the RNO parking summary; for airport delays, the RNO FAA delay sensors.
 
+**Weekend hikes**
+- The kitchen screen has a Weekend hikes tile with two trails (one moderate, one easier) that a weekly task fills every Friday afternoon from AllTrails. If either of you asks to swap them ("something shorter", "somewhere we can take a dog"), find new ones on AllTrails, check the weekend forecast at the trailhead, and call **hikes_set**. "No hike ideas until spring" is a screen rule (topic hikes).
+
 **The house**
 - Lights, the thermostat, the Rachio sprinkler standby, the Echos, the kitchen timers, the plant sensors and the Thanksgiving helpers are all on the hub. Use them directly when asked.
 - Plants: each group's soil sensor reads a percent; a group needs water when it's at or below its "thirst line" (the Plants: … thirst line numbers).

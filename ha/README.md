@@ -286,6 +286,32 @@ with your instant-read thermometer in each spot.
 
 
 
+## Weekend hikes tile (about 10 minutes, once)
+
+Every Friday afternoon a weekly Claude task picks two trails near Reno on AllTrails (one moderate, one
+easier) that suit the weekend's weather, and puts them on the kitchen screen's **Weekend hikes** tile. Tapping a
+trail opens its AllTrails page. On Friday evening and weekend mornings the tile moves up, and the ambient
+stories show the two trails full screen. After Sunday 8 PM the tile hides until next Friday. To pause it, tell
+Pik "no hike ideas until spring" (a screen rule, topic `hikes`).
+
+**1. Make the list.** Settings → Devices & services → **Add integration** → search **Local To-do** → name it
+`Weekend hikes` → **Submit**. (Its entity is `todo.weekend_hikes`.)
+
+**2. Put the files on the hub.** Upload `ha/packages/pik_hikes.yaml` (new) and `ha/packages/pik_screen.yaml`
+(changed: adds the hikes topic) into the `packages` folder in File editor, and deploy the new card build (below).
+Then **Restart Home Assistant**.
+
+**3. Add the tile to the house screen.** Open the House dashboard → pencil → three dots → **Raw configuration
+editor**. Under `cellar:` add this line (same indent) and **Save**:
+
+```yaml
+        hikes: { list: todo.weekend_hikes }
+```
+
+**4. Let Claude fill it.** Settings → Voice assistants → **Expose** → **Expose entities** → tick **Hikes: set
+this weekend's trails** and the **Weekend hikes** list. The weekly task calls that script through the Claude
+connector; until it's exposed, the task falls back to posting two feed cards.
+
 ## The house feed (live)
 
 `dashboards/house.yaml` puts Pik's house feed on its own dashboard (`/dashboard-house/house`), wired to the real devices:
