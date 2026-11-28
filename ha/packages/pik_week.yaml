@@ -1,0 +1,105 @@
+# This week at the house: the Sunday report, as a tile and an ambient story on the kitchen screen.
+#
+# Sunday at 9 AM Claude (AI Task) reads the week that was and the week ahead: your shared calendar both
+# ways, next week's forecast, the plants, the cellar and the Places list. It writes a headline and a few
+# short lines in Pik's voice. They land in sensor.pik_week_report (state = the headline, attribute
+# `lines` = the lines, `at` = when). The tile shows Sunday through Tuesday and then steps aside.
+# Run it by hand any time: Settings → Automations → "Pik: this week at the house" → ⋮ → Run actions.
+
+template:
+  - triggers:
+      - trigger: event
+        event_type: pik_week_report
+    sensor:
+      - name: "Pik week report"
+        unique_id: pik_week_report
+        icon: mdi:calendar-week
+        state: "{{ (trigger.event.data.headline | default('') | string)[:250] }}"
+        attributes:
+          lines: >-
+            {{ ((trigger.event.data.lines | default('') | string).split('\n') | map('trim') | select | map('truncate', 160) | list)[:5] }}
+          at: "{{ now().isoformat() }}"
+
+automation:
+  - id: pik_week_report
+    alias: "Pik: this week at the house"
+    description: "Sunday 9 AM: Claude writes the week-at-the-house report for the kitchen screen."
+    mode: single
+    triggers:
+      - trigger: time
+        at: "09:00:00"
+    conditions:
+      - condition: time
+        weekday: [sun]
+    actions:
+      - action: calendar.get_events
+        target: { entity_id: calendar.tyler_charlie }
+        data:
+          start_date_time: "{{ (now() - timedelta(days=7)).isoformat() }}"
+          end_date_time: "{{ now().isoformat() }}"
+        response_variable: past
+        continue_on_error: true
+      - action: calendar.get_events
+        target: { entity_id: calendar.tyler_charlie }
+        data:
+          start_date_time: "{{ now().isoformat() }}"
+          end_date_time: "{{ (now() + timedelta(days=7)).isoformat() }}"
+        response_variable: ahead
+        continue_on_error: true
+      - action: weather.get_forecasts
+        target: { entity_id: weather.hallway_thermostat }
+        data: { type: daily }
+        response_variable: fc
+        continue_on_error: true
+      - action: todo.get_items
+        target: { entity_id: [todo.wine_cellar, todo.places] }
+        data: { status: needs_action }
+        response_variable: lists
+        continue_on_error: true
+      - variables:
+          facts: >-
+            {% set ev = ((past | default({})).get('calendar.tyler_charlie', {})).get('events', []) %}
+            {% set nx = ((ahead | default({})).get('calendar.tyler_charlie', {})).get('events', []) %}
+            {% set f = ((fc | default({})).get('weather.hallway_thermostat', {})).get('forecast', []) %}
+            {% set wine = ((lists | default({})).get('todo.wine_cellar', {})).get('items', []) %}
+            {% set places = ((lists | default({})).get('todo.places', {})).get('items', []) %}
+            {% set pairs = [['Kitchen', 'sensor.gw1200b_soil_moisture_1', 'input_number.pik_dry_kitchen'], ['Big aroids', 'sensor.gw1200b_soil_moisture_2', 'input_number.pik_dry_big_aroids'], ['Bedroom & office', 'sensor.gw1200b_soil_moisture_3', 'input_number.pik_dry_bedroom_office'], ['Trees & palms', 'sensor.gw1200b_soil_moisture_4', 'input_number.pik_dry_trees_palms'], ['Tough guys', 'sensor.gw1200b_soil_moisture_5', 'input_number.pik_dry_tough_guys'], ['Jungle cacti', 'sensor.gw1200b_soil_moisture_6', 'input_number.pik_dry_jungle_cacti'], ['Desert cacti', 'sensor.gw1200b_soil_moisture_7', 'input_number.pik_dry_desert_cacti']] %}
+            {% set ns = namespace(dry=[]) %}{% for p in pairs %}{% if states(p[1]) | is_number and states(p[1]) | float <= states(p[2]) | float(0) %}{% set ns.dry = ns.dry + [p[0]] %}{% endif %}{% endfor %}
+            Today: {{ now().strftime('%A %B %-d') }}.
+            Last week's plans: {% for e in ev %}{{ e.summary }} ({{ e.start[:10] }}); {% else %}none on the calendar; {% endfor %}
+            This coming week: {% for e in nx %}{{ e.summary }} ({{ e.start }}{{ ', ' ~ e.location.split(',')[0] if e.location is defined and e.location else '' }}); {% else %}nothing yet; {% endfor %}
+            Forecast: {% for d in f[:7] %}{{ as_datetime(d.datetime).strftime('%a') }} {{ d.condition }} {{ d.temperature | round(0) }}/{{ d.templow | default('?') }}; {% endfor %}
+            Plant groups that need water now: {{ ns.dry | join(', ') or 'none' }}.
+            Wine cellar: {{ wine | count }} wines on the list.
+            Places list (newest last): {% for p in places[-5:] %}{{ p.summary }}; {% else %}empty; {% endfor %}
+            Powerwall {{ states('sensor.home_percentage_charged') }}%. Smoker cooks this week: {{ 'one going now' if is_state('input_boolean.smoke_on', 'on') else 'see calendar' }}.
+      - action: ai_task.generate_data
+        data:
+          task_name: "This week at the house"
+          entity_id: ai_task.claude_ai_task
+          instructions: |-
+            You are Pik, the warm, slightly dry little house character on Tyler and Charlie's kitchen screen in Reno.
+            Write their Sunday "this week at the house" note from the facts below. headline: one line, max 70
+            characters, the single most useful thing about the week ahead. lines: 3 to 5 short lines, one per line
+            (newline-separated), max 120 characters each: what's coming up (with the day), weather that matters,
+            anything the house needs (plants, a freeze), and at most one line looking back at last week. Plain,
+            friendly words; no emoji, no exclamation marks, no greeting, no bullets. Never invent plans or numbers.
+            {{ facts }}
+          structure:
+            headline:
+              required: true
+              selector:
+                text:
+            lines:
+              required: true
+              selector:
+                text:
+                  multiline: true
+        response_variable: out
+        continue_on_error: true
+      - if: "{{ (out | default({})).data is defined and out.data.headline | default('') | string | trim != '' }}"
+        then:
+          - event: pik_week_report
+            event_data:
+              headline: "{{ out.data.headline | string | trim | replace('\"', '') }}"
+              lines: "{{ out.data.lines | default('') | string | trim }}"

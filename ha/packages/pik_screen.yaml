@@ -88,16 +88,16 @@ script:
       Change what the kitchen screen shows, when Tyler or Charlie asks ("show less wine stuff in the
       morning", "always show the doorbell at night", "no hike ideas until spring"). Pick the closest
       topic: calendar (plans), piks (what you two send Pik), energy (solar, Powerwall), plants, cellar
-      (wine), weather, inside (heat, lights), music, doorbell, deliveries, smoker, timers, cooking, hikes (the weekend hike ideas).
+      (wine), weather, inside (heat, lights), music, doorbell, deliveries, smoker, timers, cooking, hikes (the weekend hike ideas), trip (flight days), dinners, week (Sunday's this-week note).
       effect: more, less, never or always. when: any, morning, midday, evening or night. days: how long
       (leave out for good). Read back the message.
     mode: queued
     fields:
       topic:
-        description: "calendar, piks, energy, plants, cellar, weather, inside, music, doorbell, deliveries, smoker, timers, cooking or hikes"
+        description: "calendar, piks, energy, plants, cellar, weather, inside, music, doorbell, deliveries, smoker, timers, cooking, hikes, trip, dinners or week"
         required: true
         selector:
-          select: { options: [calendar, piks, energy, plants, cellar, weather, inside, music, doorbell, deliveries, smoker, timers, cooking, hikes] }
+          select: { options: [calendar, piks, energy, plants, cellar, weather, inside, music, doorbell, deliveries, smoker, timers, cooking, hikes, trip, dinners, week] }
       effect:
         description: "more, less, never or always"
         required: true

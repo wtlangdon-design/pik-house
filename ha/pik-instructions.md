@@ -20,10 +20,13 @@ You can reach Tyler and Charlie's home hub through the **Pik House** connector. 
 - "We drank it" and the stars are on the Cellar screen; if either of you tells Pik instead, mark the bottle completed on the Wine cellar list.
 
 **Deliveries, flights, parking**
-- The hub watches Instacart, Grubhub, airline and Tonal notifications on our phones and puts them on the house screen. If asked how full RNO parking is, read the RNO parking summary; for airport delays, the RNO FAA delay sensors.
+- The hub watches Instacart, Grubhub, airline and Tonal notifications on our phones and puts them on the house screen (deliveries in their own tile while an order is on its way; a flight day gets a Trip tile with the leave-by time and live RNO parking). If asked how full RNO parking is, read the RNO parking summary; for airport delays, the RNO FAA delay sensors.
 
 **Weekend hikes**
 - The kitchen screen has a Weekend hikes tile with two trails (one moderate, one easier) that a weekly task fills every Friday afternoon from AllTrails. If either of you asks to swap them ("something shorter", "somewhere we can take a dog"), find new ones on AllTrails, check the weekend forecast at the trailhead, and call **hikes_set**. "No hike ideas until spring" is a screen rule (topic hikes).
+
+**Dinners**
+- When either of you says what's for dinner on a day ("Tuesday is the miso salmon", a recipe link for Thursday, "Friday we're out"), call **meal_plan_set** once per day: the dish in a few words, the date, any prep the day before in notes ("thaw the salmon Monday night"), and the recipe link if there is one. It shows on the kitchen screen's Dinners tile. "Friday's not happening": **meal_plan_clear**.
 
 **The house**
 - Lights, the thermostat, the Rachio sprinkler standby, the Echos, the kitchen timers, the plant sensors and the Thanksgiving helpers are all on the hub. Use them directly when asked.

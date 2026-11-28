@@ -286,31 +286,41 @@ with your instant-read thermometer in each spot.
 
 
 
-## Weekend hikes tile (about 10 minutes, once)
+## Kitchen screen tiles: hikes, trips, deliveries, outside, dinners, the week (about 20 minutes, once)
 
-Every Friday afternoon a weekly Claude task picks two trails near Reno on AllTrails (one moderate, one
-easier) that suit the weekend's weather, and puts them on the kitchen screen's **Weekend hikes** tile. Tapping a
-trail opens its AllTrails page. On Friday evening and weekend mornings the tile moves up, and the ambient
-stories show the two trails full screen. After Sunday 8 PM the tile hides until next Friday. To pause it, tell
-Pik "no hike ideas until spring" (a screen rule, topic `hikes`).
+The bottom row of the kitchen screen holds up to five tiles, picked by what's going on and by what you two
+use (it learns from taps and clears, and from rules you tell Pik). Things that stay true for a while get a
+tile; the house feed ("From your Piks") is for things to act on or clear.
 
-**1. Make the list.** Settings → Devices & services → **Add integration** → search **Local To-do** → name it
-`Weekend hikes` → **Submit**. (Its entity is `todo.weekend_hikes`.)
+| Tile | Shows | Comes from |
+|---|---|---|
+| Weekend hikes | Two trails (moderate and easier); tap one for AllTrails. Up Friday evening and weekend mornings; hides after Sunday 8 PM | A weekly Claude task, Fridays 3:13 PM, through `script.hikes_set` |
+| Trip | From 30 hours before a "Flight …" event on the shared calendar: the flight, leave-by and drive time (from 4 hours out), FAA delays at RNO, an airline change, live parking by lot. Jumps to the front 6 hours out | The calendar (airline emails land there), `input_text.pik_trip`, the FAA Delays sensors, the RNO parking sensors |
+| On the way | An Instacart, DoorDash or Grubhub order while it's coming: status, arrival time, Live map, Got it | The delivery notifications and order emails (`pik_out_and_about.yaml`) |
+| Outside | Only when it matters: a fire alert (later), smoky air (once the air monitor's connected), a weather alert, or a freeze tonight with what to cover | `sensor.weather_alerts`, the forecast low, `air_pm25` |
+| Dinners this week | Tonight big (tap for the recipe), prep for tomorrow ("thaw the short ribs tonight"), the next few nights | `script.meal_plan_set`, when either of you tells Pik |
+| This week | Sunday's note from Pik: a headline and a few lines about the week ahead. Shows Sunday to Tuesday; tap for the full note | Claude (AI Task), Sundays 9 AM |
 
-**2. Put the files on the hub.** Upload `ha/packages/pik_hikes.yaml` (new) and `ha/packages/pik_screen.yaml`
-(changed: adds the hikes topic) into the `packages` folder in File editor, and deploy the new card build (below).
+**1. Make two lists.** Settings → Devices & services → **Add integration** → **Local To-do**, twice:
+`Weekend hikes` and `Dinners` (their entities are `todo.weekend_hikes` and `todo.dinners`).
+
+**2. Put the files on the hub.** In File editor, upload into `packages`: `pik_hikes.yaml`, `pik_dinners.yaml`,
+`pik_week.yaml` (new) and `pik_screen.yaml`, `pik_together.yaml` (changed). Deploy the new card build (below).
 Then **Restart Home Assistant**.
 
-**3. Add the tile to the house screen.** Open the House dashboard → pencil → three dots → **Raw configuration
-editor**. Under `cellar:` add this line (same indent) and **Save**:
+**3. Update the house screen.** Open the House dashboard → pencil → three dots → **Raw configuration editor**.
+Replace everything with `ha/dashboards/house.yaml` from GitHub and **Save**. Then check the FAA sensor IDs:
+Settings → Devices & services → **Entities**, search `RNO`; if the delay sensors aren't named
+`binary_sensor.rno_departure_delay` and so on, change them under `trip:` → `delays:`.
 
-```yaml
-        hikes: { list: todo.weekend_hikes }
-```
+**4. Let Claude use them.** Settings → Voice assistants → **Expose** → **Expose entities**, and tick:
+**Hikes: set this weekend's trails**, **Dinners: plan a night**, **Dinners: clear a night**, and the
+**Weekend hikes** and **Dinners** lists. Then add the "Weekend hikes" and "Dinners" paragraphs from
+`ha/pik-instructions.md` to both Pik projects' instructions.
 
-**4. Let Claude fill it.** Settings → Voice assistants → **Expose** → **Expose entities** → tick **Hikes: set
-this weekend's trails** and the **Weekend hikes** list. The weekly task calls that script through the Claude
-connector; until it's exposed, the task falls back to posting two feed cards.
+**5. Try it.** Tell your Pik "tonight is tacos and tomorrow is the short ribs, thaw them tonight": the Dinners
+tile appears. Run "Pik: this week at the house" by hand (Settings → Automations → ⋮ → **Run actions**): the
+This week tile appears within a minute. The Weekend hikes tile fills itself next Friday.
 
 ## The house feed (live)
 

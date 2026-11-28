@@ -471,13 +471,24 @@ A long-term feature for any cook on the smoker: an **Inkbird IBT-4XS** (four wir
 - **The screen** (`custom:pik-smoke-card`, `ha/dashboards/smoking.yaml`): four tiles (two by two; stacked on a phone), each with the probe number on its icon, what it's in, the big temperature, the pull or set temperature, a progress bar, the last 3 hours as a line with the target dashed, and one plain line (rising N° an hour · about 1 h 20 m to go; N° to go; the stall; done N min ago; not reading). Amber = close, red = a problem, green = done (with **Got it**). Tap a tile to set it up (food chips, something else, −5/−1/+1/+5, in the food or in the smoker, clear). Header: how long it's been going, 🔊 mute, **End cook** with an on-page confirm. A `smoke_alert` shows as a banner for 10 minutes. `mock: true` (or no hass) runs a made-up cook; the preview page is `docs/smoking.html`.
 - **Thanksgiving.** The holiday package copies any probe whose "in" says turkey breast, thigh or wing into `input_number.tg26_turkey_*` as it changes, so "the turkey is done" fires on its own. Copying starts only once the turkey is on the smoker (its 10:00 task ticked, or that time reached) and ignores readings above 212°F (a probe out of the meat). When the turkey's smoker first starts (9:15 Thursday, or ticking that task), it zeroes the turkey log (so nothing from a rehearsal counts) and sets probes 1–3 to breast, thigh and wing (no target; the holiday rule decides done) and 4 to the smoker's air at the plan's temperature, each probe unless it already says so; probe 4's target then follows the plan's smoker stages (about 340°F from 12:30, the hot hold from 3:00). The kitchen timers' hourly turkey check reads the live temperatures out instead of asking for a log. The turkey screen shows "Inkbird · live" on spots being fed.
 
-## Weekend hikes
+## Tiles
 
-**Tiles versus feed cards (Tyler, Nov 27, 2026).** Something that stays true for a while and refreshes on a schedule (the cellar, the plants, this weekend's hikes) gets its own tile on the kitchen screen. The house feed is for things to act on or clear: tapping a feed card means "done," so a suggestion to browse doesn't belong there.
+**Tiles versus feed cards (Tyler, Nov 27, 2026).** Something that stays true for a while, or refreshes on a schedule, gets its own tile on the kitchen screen (the cellar, the plants, this weekend's hikes, a flight day, an order on its way). The house feed is for things to act on or clear: tapping a feed card means "done," so a suggestion to browse doesn't belong there.
 
-- **The tile** (`hikes: { list: todo.weekend_hikes }` in the card config) shows two trails near Reno, one moderate (3–7 miles) and one easier, each with its distance, climb and drive from Reno, and the weekend forecast line. Tapping a trail opens its AllTrails page. The tile ranks like the others (topic `hikes`, learned from taps and screen rules), moves up on Friday from 3 PM and on weekend mornings, and hides after the weekend's `until` (Sunday 8 PM). The ambient stories get a full-screen "Two hikes to try" story at the same times.
-- **The data** lives in a Local To-do list named `Weekend hikes`, one item per trail; the summary is the trail's name and the description is JSON (kind, miles, gain_ft, drive_min, why, url, forecast, until). `script.hikes_set` (`ha/packages/pik_hikes.yaml`) replaces both trails at once and only keeps AllTrails links.
-- **Who fills it:** Tyler's weekly Claude task, Fridays at 3:13 PM Pacific, using the AllTrails connector (trail search and the trailhead forecast) and the House notes and Places lists for likes and dislikes. Either Pik can swap a trail when asked.
+The bottom row shows up to five tiles. Each has a score from what's happening plus what the screen has learned for its topic (`rank()`); screen rules ("no hike ideas until spring") apply by topic. Setup steps: `ha/README.md`, "Kitchen screen tiles".
+
+| Tile | Topic | When it shows | Data |
+| --- | --- | --- | --- |
+| Timers, Smoker | timers, smoker | While running | Kitchen timer pool; Inkbird |
+| Energy, Plants, Inside, Music, Cellar | energy, plants, inside, music, cellar | Always, ranked | Powerwall, soil sensors, Ecobee, Echo, Wine cellar list |
+| Weekend hikes | hikes | Until Sunday 8 PM; up Friday from 3 PM and weekend mornings; a full-screen story too | `todo.weekend_hikes` via `script.hikes_set` (weekly Claude task, Fridays) |
+| Trip | trip | 30 hours before a calendar event with "flight" in its title, until 15 minutes after; near the front from 6 hours out | Shared calendar; `input_text.pik_trip` (Google Maps drive and leave-by, from 4 hours out); FAA Delays sensors; airline feed cards (`flight-*`); RNO parking |
+| On the way | deliveries | While a `delivery-*` feed card is open (those cards leave the "From your Piks" list) | `pik_out_and_about.yaml` |
+| Outside | weather | A fire alert, PM2.5 over 35, a weather alert, or (from noon) a forecast low of 32° or less with the `cold_spots` to cover | `outside:` config, `air_pm25` |
+| Dinners this week | dinners | Any planned dinner from today on; up from 2 to 8 PM | `todo.dinners` via `script.meal_plan_set` (due date = the night) |
+| This week | week | Sunday to Tuesday after Sunday's note; tap for the full-screen story | `sensor.pik_week_report`, written by AI Task Sundays at 9 AM |
+
+**Weekend hikes in detail.** Two trails near Reno, one moderate (3–7 miles) and one easier, each with its distance, climb and drive from Reno, plus the weekend forecast line. Tapping a trail opens its AllTrails page. Each list item's summary is the trail's name and its description is JSON (kind, miles, gain_ft, drive_min, why, url, forecast, until). `script.hikes_set` replaces both at once and keeps only AllTrails links. Tyler's weekly Claude task fills it (Fridays 3:13 PM Pacific, AllTrails connector, House notes and Places for likes and dislikes); either Pik can swap a trail when asked.
 
 ## Build phases
 

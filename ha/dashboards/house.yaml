@@ -20,6 +20,23 @@ views:
         calendar: calendar.tyler_charlie   # the shared calendar; until it's connected the header shows a placeholder
         cellar: { list: todo.wine_cellar, path: /dashboard-cellar/cellar }
         hikes: { list: todo.weekend_hikes }   # the Weekend hikes tile (ha/packages/pik_hikes.yaml); filled every Friday afternoon
+        trip:   # the Trip tile: from 30 hours before a "Flight …" event on the shared calendar until it leaves
+          info: input_text.pik_trip   # live drive time and leave-by (pik_together.yaml), from 4 hours out
+          delays:                     # the FAA Delays sensors for RNO (check the IDs under Settings → Entities, search "RNO")
+            - { name: Departure delays, entity: binary_sensor.rno_departure_delay }
+            - { name: Ground stop, entity: binary_sensor.rno_ground_stop }
+            - { name: Ground delay, entity: binary_sensor.rno_ground_delay }
+            - { name: Airport closed, entity: binary_sensor.rno_closure }
+        outside:   # the Outside tile: only when something's worth knowing (smoke, a weather alert, a freeze tonight)
+          alerts: sensor.weather_alerts
+          # fire: the Watch Duty alert entity, once it's hooked up
+          cold_spots:
+            - { name: "sun room glass (majesty and sago palms)" }
+            - { name: garden beds }
+            - { name: outdoor hose bibs, hard: true }   # only at 25° or colder
+        # air_pm25: the Ecowitt air quality sensor, once it's connected (smoky-air on the Outside tile)
+        dinners: { list: todo.dinners }          # the Dinners tile (ha/packages/pik_dinners.yaml)
+        week_report: sensor.pik_week_report      # This week at the house, Sundays (ha/packages/pik_week.yaml)
         airport:
           name: RNO
           lots:
